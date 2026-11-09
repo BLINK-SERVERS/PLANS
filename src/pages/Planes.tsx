@@ -222,7 +222,7 @@ export default function Planes() {
               <select
                 value={form.plataforma_id}
                 onChange={(e) => setForm({ ...form, plataforma_id: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-400 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blink-primary focus:outline-none"
               >
                 {plataformas.map((p) => (
                   <option key={p.id} value={p.id}>

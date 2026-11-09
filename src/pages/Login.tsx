@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { errMsg } from '../lib/err'
 import { Button, Field, Input } from '../components/ui'
-import { IconLock } from '../components/icons'
+import { MarcaBlink } from '../components/marca-blink'
 
 export default function Login() {
   const { session, entrar } = useAuth()
@@ -38,12 +38,12 @@ export default function Login() {
         className="w-full max-w-sm space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white">
-            <IconLock className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
+            <MarcaBlink className="h-5 w-auto" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Go Plans</h1>
-            <p className="text-sm text-slate-500">Panel administrativo</p>
+            <h1 className="text-xl font-bold text-slate-900">Blink Plans</h1>
+            <p className="text-sm text-slate-500">Gestión de suscripciones</p>
           </div>
         </div>
 

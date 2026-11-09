@@ -38,14 +38,14 @@ export default function Ingreso() {
       <div className="w-full max-w-md space-y-4">
         <Link
           to="/tienda"
-          className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="inline-flex items-center gap-1 text-sm font-medium text-blink-action hover:text-blink-action-hover"
         >
           ← Volver a la tienda
         </Link>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blink-action text-white">
               <IconLock className="h-5 w-5" />
             </div>
             <div>
@@ -87,7 +87,7 @@ export default function Ingreso() {
 
           <p className="mt-4 text-center text-sm text-slate-500">
             ¿No tienes cuenta?{' '}
-            <Link to="/registro" className="font-semibold text-indigo-600 hover:underline">
+            <Link to="/registro" className="font-semibold text-blink-action hover:underline">
               Regístrate
             </Link>
           </p>

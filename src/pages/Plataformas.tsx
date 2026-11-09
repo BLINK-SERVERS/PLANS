@@ -165,7 +165,7 @@ export default function Plataformas() {
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-indigo-600"
+              className="h-4 w-4 accent-blink-action"
               checked={form.activa}
               onChange={(e) => setForm({ ...form, activa: e.target.checked })}
             />
@@ -174,7 +174,7 @@ export default function Plataformas() {
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-indigo-600"
+              className="h-4 w-4 accent-blink-action"
               checked={form.aplica_comision}
               onChange={(e) => setForm({ ...form, aplica_comision: e.target.checked })}
             />

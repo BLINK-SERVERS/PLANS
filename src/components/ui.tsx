@@ -11,7 +11,7 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant }) {
   const styles: Record<BtnVariant, string> = {
     primary:
-      'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300',
+      'bg-blink-action text-white hover:bg-blink-action-hover disabled:bg-blink-soft-border',
     secondary:
       'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50',
     danger: 'bg-rose-600 text-white hover:bg-rose-700',
@@ -29,7 +29,7 @@ export function Button({
 export function Input({ className = '', ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${className}`}
+      className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft-border ${className}`}
       {...props}
     />
   )
@@ -38,7 +38,7 @@ export function Input({ className = '', ...props }: InputHTMLAttributes<HTMLInpu
 export function Select({ className = '', ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${className}`}
+      className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft-border ${className}`}
       {...props}
     />
   )
@@ -91,7 +91,7 @@ const badgeColors: Record<string, string> = {
   admin: 'bg-purple-100 text-purple-700',
   agente: 'bg-sky-100 text-sky-700',
   cliente: 'bg-slate-200 text-slate-600',
-  nuevo: 'bg-indigo-100 text-indigo-700',
+  nuevo: 'bg-blink-soft text-blink-action-hover',
   contactado: 'bg-amber-100 text-amber-700',
   completado: 'bg-emerald-100 text-emerald-700',
   cancelado: 'bg-slate-200 text-slate-600',

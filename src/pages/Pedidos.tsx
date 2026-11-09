@@ -121,7 +121,7 @@ export default function Pedidos() {
             onClick={() => setFiltro(f.id)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filtro === f.id
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-blink-action text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -173,7 +173,7 @@ export default function Pedidos() {
                     value={p.estado}
                     disabled={guardando === p.id}
                     onChange={(e) => void cambiarEstado(p, e.target.value as EstadoPedido)}
-                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 focus:border-indigo-400 focus:outline-none"
+                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 focus:border-blink-primary focus:outline-none"
                   >
                     {ESTADOS.map((e) => (
                       <option key={e} value={e}>

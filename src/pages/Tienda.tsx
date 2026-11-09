@@ -154,17 +154,17 @@ function TarjetaMarca({ p }: { p: PlataformaTienda }) {
       <div className="h-full">
         {contenido(
           <>
-            <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-600 text-3xl font-black text-white shadow-lg transition-transform group-hover:scale-105">
+            <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-blink-action text-3xl font-black text-white shadow-lg transition-transform group-hover:scale-105">
               {inicial}
             </span>
             <h3 className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">
               {p.nombre}
             </h3>
             <p className="mt-1 text-sm text-slate-500">{taglinePlataforma(p.nombre)}</p>
-            <p className="mt-4 text-sm font-semibold text-indigo-600">
+            <p className="mt-4 text-sm font-semibold text-blink-action">
               Desde {desde ?? '—'}
             </p>
-            <span className="mt-5 rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white transition-colors group-hover:bg-indigo-700">
+            <span className="mt-5 rounded-full bg-blink-action px-6 py-2.5 text-sm font-bold text-white transition-colors group-hover:bg-blink-action-hover">
               Ver planes →
             </span>
           </>,
@@ -221,7 +221,7 @@ export default function Tienda() {
           className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl"
           style={{ fontFamily: FONT_DISPLAY }}
         >
-          Go Plans
+          Blink Plans
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base text-slate-500 md:text-lg">
           Elige tu plataforma favorita y contrata el plan que más te convenga. Pagas en
@@ -264,7 +264,7 @@ export default function Tienda() {
           Los precios se expresan en dólares estadounidenses (USD). El equivalente en bolívares
           (VES) se calcula con la <strong>tasa de cambio oficial del BCV</strong> al momento de
           cada pago. Al contratar aceptas ser parte de un plan familiar compartido gestionado por{' '}
-          <strong>Go Plans</strong>.
+          <strong>Blink Plans</strong>.
         </p>
       </footer>
     </div>

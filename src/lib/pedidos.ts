@@ -8,7 +8,7 @@ export const linkWhatsApp = (texto: string): string =>
 export const msjContactoPedido = (nombre: string, detalle: string): string =>
   [
     `Hola ${nombre} 👋`,
-    'Aquí Go Plans respecto a tu pedido:',
+    'Aquí Blink Plans respecto a tu pedido:',
     `📦 ${detalle}`,
     '',
     '¿Seguimos con el pago?',

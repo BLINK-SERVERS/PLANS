@@ -53,7 +53,7 @@ export function SelectCliente({
         />
         <input
           type="text"
-          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-8 pr-8 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-8 pr-8 text-sm text-slate-900 outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft"
           placeholder={seleccionado ? seleccionado.nombre : 'Busca por nombre, correo o teléfono…'}
           value={q}
           onChange={(e) => {
@@ -89,8 +89,8 @@ export function SelectCliente({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => elegir(c.id)}
-                className={`block w-full px-3 py-2 text-left text-sm hover:bg-indigo-50 ${
-                  c.id === value ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-slate-700'
+                className={`block w-full px-3 py-2 text-left text-sm hover:bg-blink-soft ${
+                  c.id === value ? 'bg-blink-soft font-medium text-blink-action-hover' : 'text-slate-700'
                 }`}
               >
                 <span className="block">{c.nombre}</span>

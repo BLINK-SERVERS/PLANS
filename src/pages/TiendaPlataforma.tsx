@@ -57,7 +57,7 @@ export default function TiendaPlataforma() {
         <footer className="border-t border-slate-200 bg-white py-8">
           <p className="mx-auto max-w-2xl px-4 text-center text-xs leading-relaxed text-slate-400">
             Las tarjetas de regalo se pagan en EUR según la tarifa mostrada. Al contratar aceptas
-            ser parte de un plan familiar compartido gestionado por <strong>Go Plans</strong>.
+            ser parte de un plan familiar compartido gestionado por <strong>Blink Plans</strong>.
           </p>
         </footer>
       </div>
@@ -91,7 +91,7 @@ export default function TiendaPlataforma() {
           Los precios se expresan en dólares estadounidenses (USD). El equivalente en bolívares
           (VES) se calcula con la <strong>tasa de cambio oficial del BCV</strong> al momento de
           cada pago. Al contratar aceptas ser parte de un plan familiar compartido gestionado por{' '}
-          <strong>Go Plans</strong>.
+          <strong>Blink Plans</strong>.
         </p>
       </footer>
     </div>

@@ -152,11 +152,11 @@ export default function Checkout() {
           <h1 className="mt-4 text-2xl font-bold text-slate-900">¡Pedido enviado!</h1>
           <p className="mt-2 text-sm text-slate-500">
             Te abrimos WhatsApp con tu pedido y las instrucciones de pago. Una vez que pagues, el
-            equipo de Go Plans confirma la entrega por el mismo chat.
+            equipo de Blink Plans confirma la entrega por el mismo chat.
           </p>
           <Link
             to="/tienda"
-            className="mt-6 inline-block rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="mt-6 inline-block rounded-full bg-blink-action px-8 py-3 text-sm font-semibold text-white hover:bg-blink-action-hover"
           >
             Volver a la tienda
           </Link>
@@ -175,7 +175,7 @@ export default function Checkout() {
           <p className="mt-2 text-sm text-slate-500">Tu carrito está vacío. Añade algo primero.</p>
           <Link
             to="/tienda"
-            className="mt-6 inline-block rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="mt-6 inline-block rounded-full bg-blink-action px-8 py-3 text-sm font-semibold text-white hover:bg-blink-action-hover"
           >
             Ir a la tienda
           </Link>
@@ -244,7 +244,7 @@ export default function Checkout() {
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Tu nombre"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blink-primary focus:outline-none"
               />
             </label>
             <label className="block text-xs font-medium text-slate-600">
@@ -253,7 +253,7 @@ export default function Checkout() {
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 placeholder="+58 412 000 00 00"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blink-primary focus:outline-none"
               />
             </label>
           </div>
@@ -280,7 +280,7 @@ export default function Checkout() {
                   onClick={() => setMetodo(m.id)}
                   className={`rounded-2xl border-2 p-4 text-left transition-all ${
                     activo
-                      ? 'border-indigo-600 bg-indigo-50'
+                      ? 'border-blink-action bg-blink-soft'
                       : 'border-slate-200 bg-white hover:border-slate-300'
                   } ${disponible ? '' : 'cursor-not-allowed opacity-50'}`}
                 >
@@ -289,7 +289,7 @@ export default function Checkout() {
                     <span className="text-sm font-bold text-slate-900">{m.nombre}</span>
                   </div>
                   <p className="mt-1 text-xs text-slate-500">{m.descripcion}</p>
-                  <p className="mt-2 text-base font-extrabold text-indigo-600">
+                  <p className="mt-2 text-base font-extrabold text-blink-action">
                     {disponible ? fmtMonedaCobro(monedaCobro(m.id), total!) : '—'}
                   </p>
                 </button>
@@ -325,21 +325,21 @@ export default function Checkout() {
 
         {/* Confirmar */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Link to="/carrito" className="text-sm font-medium text-indigo-600 hover:underline">
+          <Link to="/carrito" className="text-sm font-medium text-blink-action hover:underline">
             ← Volver al carrito
           </Link>
           {session ? (
             <button
               onClick={() => void confirmar()}
               disabled={enviando || totalMetodo == null}
-              className="rounded-full bg-indigo-600 px-10 py-3.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-blink-action px-10 py-3.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-blink-action-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               {enviando ? 'Enviando…' : `Confirmar pedido · ${fmtMonedaCobro(monedaMetodo, totalMetodo ?? 0)}`}
             </button>
           ) : (
             <Link
               to="/registro"
-              className="rounded-full bg-indigo-600 px-10 py-3.5 text-center text-sm font-semibold text-white shadow-md hover:bg-indigo-700"
+              className="rounded-full bg-blink-action px-10 py-3.5 text-center text-sm font-semibold text-white shadow-md hover:bg-blink-action-hover"
             >
               Crear cuenta para finalizar
             </Link>

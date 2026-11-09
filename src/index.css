@@ -1,75 +1,152 @@
 @import "tailwindcss";
 
-/* ─── Google Sans (Google One) ─── */
+/* ============================================================
+   Tipografía de BLINK Plans — SF Pro pedida al sistema, Inter servida.
+
+   Se retiraron Google Sans y Canva Sans (6,2 MB en public/fonts/).
+   Motivo: son tipografías de marca de Google y de Canva, bajo los
+   términos de sus propios fabricantes, y no es redistribuible
+   servirlas desde un repo público de Blink. Además la tienda usaba
+   la tipografía del fabricante para vender sus productos, que es
+   justo el riesgo que se elimina. Ver docs/ADR/003.
+
+   SF Pro (Apple) tampoco se distribuye: se PIDE al sistema con
+   local(), y sale de serie en iPhone, iPad y Mac. Sin instalarla,
+   en Windows y Linux entra Inter (SIL OFL 1.1, 28 KB recortada,
+   licencia en src/assets/fonts/LICENSE-Inter.txt). El razonamiento
+   completo es el mismo de BWS/src/styles/fonts.css.
+
+   Se conservan los nombres de variable --font-store y --font-display
+   porque los consumen Tienda, TarjetasGoogle, TarjetasApple,
+   TarjetasHorizontales y BarraTienda; ahora ambas apuntan a la MISMA
+   pila: la diferencia entre el corte Display y el Text la resuelve el
+   eje óptico (opsz) de la fuente, no el nombre de la familia.
+   ============================================================ */
+
 @font-face {
-  font-family: 'Google Sans';
+  font-family: 'SF Pro';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/GoogleSans-Regular.ttf') format('truetype');
-}
-@font-face {
-  font-family: 'Google Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/GoogleSans-Medium.ttf') format('truetype');
-}
-@font-face {
-  font-family: 'Google Sans';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/GoogleSans-Bold.ttf') format('truetype');
+  src:
+    local('SF Pro'),
+    local('SFPro-Regular'),
+    local('SF Pro Text'),
+    local('SFProText-Regular'),
+    local('.SF NS Text'),
+    local('SF NS Text');
 }
 
 @font-face {
-  font-family: 'Google Sans Display';
+  font-family: 'SF Pro Text';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/GoogleSansDisplay-Regular.ttf') format('truetype');
-}
-@font-face {
-  font-family: 'Google Sans Display';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/GoogleSansDisplay-Medium.ttf') format('truetype');
-}
-@font-face {
-  font-family: 'Google Sans Display';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/GoogleSansDisplay-Bold.ttf') format('truetype');
+  src:
+    local('SF Pro Text'),
+    local('SFProText-Regular'),
+    local('.SF NS Text'),
+    local('SF NS Text'),
+    local('SF Pro');
 }
 
-/* ─── Canva Sans (tienda Canva / Spotify) ─── */
 @font-face {
-  font-family: 'Canva Sans';
+  font-family: 'SF Pro Display';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/CanvaSans-Regular.otf') format('opentype');
+  src:
+    local('SF Pro Display'),
+    local('SFProDisplay-Regular'),
+    local('.SF NS Display'),
+    local('SF NS Display'),
+    local('SF Pro');
 }
+
+/* Cifras monoespaciadas: importes, referencias de Pago Móvil, SKU. */
 @font-face {
-  font-family: 'Canva Sans';
+  font-family: 'SF Mono';
   font-style: normal;
-  font-weight: 700;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/CanvaSans-Bold.otf') format('opentype');
+  src:
+    local('SF Mono'),
+    local('SFMono-Regular'),
+    local('SF Mono Regular');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./assets/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0020-007E, U+00A0-00FF, U+0100-017F, U+2010-206F, U+20AC,
+    U+20BF, U+2190-2193, U+2212;
+}
+
+/* ============================================================
+   Tokens de marca BLINK — copia de los valores oficiales que ya usa
+   el ecosistema (BWS/src/styles/tokens.css, derivados del UI Kit de
+   iOS). La marca es una sola: si cambia uno de estos, cambia en todos.
+
+   Solo se traen los tokens que esta app consume. `color-scheme: light`
+   porque el panel no tiene modo oscuro propio todavía: en oscuro
+   resolverían light-dark() el fondo del body y las filas de las tablas
+   sin que ninguna sección controle su propio ritmo.
+   ============================================================ */
+@theme {
+  --color-blink-primary: #007aff;
+  --color-blink-bg: #f2f2f7;
+  --color-blink-dark: #1d1d1f;
+  --color-blink-muted: #424242;
+  --color-blink-success: #34c759;
+  --color-blink-danger: #ff383c;
+  --color-blink-warning: #ffcc00;
+
+  /* Relleno de acento con texto encima. El azul de marca #007AFF sobre
+     blanco da 3,16:1: suficiente para titular grande, NO para texto
+     pequeño de botón. BWS resuelve lo mismo con #0066CC (4,6:1 con
+     blanco), así que los botones usan el relleno de acción y el azul
+     de marca queda para superficies grandes. */
+  --color-blink-action: #0066cc;
+  --color-blink-action-hover: #0057ad;
+  --color-blink-action-text: #0066cc;
+  /* Velos del acento (fondo de chips, filas seleccionadas, bordes). */
+  --color-blink-soft: #eaf2fd;
+  --color-blink-soft-strong: #d3e4fb;
+  --color-blink-soft-border: #b8d4f5;
+}
+
+:root {
+  --blink-primary: #007aff;
+  --blink-bg-main: #f2f2f7;
+  --blink-dark: #1d1d1f;
+  --blink-text-muted: #424242;
+  --blink-success: #34c759;
+  --blink-danger: #ff383c;
+  --blink-warning: #ffcc00;
+  /* Superficies de trabajo de las tablas y los formularios. */
+  --blink-surface: #ffffff;
+  --blink-surface-alt: #f7f7fa;
+  --blink-hover: color-mix(in srgb, var(--blink-primary) 8%, #ffffff);
+  --blink-border: rgba(66, 66, 66, 0.16);
+  --blink-thumb: rgba(66, 66, 66, 0.22);
 }
 
 /* ─── Variables globales de tipografía ─── */
 :root {
-  --font-store: 'Google Sans', 'Canva Sans', system-ui, -apple-system, sans-serif;
-  --font-display: 'Google Sans Display', 'Google Sans', 'Canva Sans', system-ui, sans-serif;
+  --font-pila: 'SF Pro', 'SF Pro Text', 'SF Pro Display', 'Inter', -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-store: var(--font-pila);
+  --font-display: var(--font-pila);
+  --font-mono: 'SF Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
   color-scheme: light;
 }
 
 body {
-  @apply bg-slate-100 text-slate-800 antialiased;
+  @apply bg-[var(--blink-bg-main)] text-[var(--blink-dark)] antialiased;
   font-family: var(--font-store);
 }
 
@@ -77,15 +154,17 @@ body {
   box-sizing: border-box;
 }
 
-/* Filas alternadas y hover en tablas */
+/* Filas alternadas y hover en tablas: superficies de la marca, no
+   el gris slate de Tailwind en crudo. El hover es el acento al 8 %,
+   que es el mismo criterio de BWS. */
 tbody tr:nth-child(odd) {
-  background-color: #fff;
+  background-color: var(--blink-surface);
 }
 tbody tr:nth-child(even) {
-  background-color: rgb(248 250 252);
+  background-color: var(--blink-surface-alt);
 }
 tbody tr:hover {
-  background-color: rgb(238 242 255);
+  background-color: var(--blink-hover);
 }
 
 /* Scrollbar discreto para las tablas */
@@ -94,7 +173,7 @@ tbody tr:hover {
   width: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgb(203 213 225);
+  background: var(--blink-thumb);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-track {

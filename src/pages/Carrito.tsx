@@ -41,7 +41,7 @@ export default function Carrito() {
           </p>
           <Link
             to="/tienda"
-            className="mt-6 inline-block rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="mt-6 inline-block rounded-full bg-blink-action px-8 py-3 text-sm font-semibold text-white hover:bg-blink-action-hover"
           >
             Ir a la tienda
           </Link>
@@ -71,7 +71,7 @@ export default function Carrito() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-slate-800">{l.titulo}</p>
                 <p className="truncate text-xs text-slate-500">{l.detalle}</p>
-                <p className="mt-0.5 text-sm font-bold text-indigo-600">
+                <p className="mt-0.5 text-sm font-bold text-blink-action">
                   {preciolinea(l)} <span className="text-[10px] font-medium text-slate-400">c/u</span>
                 </p>
               </div>
@@ -135,12 +135,12 @@ export default function Carrito() {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Link to="/tienda" className="text-sm font-medium text-indigo-600 hover:underline">
+          <Link to="/tienda" className="text-sm font-medium text-blink-action hover:underline">
             ← Seguir comprando
           </Link>
           <Link
             to="/checkout"
-            className="rounded-full bg-indigo-600 px-10 py-3.5 text-center text-sm font-semibold text-white shadow-md transition-colors hover:bg-indigo-700"
+            className="rounded-full bg-blink-action px-10 py-3.5 text-center text-sm font-semibold text-white shadow-md transition-colors hover:bg-blink-action-hover"
           >
             Finalizar compra →
           </Link>

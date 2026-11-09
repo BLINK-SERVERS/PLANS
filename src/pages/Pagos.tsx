@@ -491,12 +491,12 @@ export default function Pagos() {
         </Card>
 
         <Card title="2 · Equivalente USD (calculadora)">
-          <div className="rounded-xl bg-indigo-50 p-4 text-center">
-            <p className="text-xs font-medium uppercase tracking-wide text-indigo-500">
+          <div className="rounded-xl bg-blink-soft p-4 text-center">
+            <p className="text-xs font-medium uppercase tracking-wide text-blink-primary">
               Equivalente en USD
             </p>
-            <p className="text-4xl font-bold text-indigo-700">{fmtUSD(equivalente)}</p>
-            <p className="mt-1 text-xs text-indigo-400">
+            <p className="text-4xl font-bold text-blink-action-hover">{fmtUSD(equivalente)}</p>
+            <p className="mt-1 text-xs text-blink-primary">
               {form.moneda === 'BS'
                 ? `${fmtVES(montoNum)} ÷ tasa ${tasaNum}`
                 : form.moneda === 'USDT'
@@ -538,7 +538,7 @@ export default function Pagos() {
                     >
                       <input
                         type="checkbox"
-                        className="h-4 w-4 accent-indigo-600"
+                        className="h-4 w-4 accent-blink-action"
                         checked={a.checked}
                         onChange={(e) =>
                           setAsign((prev) => ({

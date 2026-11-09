@@ -1,62 +1,102 @@
-# Sistema Integral de Gestión de Suscripciones
+# Blink Plans
 
-Aplicación web para la **reventa y gestión de suscripciones digitales** (Netflix, Spotify, Canva, etc.) con control de **proveedores y cuentas madre**, **clientes**, **referidos (30% de comisión)**, **control cambiario USDT/BS según tasa BCV** y **pagos** a clientes y proveedores.
+Panel de reventa y gestión de suscripciones digitales (Netflix, Spotify, Canva,
+Google One…): proveedores y cuentas madre, clientes, comisiones de referidos al
+30 %, control cambiario USDT/BS con la tasa oficial del BCV y una tienda pública
+para contratar desde el celular.
 
-## Stack tecnológico
+Nació como `go-plans/suscripciones`. Este repo es la versión Blink.
+
+**Estado: en construcción.** La migración a Neon está en curso; el panel que
+funciona hoy sigue en https://go-plans.github.io/suscripciones/ hasta que este
+esté verificado de extremo a extremo.
+
+- **Sitio:** https://plans.blink.com.ve
+- **Redirección legacy:** https://go-plans.github.io/suscripciones/ → este panel
+- **Ecosistema:** https://www.blink.com.ve/
+
+## Stack
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | Vite + React + TypeScript |
-| Estilos | Tailwind CSS + Shadcn UI (Radix) |
-| Backend / BBDD | Supabase (PostgreSQL 15) |
-| Edge Functions | Deno (Supabase) |
-| Automatización | pg_cron + pg_net |
-| Control de versiones | Git + GitHub (**go-plans/suscripciones**, repo **público**) |
-| Hosting del panel | **GitHub Pages** — https://go-plans.github.io/suscripciones/ |
-| Conexión BBDD | Pooler de sesión de Supabase (`aws-0-us-west-2.pooler.supabase.com:5432`) |
+| Frontend | Vite 8 + React 19 + TypeScript estricto (SPA estática, `HashRouter`) |
+| Estilos | Tailwind CSS 4 con los tokens de marca de Blink |
+| Base de datos | **Neon** (PostgreSQL), proyecto aislado para este panel |
+| Acceso a datos | **Neon Data API** (protocolo PostgREST) desde el navegador, solo con JWT |
+| Autenticación | **Better Auth self-hosted** en una Neon Function, modo bearer |
+| Automatización | **Neon Functions** con disparador programado (tasa BCV y vencimientos) |
+| Hosting | GitHub Pages (`dist` publicado por Actions), dominio propio |
 
-## Estructura del repositorio
+La documentación del proyecto viejo sigue siendo la referencia del negocio:
+[`docs/`](./docs/README.md), con el historial completo en
+[`docs/historia-proyecto-viejo.md`](./docs/historia-proyecto-viejo.md).
+
+## Estructura
 
 ```
-app/                                  ← proyecto (repo de git)
-├── src/                              ← código fuente del frontend
-├── supabase/
-│   ├── migrations/                   ← migraciones SQL versionadas
-│   │   ├── 0001_initial_schema.sql
-│   │   ├── 0002_automatizaciones.sql
-│   │   ├── 0003_seed.sql
-│   │   ├── 0004_demo.sql
-│   │   ├── 0005_sistema_gestion.sql
-│   │   └── 0006_seguridad_renovaciones.sql
-│   └── functions/
-│       └── fetch-bcv/                ← Edge Function: tasa BCV diaria
-├── docs/                             ← documentación completa del proyecto
-├── logs/                             ← logs de ejecución (no se versionan)
-├── .env.example                      ← plantilla pública (sin secretos)
-├── .env                              ← secretos (NO se versiona)
-└── .gitignore
+PLANS/
+├── src/                    frontend React (páginas por dominio del negocio)
+│   ├── lib/                auth, datos, dinero, tienda, pedidos
+│   ├── pages/              panel admin + tienda pública
+│   └── components/         Layout, UI, tienda, marca Blink
+├── functions/              server-side en Neon (auth, tasa-bcv)
+├── supabase/               esquema histórico: 12 migraciones del proyecto viejo
+│   └── functions/          Edge Function Deno fetch-bcv (portada a functions/)
+├── docs/                   arquitectura, BD, integraciones, flujos, seguridad
+├── public/                 CNAME, favicon, diseños de gift cards
+└── .github/workflows/      pages.yml
 ```
 
-## Documentación
+`supabase/` se conserva como **registro histórico**, no como script a ejecutar:
+las migraciones 0003, 0004, 0005 y 0011 contienen `INSERT` de datos demo con
+UUIDs fijos, un `DROP CONSTRAINT` y un `DELETE` que borrarían datos reales si
+volvieran a aplicarse. El esquema vivo es el que resultó del volcado, y lo nuevo
+se numera desde `0013`.
 
-La documentación completa está en [`docs/`](./docs/README.md), organizada por capítulos:
+## Scripts
 
-1. [Arquitectura](./docs/01-arquitectura.md)
-2. [Base de datos](./docs/02-base-de-datos.md)
-3. [Integraciones y claves](./docs/03-integraciones.md)
-4. [Flujos de negocio](./docs/04-flujos-negocio.md)
-5. [Seguridad](./docs/05-seguridad.md)
-6. [Desarrollo local](./docs/06-desarrollo.md)
-7. [Despliegue](./docs/07-despliegue.md)
-8. [Changelog](./docs/08-changelog.md)
-
-## Estado actual (Proyecto)
-
-| Fase | Estado |
+| Comando | Para qué |
 |---|---|
-| Fase 1: proyecto Vite + TS + Git + repo GitHub | ✅ Completado |
-| Fase 1: esquema Supabase (12 tablas, triggers, RLS, cron, seed) | ✅ Completado |
-| Fase 2: panel administrativo (CRUD clientes, calculadora BCV, alertas) | ✅ Completado |
-| Fase 2.1: gestión pulida (FK cascada, plataformas, inline, comisiones 30%) | ✅ Completado |
-| Fase 2.2: auditoría + Auth/RLS + despliegue GitHub Pages | ✅ Completado |
-| Fase 3: catálogo público de venta | ⏳ Pendiente |
+| `npm run dev` | desarrollo local contra el proyecto de Neon que diga `.env.local` |
+| `npm run typecheck` | TypeScript sin emitir |
+| `npm run lint` | oxlint |
+| `npm run build` | `tsc -b` + `vite build` → `dist/` |
+| `npm run preview` | servir el `dist` local |
+
+## Entorno
+
+Solo llegan al bundle valores **públicos**. La cadena de conexión de Neon nunca
+viaja al navegador, ni siquiera la del pooler.
+
+```
+VITE_NEON_DATA_API_URL=https://<endpoint>/rest/v1
+VITE_NEON_AUTH_URL=https://<funcion-de-auth>
+```
+
+En GitHub están como Variables del repo (`Settings → Secrets and variables →
+Actions → Variables`), y se consumen en `.github/workflows/pages.yml`. No son
+Secrets porque no hay nada privado en ellas.
+
+## Seguridad
+
+- Cada request a la Data API lleva el JWT de la sesión; el API hace `SET ROLE`
+  con el claim `role` y expone `auth.user_id()` desde el claim `sub`.
+- Sin sesión existe el rol `anonymous`, con `GRANT SELECT` únicamente sobre la
+  vista del catálogo público: la tienda funciona sin cuenta, el resto del panel
+  no.
+- RLS en todas las tablas de negocio. Las vistas corren con
+  `security_invoker = true` para que hereden las políticas del que consulta.
+- El rol admin no se deduce del token sino de la fila `public.usuarios.rol`, que
+  es la fuente de verdad del negocio.
+- Las contraseñas de los clientes del proyecto viejo se verifican con bcrypt y
+  se re-hashean a scrypt en el primer inicio de sesión correcto: nadie tiene que
+  restablecer su contraseña (ver `docs/ADR/002-...`).
+
+## Pendientes de esta migración
+
+1. `public/og.png` (1200×630) con la marca aprobada — sin él, los enlaces
+   compartidos salen sin imagen.
+2. `favicon` de Blink Plans.
+3. Barrido de los grises `slate-*` de Tailwind a los tokens de la marca, con
+   revisión visual en escritorio y móvil.
+4. Actualizar `docs/01`…`docs/07` al backend nuevo (hoy describen Supabase).

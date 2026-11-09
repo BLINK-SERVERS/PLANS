@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../lib/auth'
 import { IconCart, IconLogout } from '../icons'
+import { MarcaBlink } from '../marca-blink'
 import { useCarrito } from './CarritoProvider'
 
 // Barra superior compartida de la tienda pública (#/tienda y detalle de plataforma)
@@ -29,8 +30,10 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
             </Link>
           ) : null}
           <Link to="/tienda" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-sm font-black text-white" style={{ fontFamily: 'var(--font-display), "Google Sans", system-ui' }}>GP</span>
-            <span className="text-lg font-bold text-slate-900" style={{ fontFamily: 'var(--font-display), "Google Sans", system-ui' }}>Go Plans</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
+              <MarcaBlink className="h-5 w-auto" />
+            </span>
+            <span className="text-lg font-bold text-slate-900">Blink Plans</span>
           </Link>
         </div>
         <nav className="flex items-center gap-2 text-sm">
@@ -41,7 +44,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
           >
             <IconCart className="h-5 w-5" />
             {total > 0 ? (
-              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white">
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-blink-action px-1 text-[10px] font-bold text-white">
                 {total}
               </span>
             ) : null}
@@ -51,7 +54,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
               {rol === 'admin' ? (
                 <Link
                   to="/"
-                  className="rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700"
+                  className="rounded-full bg-blink-action px-4 py-2 font-semibold text-white hover:bg-blink-action-hover"
                 >
                   Panel admin
                 </Link>
@@ -77,7 +80,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
               </Link>
               <Link
                 to="/registro"
-                className="rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700"
+                className="rounded-full bg-blink-action px-4 py-2 font-semibold text-white hover:bg-blink-action-hover"
               >
                 Registrarse
               </Link>

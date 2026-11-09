@@ -15,7 +15,7 @@ import { errMsg } from '../lib/err'
 import { ErrorMsg, Field, Input, Modal, ModalFooter, Select } from './ui'
 import { IconPlus } from './icons'
 
-const enlace = 'mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800'
+const enlace = 'mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-blink-action hover:text-blink-action-hover'
 
 // ------------------------------------------------------------- Nuevo cliente
 export function NuevoCliente({ onCreated }: { onCreated: (id: string) => void }) {
@@ -418,7 +418,7 @@ export function NuevaPlataforma({ onCreated }: { onCreated: (id: string) => void
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-indigo-600"
+              className="h-4 w-4 accent-blink-action"
               checked={form.aplica_comision}
               onChange={(e) => setForm({ ...form, aplica_comision: e.target.checked })}
             />
