@@ -34,3 +34,8 @@ logs/
 *.njsproj
 *.sln
 *.sw?
+
+# Volcados de base de datos: NUNCA versionar (arrastran datos de clientes)
+/dumps/
+*.dump
+*.sql.gz

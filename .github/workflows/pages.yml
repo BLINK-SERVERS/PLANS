@@ -1,0 +1,58 @@
+name: Publicar en Pages
+
+# Convención del ecosistema Blink (calcada de BLINK-SERVERS/Pay), con dos
+# diferencias reales respecto a ese repo:
+#   · el proyecto de origen no tenía `test`, así que no hay paso de tests;
+#   · la configuración viaja por Variables del repo, no por Secrets, porque
+#     solo se exponen valores públicos (endpoint de datos y de auth).
+# El repo tiene que ser PÚBLICO: GitHub Pages en plan gratuito no funciona en
+# repos privados.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          # Las dos las fija el panel del repo:
+          #   Settings → Secrets and variables → Actions → Variables
+          VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL }}
+          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL }}
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4

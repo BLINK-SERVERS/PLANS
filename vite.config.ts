@@ -4,8 +4,10 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Base relativa: el build funciona en cualquier subruta (GitHub Pages
-  // sirve este proyecto en /suscripciones/) o incluso en file://.
-  base: './',
+  // Blink Plans se publica en la raíz de plans.blink.com.ve (CNAME en public/),
+  // así que las rutas del build son absolutas, igual que en POS y Pay. Antes
+  // era base: './' porque GitHub Pages servía el proyecto en la subruta
+  // /suscripciones/.
+  base: '/',
   plugins: [react(), tailwindcss()],
 })
