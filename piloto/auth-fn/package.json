@@ -1,0 +1,14 @@
+{
+  "name": "piloto-auth",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-auth": "^1.7.19",
+    "kysely": "^0.29.8",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.4.22"
+  }
+}

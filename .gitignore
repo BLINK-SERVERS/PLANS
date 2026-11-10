@@ -39,3 +39,4 @@ logs/
 /dumps/
 *.dump
 *.sql.gz
+.neon
