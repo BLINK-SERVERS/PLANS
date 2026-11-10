@@ -6,7 +6,8 @@ Rama `piloto-neon`, proyecto `plans-pilot` (`curly-hill-13460111`), rama de pilo
 Cada veredicto es lo que se ejecutó y se midió en esta rama, no lo que la
 documentación de Neon promete. Los guiones de prueba quedan en el repo:
 `etapa-a.mjs` (experimentos 1–3 por HTTP), `auth-fn/etapa-b.mjs` (6–7),
-`funciones/tasa-bcv/` (4–5) y las sondas desechables.
+`funciones/tasa-bcv/` (4–5) y las sondas `sonda-*.mjs` del cierre de la duda
+JWKS.
 
 ## Veredictos
 
@@ -17,12 +18,16 @@ documentación de Neon promete. Los guiones de prueba quedan en el repo:
 | 3 | Rol anónimo sobre vista pública + tabla privada bloqueada | **PASA** |
 | 4 | Function: egress a bcv.org.ve, parse e INSERT | **PASA** (con TLS fijada, ver abajo) |
 | 5 | Trigger programado (`--cron`) e idempotencia por `invocation_id` | **PASA** (4 entregas, 0 reentregas) |
-| 6 | Better Auth self-hosted en Function, UUID preexistente como identidad, FK de negocio, JWT para la Data API | **PASA** |
+| 6 | Better Auth self-hosted en Function, UUID preexistente como identidad, FK de negocio, JWT para la Data API | **PASA** (con secuencia de diseño cambiada, ver «Proveedor externo…») |
 | 7 | bcrypt heredado verifica y se re-hashea a scrypt en el primer login | **PASA** |
 
 **Criterio de corte del plan:** «si 1, 2, 6 o 7 fallan, la migración a Neon se
 abandona y se vuelve al plan original». Los cuatro pasan con evidencia, y 4 y 5
 también. **La migración a Neon sigue adelante.**
+
+Lo que el piloto cambió del plan no es la viabilidad sino la ruta: el acceso
+autenticado a datos va por una Function que verifica nuestro JWT, no por la Data
+API con proveedor externo. La medición completa está en la sección final.
 
 ## 1 · RPC por HTTP
 
@@ -176,8 +181,9 @@ para la Fase 5.
   token de sesión firmado con el `secret`** (el que Better Auth devuelve en
   `set-auth-token`), **no** contra el JWT. `/get-session` con el token de sesión
   → `200` y el email; con el JWT → `200` y cuerpo `null` (sin sesión). Dos
-  credenciales para dos cosas: el token de sesión para Better Auth, el JWT para
-  la Data API.
+  credenciales para dos cosas: el token de sesión para Better Auth y el JWT para
+  el consumo autenticado de datos. En el piloto el JWT se probó contra la Data
+  API; la medición del cierre muestra que ese destino no es el correcto.
 - La Data API acepta nuestro JWT propio tras registrarlo como proveedor
   externo:
   `neon data-api create --database neondb --auth-provider external
@@ -189,9 +195,10 @@ para la Fase 5.
   haber un proveedor activo** (los tokens del anterior quedan inválidos al
   cambiarlo, con `401` hasta volver a autenticarse) y `jwt_role_claim_key` es
   obligatorio al tocar la configuración por API.
-- Detalle observado y por confirmar: el primer intento tras el cambio devolvió
-  `jwk not found` (`400`) y el segundo inmediato `200` — cohete de caché JWKS
-  fría. Ver «Caché JWKS» abajo.
+- **Lo que no se sostuvo**: tras esa primera ventana de ~5 min el mismo JWT
+  empezó a alternar `200` y `400 jwk not found`. Medido a fondo en «Proveedor
+  externo de la Data API: la caché JWKS medida» más abajo, con su consecuencia
+  de diseño —el camino autenticado va por Function, no por la Data API.
 
 ## 7 · bcrypt heredado → scrypt, sin reiniciar ninguna contraseña
 
@@ -221,15 +228,88 @@ para la Fase 5.
 5. El origin de producción (`https://plans.blink.com.ve`) registrado como dominio
    de confianza — en el piloto el fallo por no estarlo fue `INVALID_ORIGIN` 403
    (Fase 5/9).
-6. Proveedor externo de la Data API con el `jwksUrl` de la Function de auth, y
-   `jwt_audience` = ese origin (Fase 5).
+6. **No** registrar el JWT propio como proveedor externo de la Data API: la
+   validación alterna `200`/`400 jwk not found` sin que nada del repo lo
+   controle. Lo autenticado va por una Function que verifica el JWT leyendo la
+   clave de la misma BD y consulta Postgres con `SET ROLE`; la Data API se queda
+   con el lado público/anónimo bajo `neon_auth` (Fase 5/6).
 7. El scrape del BCV con la cadena de CA fijada (el intermedio R36 que el BCV no
    envía) y sin apagar TLS (Fase 7).
-8. Contar con reintentos cortos en la primera llamada tras un deploy o tras el
-   expirar de la caché JWKS (Fase 6/7).
+8. Contar con reintentos cortos en la primera llamada tras un deploy: un
+   redeploy **no** recicla un isolate caliente (medido: la versión nueva tardó
+   ~6 min en ejecutarse) (Fase 6/7).
 
-## Caché JWKS
+## Proveedor externo de la Data API: la caché JWKS medida
 
-(En cursa: se está comprobando si el `jwk not found` del primer intento se
-reproduce al expirar la caché, para decidir si el frontend reintenta o se
-mantienen las Functions despiertas.)
+Era la última duda abierta del gate y quedó resuelta con números propios, no con
+lo que promete la documentación. El objeto de la duda: el mismo JWT válido
+(`kid` estable, `role:"authenticated"`, `sub` el uuid viejo, `iss`/`aud` el
+origin de la Function) unas veces entra y otras no.
+
+| Medición | Resultado |
+|---|---|
+| Recién registrado el proveedor externo (`neon data-api create … --auth-provider external`, 10:41:50 UTC) | `200` durante ~5 min, incluido `POST /rpc/editar_pago` → `200` con efecto real en la BD |
+| Cerrada esa ventana | 3/12 · 0/10 · 0/10 en tres series distintas |
+| Tras `DELETE /projects/{id}/jwks/{id}` + `POST /projects/{id}/jwks` (re-registro) | 0/5 en t+0, t+30 y t+60 s · **5/5 en t+120 s y 5/5 en t+300 s** |
+| 20 llamadas cada 25 s con **un solo** JWT, sin volver a tocar la Function | **12/20** (60 %) |
+| Con el JWKS servido desde un bucket `public_read` siempre despierto | **8/12** |
+| Con el proveedor gestionado (`neon_auth`) en las mismas condiciones | **6/6** y **8/8** |
+
+Qué se descartó, cada hipótesis con su experimento:
+
+- **Rotación de clave.** `select count(*) from jwks` = 1 fila; `/api/auth/jwks`
+  devuelve 1 `kid`; seis tokens recién mintados llevan todos el mismo
+  `TJuVZSsr8Ij96qqTowtil8mhP3OC02cQ`. La pareja `EdDSA`/Ed25519 vive en la BD
+  (`better-auth` la persiste, no la regenera) y no rota sola.
+- **Arranque en frío de la Function de auth.** Calentar `/jwks` antes de cada
+  llamada → sigue 0/10. Y en la ventana de 8,5 min que contuvo 8 fallos,
+  `neon-function/blinkauth` registró **exactamente 2 invokes, ambos míos**: la
+  Data API **no vuelve a pedir el JWKS externo** una vez que lo tiene en caché.
+- **`Origin`, CORS o `User-Agent` bloqueando `/jwks`**: la ruta responde `200` en
+  todas las combinaciones probadas.
+- **Claims mal formados**: `iss`, `aud`, `role` y `sub` correctos (sonda
+  `sonda-jwt.mjs` imprimiendo cabecera y payload).
+- **`jwt_cache_max_lifetime`**: se aplicó 3600, se vio reflejado en la
+  configuración devuelta por la API → 0/12. No mueve nada.
+
+Dos hallazgos adicionales:
+
+- **No hay degradación silenciosa a `anonymous`.** Con un proveedor configurado,
+  la sonda `sonda-rol.mjs` midió en una ventana oscura 0/8 `jwk not found` y el
+  control sin token devolvió `400 missing authentication credentials: required
+  authorization bearer token in JWT format`. Es decir: el fallo es total por
+  request, no un `42501` con el rol equivocado. El `role` sí se aplica cuando el
+  `kid` está en caché (`/pagos` → `200`).
+- **La operación que sí refresca** es borrar y volver a registrar el
+  proveedor. `neon data-api create` con el mismo proveedor parece un no-op
+  (`updated_at` no cambia y la serie sigue en 0/10), y tras el DELETE+POST hay
+  que esperar **~2 min** a que se propague antes de la primera `200`.
+
+**Consecuencia de diseño (va a la Fase 5/6).** El camino «JWT de nuestro Better
+Auth → Data API con proveedor externo» no es fiable para tráfico autenticado y
+no depende de nada que controlemos desde el repo: es la caché de la plataforma.
+Así que los datos autenticados pasan por una **Function que verifica nuestro JWT
+localmente** (lee la clave de la misma BD) y consulta Postgres con `SET ROLE` —
+que es además la recomendación general de Neon. La Data API queda para lo que
+sí está medido como estable: el lado público/anónimo con el proveedor gestionado
+(6/6 y 8/8 arriba). El experimento 6 sigue siendo **PASA** en lo que el gate
+preguntaba —Better Auth self-hosted en Function, el uuid viejo como identidad,
+FK de negocio y JWT aceptado por la Data API con efecto real—; lo que cambia es
+por dónde viaja la autenticación, no la viabilidad de Neon.
+
+## Estado final del piloto
+
+- La Data API quedó restaurada a `--auth-provider neon_auth`, que es lo que
+  declara `neon.ts` y lo que usan `piloto/etapa-a.mjs` y `piloto/auth-fn/*`.
+  Verificado después del restore: `6/6` peticiones `200` con el token anónimo.
+- Para reproducir el proveedor externo hace falta borrar y volver a crear, y
+  esperar los ~2 min: `neon api /projects/curly-hill-13460111/jwks/<jwks_id> -X
+  DELETE` y luego `neon api /projects/curly-hill-13460111/jwks -X POST -d
+  '{"jwks_url":"<auth>/api/auth/jwks","branch_id":"br-quiet-star-beinsyb9","jwt_audience":"<auth>","provider_name":"blink-plans-piloto"}'`.
+- Existe un bucket `piloto-jwks` (`public_read`) con `jwks-fija.json`: es solo
+  material **público** de clave (sin secreto), servía para aislar el arranque en
+  frío. No está declarado en `neon.ts`; se borra al cerrar el piloto.
+- Las sondas quedan versionadas: `sonda-jwks.mjs` (fiabilidad con tokens bien
+  mintados), `sonda-jwt.mjs` (forma del JWT), `sonda-proveedor.mjs` (re-registro
+  con hitos), `sonda-decaimiento.mjs` (decaimiento con un solo token) y
+  `sonda-rol.mjs` (rol real vs. anónimo).
