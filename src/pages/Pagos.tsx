@@ -191,7 +191,7 @@ export default function Pagos() {
     setError('')
     setExito('')
     try {
-      const r = await fetchTasaBcv()
+      const r = await fetchTasaBcv({ forzar: true })
       if (r.tasa != null) {
         setForm((f) => ({ ...f, tasa: String(r.tasa) }))
         setExito(
@@ -201,7 +201,7 @@ export default function Pagos() {
         )
       } else {
         setError(
-          'No se pudo obtener la tasa del BCV. Verifica la conexión o ejecuta la Edge Function fetch-bcv.',
+          'No se pudo obtener la tasa del BCV. Se necesita una sesión iniciada para pedir el refresco; si no, la Function tasabcv lo hace sola cada tarde.',
         )
       }
     } catch (e) {

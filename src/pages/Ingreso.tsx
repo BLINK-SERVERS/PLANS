@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/db'
+import { getSesion } from '../lib/sesion'
 import { errMsg } from '../lib/err'
 import { Button, Field, Input } from '../components/ui'
 import { IconLock } from '../components/icons'
@@ -20,11 +21,12 @@ export default function Ingreso() {
     setError('')
     try {
       await entrar(email.trim(), password)
-      // Redirige según el rol: admin al panel, cliente a la tienda.
-      const { data } = await supabase.auth.getUser()
-      const uid = data.user?.id
+      // Redirige según el rol: admin al panel, cliente a la tienda. El id ya
+      // está en la sesión guardada; antes se pedía con supabase.auth.getUser(),
+      // que era una ida y vuelta más para lo mismo.
+      const uid = getSesion()?.user.id
       const { data: fila } = uid
-        ? await supabase.from('usuarios').select('rol').eq('id', uid).maybeSingle()
+        ? await db.from('usuarios').select('rol').eq('id', uid).maybeSingle()
         : { data: null }
       navigate(fila?.rol === 'admin' ? '/' : '/tienda', { replace: true })
     } catch (err) {

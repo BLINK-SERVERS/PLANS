@@ -18,8 +18,13 @@ export default function Registro() {
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault()
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
+    // Ocho, no seis: el mínimo lo fija `emailAndPassword.minPasswordLength`
+    // en functions/auth/index.mjs, y este chequeo existe solo para no mandar
+    // un request que el servidor va a rechazar con PASSWORD_TOO_SHORT. Las
+    // cuentas viejas de Supabase con 6 caracteres siguen entrando — verificar
+    // una contraseña no aplica la política de longitud.
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.')
       return
     }
     setCargando(true)
@@ -30,22 +35,23 @@ export default function Registro() {
         telefono: telefono.trim(),
       })
       if (conSesion) {
-        // Confirmación de correo desactivada: entra directo a la tienda.
+        // Sin confirmación de correo (requireEmailVerification:false a
+        // propósito):Better Auth responde con sesión y el cliente entra
+        // directo a la tienda.
         navigate('/tienda', { replace: true, state: { registrado: true } })
       } else {
-        // Supabase pidió confirmar el correo antes de poder entrar.
+        // Camino defensivo: hoy es inalcanzable, porque `registrar` lanza si
+        // el alta no devuelve sesión. Se queda por si algún día se enciende
+        // la verificación por correo, que es la única forma real de llegar
+        // aquí con `conSesion === false`.
         setPendiente(true)
         setCargando(false)
       }
     } catch (err) {
-      const msg = errMsg(err)
-      setError(
-        /already registered|Email rate limit/i.test(msg)
-          ? 'Ese correo ya tiene una cuenta. Prueba entrar.'
-          : msg === 'Password should be at least 6 characters.'
-            ? 'La contraseña debe tener al menos 6 caracteres.'
-            : msg,
-      )
+      // El mensaje ya viene en español: sesion.ts traduce los códigos de
+      // Better Auth (USER_ALREADY_EXISTS_…, PASSWORD_TOO_SHORT,
+      // USER_NOT_FOUND) antes de que lleguen aquí.
+      setError(errMsg(err))
       setCargando(false)
     }
   }
@@ -73,10 +79,10 @@ export default function Registro() {
 
           {pendiente ? (
             <div className="mt-5 rounded-xl bg-emerald-50 px-4 py-4 text-sm text-emerald-800">
-              <p className="font-semibold">¡Casi listo! 🎉</p>
+              <p className="font-semibold">Cuenta creada</p>
               <p className="mt-1">
-                Te enviamos un correo de confirmación a <strong>{email}</strong>. Ábrelo y pulsa el
-                enlace para activar tu cuenta y poder entrar.
+                <strong>{email}</strong> ya existe en el sistema. Entra con tu correo y tu
+                contraseña para continuar.
               </p>
               <Link
                 to="/ingreso"
@@ -125,7 +131,7 @@ export default function Registro() {
                     type="password"
                     required
                     autoComplete="new-password"
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />

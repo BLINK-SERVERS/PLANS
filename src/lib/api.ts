@@ -1,4 +1,6 @@
-import { supabase, SUPABASE_KEY, SUPABASE_URL } from './supabase'
+import { db } from './db'
+import { URL_TASA } from './entorno'
+import { tokenParaDatos } from './sesion'
 import { hoy, round2 } from './format'
 import { errMsg } from './err'
 import type {
@@ -37,7 +39,7 @@ function invalidar(...keys: string[]) {
 // ---------------------------------------------------------------- Clientes
 export async function fetchClientes(): Promise<Usuario[]> {
   return cached('clientes', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('usuarios')
       .select('*')
       .eq('rol', 'cliente')
@@ -49,7 +51,7 @@ export async function fetchClientes(): Promise<Usuario[]> {
 
 export async function fetchAgentes(): Promise<Usuario[]> {
   return cached('agentes', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('usuarios')
       .select('id, nombre, email')
       .eq('rol', 'agente')
@@ -65,7 +67,7 @@ export async function crearCliente(input: {
   telefono?: string
   referido_por?: string | null
 }): Promise<string> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('usuarios')
     .insert({
       rol: 'cliente',
@@ -85,7 +87,7 @@ export async function actualizarCliente(
   id: string,
   input: { nombre: string; email?: string; telefono?: string },
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('usuarios')
     .update({
       nombre: input.nombre,
@@ -98,7 +100,7 @@ export async function actualizarCliente(
 }
 
 export async function eliminarCliente(id: string): Promise<void> {
-  const { error } = await supabase.from('usuarios').delete().eq('id', id)
+  const { error } = await db.from('usuarios').delete().eq('id', id)
   if (error) throw new Error(errMsg(error))
   invalidar('clientes', 'susc', 'pagos', 'resumen', 'comisiones')
 }
@@ -106,7 +108,7 @@ export async function eliminarCliente(id: string): Promise<void> {
 // -------------------------------------------------------------- Proveedores
 export async function fetchProveedores(): Promise<Proveedor[]> {
   return cached('proveedores', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('proveedores')
       .select('*')
       .order('nombre')
@@ -120,7 +122,7 @@ export async function crearProveedor(input: {
   contacto?: string
   metodo_pago_preferido?: string
 }): Promise<string> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('proveedores')
     .insert({
       nombre: input.nombre,
@@ -135,7 +137,7 @@ export async function crearProveedor(input: {
 }
 
 export async function eliminarProveedor(id: string): Promise<void> {
-  const { error } = await supabase.from('proveedores').delete().eq('id', id)
+  const { error } = await db.from('proveedores').delete().eq('id', id)
   if (error) throw new Error(errMsg(error))
   invalidar('proveedores', 'cuentas', 'vencimientos', 'resumen')
 }
@@ -144,7 +146,7 @@ export async function eliminarProveedor(id: string): Promise<void> {
 export async function fetchPlataformas(): Promise<Plataforma[]> {
   // Catálogo activo (para selects y venta)
   return cached('plataformas', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('plataformas')
       .select('*')
       .eq('activa', true)
@@ -156,7 +158,7 @@ export async function fetchPlataformas(): Promise<Plataforma[]> {
 
 export async function fetchPlataformasTodas(): Promise<Plataforma[]> {
   return cached('plataformas_todas', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('plataformas')
       .select('*')
       .order('nombre')
@@ -170,7 +172,7 @@ export async function crearPlataforma(input: {
   activa?: boolean
   aplica_comision?: boolean
 }): Promise<string> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('plataformas')
     .insert({
       nombre: input.nombre,
@@ -188,7 +190,7 @@ export async function actualizarPlataforma(
   id: string,
   input: { nombre: string; activa: boolean; aplica_comision: boolean },
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('plataformas')
     .update(input)
     .eq('id', id)
@@ -197,7 +199,7 @@ export async function actualizarPlataforma(
 }
 
 export async function eliminarPlataforma(id: string): Promise<void> {
-  const { error } = await supabase.from('plataformas').delete().eq('id', id)
+  const { error } = await db.from('plataformas').delete().eq('id', id)
   if (error) throw new Error(errMsg(error))
   invalidar('plataformas', 'plataformas_todas', 'planes', 'susc', 'cuentas', 'vencimientos', 'resumen')
 }
@@ -207,7 +209,7 @@ export async function eliminarPlataforma(id: string): Promise<void> {
 // plataformas activas). La tienda vive en las rutas /tienda, /registro
 // e /ingreso, fuera del panel administrativo.
 export async function fetchCatalogoPublico(): Promise<CatalogoItem[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('v_catalogo_publico')
     .select('*')
     .order('plataforma')
@@ -218,7 +220,7 @@ export async function fetchCatalogoPublico(): Promise<CatalogoItem[]> {
 
 export async function fetchPlanes(): Promise<PlanRow[]> {
   return cached('planes', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('planes')
       .select('*, plataformas(nombre)')
       .order('duracion_dias')
@@ -233,7 +235,7 @@ export async function crearPlan(input: {
   precio_venta_usd: number
   precio_referencia_usd?: number | null
 }): Promise<string> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('planes')
     .insert({
       plataforma_id: input.plataforma_id,
@@ -256,13 +258,13 @@ export async function actualizarPlan(
     precio_referencia_usd?: number | null
   },
 ): Promise<void> {
-  const { error } = await supabase.from('planes').update(input).eq('id', id)
+  const { error } = await db.from('planes').update(input).eq('id', id)
   if (error) throw new Error(errMsg(error))
   invalidar('planes', 'resumen')
 }
 
 export async function eliminarPlan(id: string): Promise<void> {
-  const { error } = await supabase.from('planes').delete().eq('id', id)
+  const { error } = await db.from('planes').delete().eq('id', id)
   if (error) throw new Error(errMsg(error))
   invalidar('planes', 'resumen')
 }
@@ -286,7 +288,7 @@ export async function crearPedido(input: {
   moneda_cobro?: string | null
   monto_cobro?: number | null
 }): Promise<{ ok: boolean; error?: string }> {
-  const { error } = await supabase.from('pedidos').insert({
+  const { error } = await db.from('pedidos').insert({
     tipo: input.tipo,
     plataforma: input.plataforma,
     duracion_dias: input.duracion_dias ?? null,
@@ -308,7 +310,7 @@ export async function crearPedido(input: {
 
 export async function fetchPedidos(): Promise<Pedido[]> {
   return cached('pedidos', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pedidos')
       .select('*')
       .order('created_at', { ascending: false })
@@ -318,7 +320,7 @@ export async function fetchPedidos(): Promise<Pedido[]> {
 }
 
 export async function actualizarEstadoPedido(id: string, estado: EstadoPedido): Promise<void> {
-  const { error } = await supabase.from('pedidos').update({ estado }).eq('id', id)
+  const { error } = await db.from('pedidos').update({ estado }).eq('id', id)
   if (error) throw new Error(errMsg(error))
   invalidar('pedidos')
 }
@@ -326,7 +328,7 @@ export async function actualizarEstadoPedido(id: string, estado: EstadoPedido): 
 // ---------------------------------------------------------- Cuentas madre
 export async function fetchCuentasMadre(): Promise<CuentaMadreRow[]> {
   return cached('cuentas', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('cuentas_madre')
       .select('*, proveedores(nombre), plataformas(nombre)')
       .order('fecha_corte_proveedor', { ascending: true, nullsFirst: true })
@@ -343,7 +345,7 @@ export async function crearCuentaMadre(input: {
   costo_renovacion_usd: number
   fecha_corte_proveedor: string | null
 }): Promise<string> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('cuentas_madre')
     .insert({
       proveedor_id: input.proveedor_id ?? null,
@@ -364,7 +366,7 @@ export async function cambiarEstadoCuenta(
   id: string,
   estado: CuentaMadre['estado'],
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('cuentas_madre')
     .update({ estado })
     .eq('id', id)
@@ -375,7 +377,7 @@ export async function cambiarEstadoCuenta(
 // ----------------------------------------------------------- Suscripciones
 export async function fetchSuscripciones(): Promise<SuscripcionRow[]> {
   return cached('susc', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('suscripciones')
       .select(
         '*, usuarios(nombre, email), planes(precio_venta_usd, duracion_dias, plataformas(nombre)), cuentas_madre(correo_cuenta, cupos_ocupados, cupos_totales)',
@@ -395,7 +397,7 @@ export async function crearSuscripcion(input: {
   fecha_corte_cliente: string
   estado: 'activa' | 'vencida' | 'cancelada'
 }): Promise<string> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('suscripciones')
     .insert({
       cliente_id: input.cliente_id,
@@ -416,7 +418,7 @@ export async function cambiarEstadoSuscripcion(
   id: string,
   estado: SuscripcionRow['estado'],
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('suscripciones')
     .update({ estado })
     .eq('id', id)
@@ -427,7 +429,7 @@ export async function cambiarEstadoSuscripcion(
 // -------------------------------------------------------------- Comisiones
 export async function fetchComisiones(): Promise<ComisionRow[]> {
   return cached('comisiones', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('comisiones')
       .select('*, usuarios(nombre)')
       .order('created_at', { ascending: false })
@@ -438,7 +440,7 @@ export async function fetchComisiones(): Promise<ComisionRow[]> {
 }
 
 export async function liquidarComision(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('comisiones')
     .update({ estado: 'liquidada' })
     .eq('id', id)
@@ -449,7 +451,7 @@ export async function liquidarComision(id: string): Promise<void> {
 // ------------------------------------------------------------- Tasa BCV
 export async function fetchTasaDelDia(): Promise<number | null> {
   return cached('tasa', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('tasas_cambio')
       .select('tasa_bcv')
       .order('fecha', { ascending: false })
@@ -461,21 +463,17 @@ export async function fetchTasaDelDia(): Promise<number | null> {
 }
 
 // Tasa € → Bs del día (Pago Móvil de las Apple Gift Cards, ancladas al euro).
-// Vive en `tasas_cambio.tasa_eur_bs` (migración 0012). Si la migración no se
-// ha aplicado o la tasa no existe, devuelve null (el checkout anota la falta).
+// Vive en `tasas_cambio.tasa_eur_bs` (migración 0012).
+//
+// Se lee por `GET /tasa` de la Function, no por la tabla: la política de
+// `tasas_cambio` es `admin_acceso_total` (USING es_admin()), así que el
+// intento por RLS devolvía cero filas para un cliente y el checkout se quedaba
+// sin precio en Bs. Si la columna no existe todavía, `tasaGuardada()` devuelve
+// eur:null y el checkout anota la falta, igual que antes.
 export async function fetchTasaEurDelDia(): Promise<number | null> {
   try {
-    return await cached('tasa-eur', async () => {
-      const { data, error } = await supabase
-        .from('tasas_cambio')
-        .select('tasa_eur_bs')
-        .order('fecha', { ascending: false })
-        .limit(1)
-      if (error) return null
-      const row = data?.[0] as { tasa_eur_bs?: number | null } | undefined
-      const t = Number(row?.tasa_eur_bs)
-      return t > 0 ? t : null
-    })
+    const { eur } = await tasaGuardada()
+    return eur
   } catch {
     return null
   }
@@ -483,37 +481,93 @@ export async function fetchTasaEurDelDia(): Promise<number | null> {
 
 export type FuenteTasa = 'bcv-directo' | 'sistema' | 'ninguna'
 
+interface TasaPublicada {
+  ok?: boolean
+  fecha?: string
+  tasa_bcv?: number
+  tasa_eur_bs?: number | null
+}
+
 /**
- * Tasa oficial del día directamente del sitio del BCV.
- * 1) Invoca la Edge Function `fetch-bcv` (scrape server-side de
- *    bcv.org.ve — el navegador NO puede leer el sitio por CORS).
- * 2) Si la función no está desplegada, cae a la última tasa
- *    almacenada en `tasas_cambio` (que también proviene del BCV).
+ * Tasa oficial del día.
+ *
+ * `forzar: true`  → invoca la Function `tasabcv` para que rapee bcv.org.ve y
+ *                   guarde la fila (el botón «Refrescar» del panel de pagos;
+ *                   requiere sesión porque la Function la autoriza con el
+ *                   token de datos).
+ * `forzar: false` → lectura simple de `GET /tasa`: lo último guardado, sin
+ *                   egreso al BCV y sin sesión. Es el camino del checkout,
+ *                   que ahora despierta el Function Trigger todas las tardes.
+ *
+ * En la versión de Supabase el checkout rapeaba en cada carga usando la anon
+ * key; con el trigger diario eso dejó de tener sentido (un egreso y una
+ * escritura por visita). Queda una excepción: si en la tabla no hay nada —las
+ * primeras horas tras la migración, o una rama recién creada— se pide el
+ * scrape aunque se haya llamado por lectura, porque lo contrario es un
+ * checkout que no puede cobrar.
  */
-export async function fetchTasaBcv(): Promise<{ tasa: number | null; fuente: FuenteTasa }> {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/fetch-bcv`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        apikey: SUPABASE_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: '{}',
-    })
-    if (res.ok) {
-      const data = (await res.json()) as { ok?: boolean; tasa_bcv?: number }
+export async function fetchTasaBcv(
+  opciones: { forzar?: boolean } = {},
+): Promise<{ tasa: number | null; eur: number | null; fuente: FuenteTasa }> {
+  const leidos = await tasaGuardada()
+
+  const irAlBcv = async () => {
+    try {
+      const token = await tokenParaDatos()
+      const res = await fetch(`${URL_TASA}/`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+      })
+      if (!res.ok) return null
+      const data = (await res.json()) as TasaPublicada
       const t = Number(data.tasa_bcv)
-      if (data.ok && t > 0) {
-        invalidar('tasa')
-        return { tasa: t, fuente: 'bcv-directo' }
-      }
+      if (!data.ok || !(t > 0)) return null
+      // El raspado escribió: las lecturas anteriores quedan obsoletas.
+      invalidar('tasa', 'tasa-publica')
+      const eur = Number(data.tasa_eur_bs)
+      return { tasa: t, eur: eur > 0 ? eur : null, fuente: 'bcv-directo' as const }
+    } catch {
+      // Function dormida, sin sesión o sin conexión.
+      return null
     }
-  } catch {
-    // Edge Function no desplegada o sin conexión: se cae a la tasa almacenada.
   }
-  const t = await fetchTasaDelDia()
-  return t != null ? { tasa: t, fuente: 'sistema' } : { tasa: null, fuente: 'ninguna' }
+
+  if (opciones.forzar || leidos.tasa == null) {
+    const fresca = await irAlBcv()
+    if (fresca) return fresca
+  }
+  return leidos.tasa != null
+    ? { ...leidos, fuente: 'sistema' }
+    : { tasa: null, eur: null, fuente: 'ninguna' }
+}
+
+// Última tasa en tabla, por la ruta pública de la Function; si esa Function
+// todavía no está desplegada, se intenta la lectura normal (solo admin).
+// Con caché corta: el checkout pide USD y EUR en paralelo, y sin ella serían
+// dos viajes por cada vez que alguien abre la página.
+async function tasaGuardada(): Promise<{ tasa: number | null; eur: number | null }> {
+  return cached('tasa-publica', async () => {
+    try {
+      const res = await fetch(`${URL_TASA}/tasa`)
+      if (res.ok) {
+        const d = (await res.json()) as TasaPublicada
+        const t = Number(d.tasa_bcv)
+        const e = Number(d.tasa_eur_bs)
+        return {
+          tasa: t > 0 ? t : null,
+          eur: Number.isFinite(e) && e > 0 ? e : null,
+        }
+      }
+    } catch {
+      /* URL_TASA vacío en desarrollo local, o la Function no contesta */
+    }
+    const t = await fetchTasaDelDia().catch(() => null)
+    return { tasa: t, eur: null }
+  })
 }
 
 // --------------------------------------------------------------- Pagos
@@ -529,7 +583,7 @@ export async function registrarPago(input: {
   asignados: Array<{ suscripcion_id: string; monto_usd: number }>
 }): Promise<void> {
   // 1) Insertar el pago (ingreso)
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('pagos_ingresos')
     .insert({
       cliente_id: input.cliente_id,
@@ -554,7 +608,7 @@ export async function registrarPago(input: {
     monto_asignado_usd: round2(a.monto_usd),
   }))
   if (rows.length > 0) {
-    const { error: err2 } = await supabase.from('pago_suscripciones').insert(rows)
+    const { error: err2 } = await db.from('pago_suscripciones').insert(rows)
     if (err2) throw new Error(errMsg(err2))
   }
   invalidar('pagos', 'comisiones', 'resumen', 'tasa')
@@ -564,8 +618,10 @@ export async function registrarPago(input: {
 export async function fetchAsignacionesDePago(
   pagoId: string,
 ): Promise<Array<{ suscripcion_id: string; monto_usd: number }>> {
-  const { data, error } = await supabase
-    .from('pago_suscripciones')
+  const { data, error } = await db
+    .from<Array<{ suscripcion_id: string; monto_asignado_usd: number | string }>>(
+      'pago_suscripciones',
+    )
     .select('suscripcion_id, monto_asignado_usd')
     .eq('pago_ingreso_id', pagoId)
   if (error) throw new Error(errMsg(error))
@@ -590,7 +646,7 @@ export async function actualizarPago(
     asignados: Array<{ suscripcion_id: string; monto_usd: number }>
   },
 ): Promise<void> {
-  const { error } = await supabase.rpc('editar_pago', {
+  const { error } = await db.rpc('editar_pago', {
     p_pago_id: pagoId,
     p_cliente_id: input.cliente_id,
     p_monto_pagado: input.monto_pagado,
@@ -611,14 +667,14 @@ export async function actualizarPago(
 
 /** Borra un pago (cascada: asignaciones y comisión asociada). */
 export async function eliminarPago(pagoId: string): Promise<void> {
-  const { error } = await supabase.from('pagos_ingresos').delete().eq('id', pagoId)
+  const { error } = await db.from('pagos_ingresos').delete().eq('id', pagoId)
   if (error) throw new Error(errMsg(error))
   invalidar('pagos', 'comisiones', 'resumen')
 }
 
 export async function fetchPagos(): Promise<PagoRow[]> {
   return cached('pagos', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pagos_ingresos')
       .select('*, usuarios(nombre)')
       .order('fecha_pago', { ascending: false })
@@ -633,7 +689,7 @@ export async function fetchVencimientosProveedores(): Promise<
   VencimientoProveedor[]
 > {
   return cached('vencimientos', async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('v_vencimientos_proveedores')
       .select('*')
       .order('dias_restantes')
@@ -651,20 +707,20 @@ export async function fetchResumen(): Promise<{
 }> {
   return cached('resumen', async () => {
     const [clientes, activas, vencidas, comPend, ingresos] = await Promise.all([
-      supabase
+      db
         .from('usuarios')
         .select('id', { count: 'exact', head: true })
         .eq('rol', 'cliente'),
-      supabase
+      db
         .from('suscripciones')
         .select('id', { count: 'exact', head: true })
         .eq('estado', 'activa'),
-      supabase
+      db
         .from('suscripciones')
         .select('id', { count: 'exact', head: true })
         .eq('estado', 'vencida'),
-      supabase.from('comisiones').select('monto_comision_usd').eq('estado', 'pendiente'),
-      supabase
+      db.from('comisiones').select('monto_comision_usd').eq('estado', 'pendiente'),
+      db
         .from('pagos_ingresos')
         .select('equivalente_usd')
         .gte('fecha_pago', hoy().slice(0, 7) + '-01'),
