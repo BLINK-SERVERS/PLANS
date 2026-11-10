@@ -1,43 +1,53 @@
 import { defineConfig } from "@neon/config/v1";
 
-// Piloto de verificación (Fase 3). Etapa A: Data API con Neon Auth para
-// comprobar la mecánica del camino PostgREST — RPC por HTTP, count=exact,
-// Range, embeds a través de vistas y el rol anónimo de la tienda.
-// La Etapa B cambia `auth: true` por el proveedor externo de la Data API, con
-// el JWKS de Better Auth self-hosted, que es el diseño real. Se registró por
-// CLI (no por aquí) porque el `neon deploy` de esta rama aún lleva `auth: true`
-// y la Data API solo admite un proveedor activo:
+// BLINK Plans — producción (proyecto `plans-prod`, aws-us-east-2).
 //
-//   neon data-api create --database neondb --auth-provider external \
-//     --jwks-url https://<branch>-blinkauth<suffix>/api/auth/jwks \
-//     --jwt-audience https://<branch>-blinkauth<suffix>
+// Aquí no se declaran `auth` ni `dataApi`. No es un descuido: el piloto midió
+// que la Data API con proveedor EXTERNO de JWKS alterna 200 y 400 `jwk not
+// found` con el mismo JWT válido y sin nada que controlemos desde el repo
+// (piloto/RESULTADOS.md, «Proveedor externo de la Data API»). Con ese resultado,
+// el tráfico autenticado no puede pasar por la Data API, y tener dos caminos de
+// datos —PostgREST para lo público y Functions para lo autenticado— significa
+// dos clientes, dos RLS-views y dos superficies de error en un panel que mueve
+// plata. Así que hay UNO solo: la Function `datos`, que verifica nuestro JWT,
+// hace SET ROLE y deja decidir a RLS. La Data API sigue disponible en Neon si
+// algún día hace falta, pero no forma parte de la arquitectura de Plans.
 //
-// Ver piloto/RESULTADOS.md, experimentos 6 y 7, y la sección «Caché JWKS».
+// Verificación: Fase 10 del plan y docs/01-arquitectura.md.
 export default defineConfig({
-  auth: true,
-  dataApi: true,
   functions: {
-    blinkauth: {
-      name: 'Better Auth self-hosted (piloto)',
-      source: 'piloto/auth-fn/function.mjs',
+    auth: {
+      name: "Better Auth self-hosted (login, sesiones, alta del JWT de datos)",
+      source: "functions/auth/index.mjs",
+      env: {
+        BETTER_AUTH_SECRET: { value: process.env.BETTER_AUTH_SECRET, required: true },
+        // La URL pública de ESTA function. Better Auth la compara contra
+        // Origin/Referer, así que un valor aproximado da 403 en el login.
+        // Se saca de `neon functions get auth` (campo invocation_url).
+        BETTER_AUTH_URL: { value: process.env.BETTER_AUTH_URL, required: true },
+        BLINK_DATA_JWT_SECRET: { value: process.env.BLINK_DATA_JWT_SECRET, required: true },
+        BLINK_ALLOWED_ORIGINS: { value: process.env.BLINK_ALLOWED_ORIGINS, required: false },
+      },
+    },
+    datos: {
+      name: "API de datos de Plans (RLS por SET ROLE)",
+      source: "functions/datos/index.mjs",
+      env: {
+        // El mismo secreto con el que `auth` acuña el token: dos Functions que
+        // firman y verifican la misma credencial. No es BETTER_AUTH_SECRET —
+        // ver functions/_shared/token.mjs.
+        BLINK_DATA_JWT_SECRET: { value: process.env.BLINK_DATA_JWT_SECRET, required: true },
+        BLINK_ALLOWED_ORIGINS: { value: process.env.BLINK_ALLOWED_ORIGINS, required: false },
+      },
     },
     tasabcv: {
-      name: 'Scrape de la tasa BCV + triggers (piloto)',
-      source: 'piloto/funciones/tasa-bcv/index.mjs',
+      name: "Tasa BCV diaria + vencimientos",
+      source: "functions/tasa-bcv/index.mjs",
     },
   },
-  // Branch policy: per-branch tuning
   branch: (branch) => {
-    if (branch.isDefault) {
-      // Default branch: no overrides, uses project defaults
-      return {};
-    }
-    if (!branch.exists) {
-      // New non-default branches: auto-expire
-      // Run `neon checkout <name>` to create a new branch with these settings
-      return { ttl: "7d" };
-    }
-    // Existing branch: no changes
+    if (branch.isDefault) return {};
+    if (!branch.exists) return { ttl: "7d" };
     return {};
   },
 });
