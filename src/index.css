@@ -1,27 +1,99 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Tipografía de BLINK Plans — SF Pro pedida al sistema, Inter servida.
+   Tipografía de Blink Plans — dos capas que NO se mezclan.
 
-   Se retiraron Google Sans y Canva Sans (6,2 MB en public/fonts/).
-   Motivo: son tipografías de marca de Google y de Canva, bajo los
-   términos de sus propios fabricantes, y no es redistribuible
-   servirlas desde un repo público de Blink. Además la tienda usaba
-   la tipografía del fabricante para vender sus productos, que es
-   justo el riesgo que se elimina. Ver docs/ADR/003.
+   CAPA 1 · LA MARCA BLINK (la app entera)
+   SF Pro se PIDE al sistema con local() y sale de serie en iPhone,
+   iPad y Mac. Sin instalarla, en Windows y Linux entra Inter (SIL
+   OFL 1.1, 28 KB recortada, licencia en
+   src/assets/fonts/LICENSE-Inter.txt). El razonamiento completo es
+   el mismo de BWS/src/styles/fonts.css. Esto viste el panel, la
+   barra de la tienda, los textos legales y el chrome propio de
+   Blink — nunca una ficha de producto de tercero.
 
-   SF Pro (Apple) tampoco se distribuye: se PIDE al sistema con
-   local(), y sale de serie en iPhone, iPad y Mac. Sin instalarla,
-   en Windows y Linux entra Inter (SIL OFL 1.1, 28 KB recortada,
-   licencia en src/assets/fonts/LICENSE-Inter.txt). El razonamiento
-   completo es el mismo de BWS/src/styles/fonts.css.
+   CAPA 2 · LAS FICHAS DE PLATAFORMA (inmersión de marca)
+   La tienda vende productos de Google, Canva, Spotify y Apple, y la
+   ficha funciona como reconocimiento: el mismo tipo de letra con el
+   que esa marca escribe su propio nombre. Van servidas desde
+   public/fonts/ y SOLO alcanzan a los componentes de ficha
+   (TarjetasGoogle, TarjetasApple, TarjetasHorizontales) a través de
+   las variables --font-marca-*. Nada más las consume.
+   Riesgo aceptado por el dueño del proyecto, y es real: Google Sans
+   y Canva Sans son tipografías de marca de sus fabricantes, no
+   tienen una licencia pública de redistribución, y este repo se va a
+   publicar. Si en algún momento hay que retirlas, el cambio es
+   acotado: borrar los @font-face de la CAPA 2 y las cuatro
+   variables; la capa 1 no se entera.
+   Apple es el caso limpio: su tipografía (SF Pro) no se redistribuye
+   sino que se pide al sistema, igual que en la capa 1.
 
-   Se conservan los nombres de variable --font-store y --font-display
-   porque los consumen Tienda, TarjetasGoogle, TarjetasApple,
-   TarjetasHorizontales y BarraTienda; ahora ambas apuntan a la MISMA
-   pila: la diferencia entre el corte Display y el Text la resuelve el
-   eje óptico (opsz) de la fuente, no el nombre de la familia.
+   --font-store y --font-display siguen apuntando a la pila de Blink
+   (los nombres se conservan porque los consumen Tienda y BarraTienda
+   para el chrome de Blink, que es la capa 1). La diferencia entre el
+   corte Display y el Text la resuelve el eje óptico (opsz) de la
+   fuente, no el nombre de la familia.
    ============================================================ */
+
+/* --- CAPA 2 · fichas de plataforma -------------------------------
+   Ámbito: solo las variables --font-marca-*. Ver el recuadro de
+   arriba antes de usar cualquiera de estas familias en otro sitio. */
+@font-face {
+  font-family: 'Google Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/GoogleSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Google Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/GoogleSans-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Google Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/GoogleSans-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Google Sans Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/GoogleSansDisplay-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Google Sans Display';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/GoogleSansDisplay-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Google Sans Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/GoogleSansDisplay-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Canva Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/CanvaSans-Regular.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Canva Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/CanvaSans-Bold.otf') format('opentype');
+}
 
 @font-face {
   font-family: 'SF Pro';
@@ -142,6 +214,19 @@
   --font-store: var(--font-pila);
   --font-display: var(--font-pila);
   --font-mono: 'SF Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* CAPA 2 · tipografía de las fichas de plataforma. Solo para los
+     componentes de ficha; caen a la pila de Blink si la marca no está.
+     Spotify no tiene fuente servida (la suya es Circular/Spotify Mix,
+     propiedad de Spotify): se pide a la máquina del usuario —quien tiene
+     la app de escritorio ya la tiene— y se respalda en Canva Sans, el
+     mismo respaldo geométrico que usaba el proyecto viejo. Apple no
+     distribuye SF Pro: se pide por local(), sin fichero en el repo. */
+  --font-marca-google: 'Google Sans Display', 'Google Sans', var(--font-pila);
+  --font-marca-canva: 'Canva Sans', var(--font-pila);
+  --font-marca-spotify: 'Spotify Mix GT', 'Spotify Title', 'Circular Std',
+    'Canva Sans', var(--font-pila);
+  --font-marca-apple: 'SF Pro Display', 'SF Pro Text', 'SF Pro', var(--font-pila);
   color-scheme: light;
 }
 

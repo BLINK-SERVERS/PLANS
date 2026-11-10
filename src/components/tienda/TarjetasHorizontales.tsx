@@ -83,7 +83,7 @@ function LogoSpotify() {
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0F0F0F] text-[#1ED760] shadow-md">
         <IconoSpotify className="h-8 w-8 text-[#1ED760]" fill="#1ED760" />
       </span>
-      <span className="text-3xl font-extrabold tracking-tight text-white" style={{ fontFamily: 'var(--font-store)' }}>
+      <span className="text-3xl font-extrabold tracking-tight text-white" style={{ fontFamily: 'var(--font-marca-spotify)' }}>
         Spotify <span className="font-medium text-white/90">Premium</span>
       </span>
     </div>
@@ -142,6 +142,16 @@ function Fila({ plan, tema, plataforma }: { plan: PlanTienda; tema: Tema; plataf
 }
 
 // ---------- Sección de venta en filas horizontales (Spotify/Canva/genérico) ----------
+
+// Inmersión de marca: la ficha escribe con la tipografía de la propia
+// plataforma. 'generica' es cualquier otra marca (Netflix, YouTube…), no
+// tenemos ni servimos su tipógrafo, así que viste con la pila de Blink.
+const fuentePorVariante: Record<VarianteHorizontal, string> = {
+  spotify: 'var(--font-marca-spotify)',
+  canva: 'var(--font-marca-canva)',
+  generica: 'var(--font-store)',
+}
+
 export default function TarjetasHorizontales({
   p,
   variante,
@@ -153,7 +163,10 @@ export default function TarjetasHorizontales({
   const esCanva = variante === 'canva'
   const esSpotify = variante === 'spotify'
   return (
-    <section className={`${t.seccion} py-12`}>
+    <section
+      className={`${t.seccion} py-12`}
+      style={{ fontFamily: fuentePorVariante[variante] }}
+    >
       <div className="mx-auto max-w-3xl px-4">
         {/* Header */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">

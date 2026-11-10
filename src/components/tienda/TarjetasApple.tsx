@@ -13,7 +13,7 @@ import { rutaImagenDiseno } from '../../lib/pedidos'
 import { useCarrito } from './CarritoProvider'
 import { IconoApple } from './IconosMarca'
 
-const FONT_DISPLAY = 'var(--font-display), system-ui, sans-serif'
+const FONT_DISPLAY = 'var(--font-marca-apple), system-ui, sans-serif'
 
 // Dónde se puede usar (nombres en inglés, como en apple.com)
 const HARDWARE = ['Mac', 'iPhone', 'iPad', 'Watch', 'Accessories']
@@ -237,7 +237,7 @@ function CompraGiftCard() {
 // ---------- Página unificada de Apple Gift Cards (#/tienda/apple) ----------
 export default function TarjetasApple() {
   return (
-    <section className="bg-white">
+    <section className="bg-white" style={{ fontFamily: 'var(--font-marca-apple)' }}>
       {/* Hero — estilo portada apple.com/shop/gift-cards */}
       <div
         className="py-16 text-center md:py-24"

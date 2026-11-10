@@ -108,11 +108,11 @@ function CartaPrecio({ plan, destacada, plataforma }: { plan: PlanTienda; destac
 // ---------- Sección de venta estilo Google (columna vertical) ----------
 export default function TarjetasGoogle({ p }: { p: PlataformaTienda }) {
   return (
-    <section className="bg-white py-12">
+    <section className="bg-white py-12" style={{ fontFamily: 'var(--font-marca-google)' }}>
       <div className="mx-auto max-w-5xl px-4">
         {/* Hero */}
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl" style={{ fontFamily: 'var(--font-marca-google)' }}>
             5 TB de almacenamiento
           </h1>
           <p className="mt-2 text-xl md:text-2xl" style={{ color: GOOGLE.mid }}>
@@ -185,7 +185,7 @@ export default function TarjetasGoogle({ p }: { p: PlataformaTienda }) {
         <div className="mt-12">
           <h2
             className="text-center text-xl font-bold md:text-2xl"
-            style={{ fontFamily: 'var(--font-display), system-ui, sans-serif', color: GOOGLE.dark }}
+            style={{ fontFamily: 'var(--font-marca-google)', color: GOOGLE.dark }}
           >
             Libera espacio en tu correo por:
           </h2>
