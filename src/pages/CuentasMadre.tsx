@@ -156,7 +156,7 @@ export default function CuentasMadre() {
                 {c.fecha_corte_proveedor ? (
                   fmtDate(c.fecha_corte_proveedor)
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+                  <span className="inline-flex items-center gap-1 text-xs text-blink-ink-mute">
                     <IconInfinity className="h-3.5 w-3.5" /> Sin cortes
                   </span>
                 )}
@@ -236,7 +236,7 @@ export default function CuentasMadre() {
               value={form.fecha_corte_proveedor}
               onChange={(e) => setForm({ ...form, fecha_corte_proveedor: e.target.value })}
             />
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-blink-ink-mute">
               Déjala vacía si la cuenta no tiene renovación (p. ej. Canva docente, dura para
               siempre).
             </p>

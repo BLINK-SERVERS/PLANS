@@ -1,4 +1,16 @@
-@import "tailwindcss";
+/* Tailwind NO escruta el repo entero: hay que decirle qué es contenido. Con
+   la detección automática cualquier archivo es una fuente potencial, leída
+   cadena por cadena, así que las clases que se **citan** en comentarios y
+   tablas se compilaban en el bundle justo después de barrerse del código:
+   la tabla de `scripts/grises.mjs` (`bg-slate-100`, `text-slate-400`…), la
+   equivalencia `slate → token` de abajo y `docs/08-changelog.md` metían
+   grises de Tailwind que ningún `.tsx` ya usa. Medido: con detección
+   automática el `dist` seguía trayendo `.bg-slate-100{}` con cero `slate-*`
+   en los tsx. `source(none)` apaga el rastreo; `@source` declara lo que sí
+   es app, y las rutas son relativas a este archivo. */
+@import "tailwindcss" source(none);
+@source "./**/*.{ts,tsx}";
+@source "../index.html";
 
 /* ============================================================
    Tipografía de Blink Plans — dos capas que NO se mezclan.
@@ -188,6 +200,38 @@
   --color-blink-soft: #eaf2fd;
   --color-blink-soft-strong: #d3e4fb;
   --color-blink-soft-border: #b8d4f5;
+
+  /* ── La escala de grises de la casa, en vez del `slate` de Tailwind ──
+     Tailwind trae slate con subtono AZUL (#94a3b8, #e2e8f0); los grises
+     de Apple —y los de este panel— son neutros con un dedo de azul
+     apenas. Mientras convivieran los dos, una tarjeta y una fila de tabla
+     se veían de familias distintas. Los valores vienen de las tintas de
+     sistema de HIG (label / separator / fill), no de la paleta de
+     Tailwind, y el barrido se hizo con esta tabla:
+
+       text-slate-900 · 800  → text-blink-dark        #1d1d1f
+       text-slate-700 · 600  → text-blink-muted       #424242
+       text-slate-500 · 400  → text-blink-ink-mute    #6a6a6f
+       border-slate-200      → border-blink-line      #e5e5ea
+       border-slate-300      → border-blink-line-strong #d1d1d6
+       divide-slate-100      → divide-blink-line
+       bg-slate-50 · 100     → bg-blink-fill          #f7f7fa
+       bg-slate-200          → bg-blink-fill-strong   #ececf0
+       hover:bg-slate-100    → hover:bg-blink-soft    (el acento al 8 %)
+       bg-slate-900/50       → bg-blink-scrim         (vela negra, no gris)
+
+     slate-400 (#94a3b8) sobre blanco da 2,56:1: no pasa ni AA de texto
+     grande. ink-mute da 5,38:1 sobre blanco, 5,03:1 sobre blink-fill y
+     4,57:1 sobre blink-fill-strong — o sea pasa AA en las tres superficies
+     donde vive un texto secundario. Por eso la tinta es #6A6A6F y no
+     #6E6E73: las tres cifras que separan a una de la otra son las que
+     deciden, y están medidas con scripts/contraste.mjs. */
+  --color-blink-ink-mute: #6a6a6f;
+  --color-blink-line: #e5e5ea;
+  --color-blink-line-strong: #d1d1d6;
+  --color-blink-fill: #f7f7fa;
+  --color-blink-fill-strong: #ececf0;
+  --color-blink-scrim: rgba(0, 0, 0, 0.45);
 }
 
 :root {

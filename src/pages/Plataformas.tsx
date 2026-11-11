@@ -123,7 +123,7 @@ export default function Plataformas() {
                     <IconCheck className="h-3.5 w-3.5" /> Sí
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+                  <span className="inline-flex items-center gap-1 text-xs text-blink-ink-mute">
                     <IconX className="h-3.5 w-3.5" /> No
                   </span>
                 )}
@@ -144,7 +144,7 @@ export default function Plataformas() {
         </Table>
       )}
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-blink-ink-mute">
         La comisión del 30% se genera automáticamente solo en las plataformas marcadas (p. ej.
         Google One).
       </p>
@@ -162,7 +162,7 @@ export default function Plataformas() {
               placeholder="Netflix, Spotify…"
             />
           </Field>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-blink-muted">
             <input
               type="checkbox"
               className="h-4 w-4 accent-blink-action"
@@ -171,7 +171,7 @@ export default function Plataformas() {
             />
             Activa (disponible para venta)
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-blink-muted">
             <input
               type="checkbox"
               className="h-4 w-4 accent-blink-action"

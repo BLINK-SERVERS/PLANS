@@ -150,17 +150,17 @@ function TarjetaMarca({ p }: { p: PlataformaTienda }) {
   // Genérico
   const inicial = p.nombre.charAt(0).toUpperCase()
   return (
-    <div className="relative rounded-3xl border border-slate-200 bg-white transition-shadow hover:shadow-2xl">
+    <div className="relative rounded-3xl border border-blink-line bg-white transition-shadow hover:shadow-2xl">
       <div className="h-full">
         {contenido(
           <>
             <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-blink-action text-3xl font-black text-white shadow-lg transition-transform group-hover:scale-105">
               {inicial}
             </span>
-            <h3 className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">
+            <h3 className="mt-5 text-2xl font-extrabold tracking-tight text-blink-dark">
               {p.nombre}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">{taglinePlataforma(p.nombre)}</p>
+            <p className="mt-1 text-sm text-blink-ink-mute">{taglinePlataforma(p.nombre)}</p>
             <p className="mt-4 text-sm font-semibold text-blink-action">
               Desde {desde ?? '—'}
             </p>
@@ -218,12 +218,12 @@ export default function Tienda() {
       {/* Hero */}
       <section className="bg-gradient-to-b from-[#F8F9FA] to-white py-16 text-center md:py-20">
         <h1
-          className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl"
+          className="text-4xl font-extrabold tracking-tight text-blink-dark md:text-5xl"
           style={{ fontFamily: FONT_DISPLAY }}
         >
           Blink Plans
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-base text-slate-500 md:text-lg">
+        <p className="mx-auto mt-4 max-w-xl text-base text-blink-ink-mute md:text-lg">
           Elige tu plataforma favorita y contrata el plan que más te convenga. Pagas en
           USDT, USD o BS al cambio oficial BCV.
         </p>
@@ -232,20 +232,20 @@ export default function Tienda() {
       {/* Catálogo de plataformas (tarjetas de marca) */}
       <section className="mx-auto max-w-5xl px-4 pb-16">
         <h2
-          className="mb-8 text-center text-lg font-semibold uppercase tracking-widest text-slate-400"
+          className="mb-8 text-center text-lg font-semibold uppercase tracking-widest text-blink-ink-mute"
           style={{ fontFamily: FONT_DISPLAY }}
         >
           Plataformas disponibles
         </h2>
 
         {cargando ? (
-          <p className="py-20 text-center text-sm text-slate-400">Cargando planes…</p>
+          <p className="py-20 text-center text-sm text-blink-ink-mute">Cargando planes…</p>
         ) : error ? (
           <div className="mx-auto max-w-lg">
             <ErrorMsg message={error} />
           </div>
         ) : visibles.length === 0 ? (
-          <p className="py-20 text-center text-sm text-slate-400">
+          <p className="py-20 text-center text-sm text-blink-ink-mute">
             El catálogo está vacío. Vuelve pronto.
           </p>
         ) : (
@@ -259,8 +259,8 @@ export default function Tienda() {
       </section>
 
       {/* Pie con descargo legal */}
-      <footer className="border-t border-slate-200 bg-white py-8">
-        <p className="mx-auto max-w-2xl px-4 text-center text-xs leading-relaxed text-slate-400">
+      <footer className="border-t border-blink-line bg-white py-8">
+        <p className="mx-auto max-w-2xl px-4 text-center text-xs leading-relaxed text-blink-ink-mute">
           Los precios se expresan en dólares estadounidenses (USD). El equivalente en bolívares
           (VES) se calcula con la <strong>tasa de cambio oficial del BCV</strong> al momento de
           cada pago. Al contratar aceptas ser parte de un plan familiar compartido gestionado por{' '}

@@ -18,13 +18,13 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
   const saludo = perfil?.nombre || (session?.user.email ?? '').split('@')[0] || ''
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-blink-line bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-3">
           {volver ? (
             <Link
               to="/tienda"
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              className="inline-flex items-center gap-1.5 rounded-full border border-blink-line-strong px-3 py-1.5 text-sm font-medium text-blink-muted hover:bg-blink-soft"
             >
               ← Tienda
             </Link>
@@ -33,14 +33,14 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
               <MarcaBlink className="h-5 w-auto" />
             </span>
-            <span className="text-lg font-bold text-slate-900">Blink Plans</span>
+            <span className="text-lg font-bold text-blink-dark">Blink Plans</span>
           </Link>
         </div>
         <nav className="flex items-center gap-2 text-sm">
           <Link
             to="/carrito"
             aria-label={`Carrito (${total} artículo${total === 1 ? '' : 's'})`}
-            className="relative inline-flex items-center justify-center rounded-full border border-slate-300 p-2 text-slate-600 transition-colors hover:bg-slate-100"
+            className="relative inline-flex items-center justify-center rounded-full border border-blink-line-strong p-2 text-blink-muted transition-colors hover:bg-blink-soft"
           >
             <IconCart className="h-5 w-5" />
             {total > 0 ? (
@@ -59,13 +59,13 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
                   Panel admin
                 </Link>
               ) : (
-                <span className="hidden max-w-[10rem] truncate px-2 text-slate-600 sm:inline">
+                <span className="hidden max-w-[10rem] truncate px-2 text-blink-muted sm:inline">
                   Hola, {saludo} 👋
                 </span>
               )}
               <button
                 onClick={salirDeTienda}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-3 py-2 text-slate-600 hover:bg-slate-100"
+                className="inline-flex items-center gap-1 rounded-full border border-blink-line-strong px-3 py-2 text-blink-muted hover:bg-blink-soft"
               >
                 <IconLogout className="h-4 w-4" /> Salir
               </button>
@@ -74,7 +74,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
             <>
               <Link
                 to="/ingreso"
-                className="rounded-full border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-100"
+                className="rounded-full border border-blink-line-strong px-4 py-2 font-semibold text-blink-muted hover:bg-blink-soft"
               >
                 Ingresar
               </Link>

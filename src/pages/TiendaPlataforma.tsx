@@ -54,8 +54,8 @@ export default function TiendaPlataforma() {
       <div className="min-h-screen bg-white">
         <BarraTienda volver />
         <TarjetasApple />
-        <footer className="border-t border-slate-200 bg-white py-8">
-          <p className="mx-auto max-w-2xl px-4 text-center text-xs leading-relaxed text-slate-400">
+        <footer className="border-t border-blink-line bg-white py-8">
+          <p className="mx-auto max-w-2xl px-4 text-center text-xs leading-relaxed text-blink-ink-mute">
             Las tarjetas de regalo se pagan en EUR según la tarifa mostrada. Al contratar aceptas
             ser parte de un plan familiar compartido gestionado por <strong>Blink Plans</strong>.
           </p>
@@ -72,7 +72,7 @@ export default function TiendaPlataforma() {
 
       {/* Contenido con la estética de la marca */}
       {cargando ? (
-        <p className="py-24 text-center text-sm text-slate-400">Cargando planes…</p>
+        <p className="py-24 text-center text-sm text-blink-ink-mute">Cargando planes…</p>
       ) : error ? (
         <div className="mx-auto max-w-lg px-4 py-24">
           <ErrorMsg message={error} />
@@ -86,8 +86,8 @@ export default function TiendaPlataforma() {
       ) : null}
 
       {/* Pie con descargo legal */}
-      <footer className="border-t border-slate-200 bg-white py-8">
-        <p className="mx-auto max-w-2xl px-4 text-center text-xs leading-relaxed text-slate-400">
+      <footer className="border-t border-blink-line bg-white py-8">
+        <p className="mx-auto max-w-2xl px-4 text-center text-xs leading-relaxed text-blink-ink-mute">
           Los precios se expresan en dólares estadounidenses (USD). El equivalente en bolívares
           (VES) se calcula con la <strong>tasa de cambio oficial del BCV</strong> al momento de
           cada pago. Al contratar aceptas ser parte de un plan familiar compartido gestionado por{' '}

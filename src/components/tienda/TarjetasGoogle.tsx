@@ -112,7 +112,7 @@ export default function TarjetasGoogle({ p }: { p: PlataformaTienda }) {
       <div className="mx-auto max-w-5xl px-4">
         {/* Hero */}
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl" style={{ fontFamily: 'var(--font-marca-google)' }}>
+          <h1 className="text-4xl font-extrabold tracking-tight text-blink-dark md:text-5xl" style={{ fontFamily: 'var(--font-marca-google)' }}>
             5 TB de almacenamiento
           </h1>
           <p className="mt-2 text-xl md:text-2xl" style={{ color: GOOGLE.mid }}>

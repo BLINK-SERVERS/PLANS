@@ -38,10 +38,10 @@ function detalle(p: Pedido): ReactNode {
           title={d.nombre}
         />
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-blink-dark">
             Apple Gift Card · {dolar(p.valor_giftcard_usd ?? 0)}
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-blink-ink-mute">
             {euro(p.precio_giftcard_eur ?? 0)} · {d.nombre}
           </p>
         </div>
@@ -50,8 +50,8 @@ function detalle(p: Pedido): ReactNode {
   }
   return (
     <div>
-      <p className="text-sm font-medium text-slate-800">{p.plataforma}</p>
-      <p className="text-xs text-slate-400">
+      <p className="text-sm font-medium text-blink-dark">{p.plataforma}</p>
+      <p className="text-xs text-blink-ink-mute">
         {etiquetaDuracion(p.duracion_dias ?? 0)} · {precioUsd(p.precio_usd ?? 0)}
       </p>
     </div>
@@ -122,7 +122,7 @@ export default function Pedidos() {
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filtro === f.id
                 ? 'bg-blink-action text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                : 'bg-blink-fill text-blink-muted hover:bg-blink-fill-strong'
             }`}
           >
             {f.label}
@@ -140,32 +140,32 @@ export default function Pedidos() {
             const telefono = (p.cliente_contacto ?? '').replace(/\D/g, '')
             return (
               <tr key={p.id}>
-                <Td className="whitespace-nowrap text-xs text-slate-500">
+                <Td className="whitespace-nowrap text-xs text-blink-ink-mute">
                   {fmtDateTime(p.created_at)}
                 </Td>
                 <Td>
-                  <p className="text-sm font-medium text-slate-800">
+                  <p className="text-sm font-medium text-blink-dark">
                     {p.cliente_nombre ?? '—'}
                   </p>
                   {p.cliente_contacto ? (
-                    <p className="text-xs text-slate-400">{p.cliente_contacto}</p>
+                    <p className="text-xs text-blink-ink-mute">{p.cliente_contacto}</p>
                   ) : null}
                 </Td>
                 <Td>{detalle(p)}</Td>
                 <Td>
                   {p.metodo_pago ? (
                     <div>
-                      <p className="text-xs font-semibold text-slate-700">
+                      <p className="text-xs font-semibold text-blink-muted">
                         {METODOS_PAGO.find((x) => x.id === p.metodo_pago)?.nombre ?? p.metodo_pago}
                       </p>
                       {p.monto_cobro != null ? (
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-blink-ink-mute">
                           {fmtMonedaCobro(p.moneda_cobro ?? 'USDT', p.monto_cobro)}
                         </p>
                       ) : null}
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-400">—</span>
+                    <span className="text-xs text-blink-ink-mute">—</span>
                   )}
                 </Td>
                 <Td>
@@ -173,7 +173,7 @@ export default function Pedidos() {
                     value={p.estado}
                     disabled={guardando === p.id}
                     onChange={(e) => void cambiarEstado(p, e.target.value as EstadoPedido)}
-                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 focus:border-blink-primary focus:outline-none"
+                    className="rounded-lg border border-blink-line px-2 py-1 text-xs font-medium text-blink-muted focus:border-blink-primary focus:outline-none"
                   >
                     {ESTADOS.map((e) => (
                       <option key={e} value={e}>
@@ -199,7 +199,7 @@ export default function Pedidos() {
                         WhatsApp
                       </a>
                     ) : (
-                      <span className="text-[11px] text-slate-400">sin contacto</span>
+                      <span className="text-[11px] text-blink-ink-mute">sin contacto</span>
                     )}
                   </div>
                 </Td>

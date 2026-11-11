@@ -403,7 +403,7 @@ export default function Pagos() {
                 value={form.fecha_pago}
                 onChange={(e) => setForm({ ...form, fecha_pago: e.target.value })}
               />
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-blink-ink-mute">
                 Por defecto hoy. Elige una fecha pasada para registrar cobros hechos antes de la
                 web (la renovación se calcula desde esa fecha).
               </p>
@@ -461,13 +461,13 @@ export default function Pagos() {
                   <IconRefresh className={`h-4 w-4 ${reflejando ? 'animate-spin' : ''}`} />
                   {reflejando ? 'Reflejando…' : 'Reflejar tasa'}
                 </Button>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-blink-ink-mute">
                   Trae la tasa oficial del día desde el sitio del BCV (bcv.org.ve) vía
                   la Edge Function `fetch-bcv`; si no está desplegada, usa la última guardada.
                 </span>
               </div>
             ) : form.moneda === 'USDT' ? (
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-blink-ink-mute">
                 La tasa de Binance se guarda como referencia con el cobro en USDT (el
                 equivalente en USD es 1:1).
               </p>
@@ -482,7 +482,7 @@ export default function Pagos() {
                   </option>
                 ))}
               </Select>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-blink-ink-mute">
                 La moneda se ajusta sola según el método (Pago Movil → BS, Zelle → USD,
                 Binance/Transferencia → USDT). Siempre puedes cambiarla.
               </p>
@@ -505,26 +505,26 @@ export default function Pagos() {
             </p>
           </div>
 
-          <h3 className="mb-2 mt-4 text-sm font-semibold text-slate-700">
+          <h3 className="mb-2 mt-4 text-sm font-semibold text-blink-muted">
             Distribución en suscripciones activas
           </h3>
           {activasDelCliente.length === 0 ? (
-            <p className="text-sm text-slate-400">Este cliente no tiene suscripciones activas.</p>
+            <p className="text-sm text-blink-ink-mute">Este cliente no tiene suscripciones activas.</p>
           ) : (
             <>
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <Button variant="secondary" onClick={repartirAutomatico}>
                   Repartir automáticamente
                 </Button>
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-blink-muted">
                   Asignado: <strong>{fmtUSD(totalAsignado)}</strong>
-                  <span className={diferencia < 0 ? ' text-rose-600' : ' text-slate-400'}>
+                  <span className={diferencia < 0 ? ' text-rose-600' : ' text-blink-ink-mute'}>
                     {' '}
                     (dif. {fmtUSD(Math.abs(diferencia))})
                   </span>
                 </span>
               </div>
-              <p className="mb-2 text-xs text-slate-400">
+              <p className="mb-2 text-xs text-blink-ink-mute">
                 Repartir automáticamente divide el equivalente en partes iguales entre las
                 suscripciones marcadas; la última recibe el resto para que cuadre exacto.
               </p>
@@ -534,7 +534,7 @@ export default function Pagos() {
                   return (
                     <div
                       key={s.id}
-                      className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                      className="flex items-center gap-3 rounded-lg border border-blink-line bg-white px-3 py-2"
                     >
                       <input
                         type="checkbox"
@@ -548,11 +548,11 @@ export default function Pagos() {
                         }
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-slate-800">
+                        <p className="truncate text-sm font-medium text-blink-dark">
                           {s.planes?.plataformas?.nombre ?? '?'} ·{' '}
                           {fmtUSD(s.planes?.precio_venta_usd ?? 0)}
                         </p>
-                        <p className="truncate text-xs text-slate-400">
+                        <p className="truncate text-xs text-blink-ink-mute">
                           {s.usuarios?.nombre} · vence: {fmtDate(s.fecha_corte_cliente)}
                         </p>
                       </div>
@@ -623,7 +623,7 @@ export default function Pagos() {
           <Input type="date" value={fHasta} onChange={(e) => setFHasta(e.target.value)} />
         </div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-blink-muted">
             {filtrados.length} pago{filtrados.length === 1 ? '' : 's'} · Total filtrado:{' '}
             <strong>{fmtUSD(totalFiltrado)}</strong>
           </p>

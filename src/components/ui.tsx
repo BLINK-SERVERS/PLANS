@@ -13,9 +13,9 @@ export function Button({
     primary:
       'bg-blink-action text-white hover:bg-blink-action-hover disabled:bg-blink-soft-border',
     secondary:
-      'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50',
+      'bg-white text-blink-muted border border-blink-line-strong hover:bg-blink-soft',
     danger: 'bg-rose-600 text-white hover:bg-rose-700',
-    ghost: 'text-slate-600 hover:bg-slate-100',
+    ghost: 'text-blink-muted hover:bg-blink-soft',
   }
   return (
     <button
@@ -29,7 +29,7 @@ export function Button({
 export function Input({ className = '', ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft-border ${className}`}
+      className={`w-full rounded-lg border border-blink-line-strong bg-white px-3 py-2 text-sm outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft-border ${className}`}
       {...props}
     />
   )
@@ -38,7 +38,7 @@ export function Input({ className = '', ...props }: InputHTMLAttributes<HTMLInpu
 export function Select({ className = '', ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft-border ${className}`}
+      className={`w-full rounded-lg border border-blink-line-strong bg-white px-3 py-2 text-sm outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft-border ${className}`}
       {...props}
     />
   )
@@ -47,7 +47,7 @@ export function Select({ className = '', ...props }: SelectHTMLAttributes<HTMLSe
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block space-y-1">
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <span className="text-xs font-medium uppercase tracking-wide text-blink-ink-mute">
         {label}
       </span>
       {children}
@@ -58,18 +58,18 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 // ---------- Tablas ----------
 export function Table({ headers, children }: { headers: string[]; children: ReactNode }) {
   return (
-    <div className="max-h-[72vh] overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="max-h-[72vh] overflow-auto rounded-xl border border-blink-line bg-white shadow-sm">
       <table className="w-full min-w-max text-left text-sm">
-        <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <thead className="sticky top-0 z-10 bg-blink-fill text-xs uppercase tracking-wide text-blink-ink-mute">
           <tr>
             {headers.map((h) => (
-              <th key={h} className="border-b border-slate-200 bg-slate-50 px-4 py-3 font-semibold">
+              <th key={h} className="border-b border-blink-line bg-blink-fill px-4 py-3 font-semibold">
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">{children}</tbody>
+        <tbody className="divide-y divide-blink-line">{children}</tbody>
       </table>
     </div>
   )
@@ -83,22 +83,22 @@ export function Td({ children, className = '' }: { children: ReactNode; classNam
 const badgeColors: Record<string, string> = {
   activa: 'bg-emerald-100 text-emerald-700',
   vencida: 'bg-rose-100 text-rose-700',
-  cancelada: 'bg-slate-200 text-slate-600',
+  cancelada: 'bg-blink-fill-strong text-blink-muted',
   suspendida: 'bg-amber-100 text-amber-700',
-  baja: 'bg-slate-200 text-slate-600',
+  baja: 'bg-blink-fill-strong text-blink-muted',
   pendiente: 'bg-amber-100 text-amber-700',
   liquidada: 'bg-emerald-100 text-emerald-700',
   admin: 'bg-purple-100 text-purple-700',
   agente: 'bg-sky-100 text-sky-700',
-  cliente: 'bg-slate-200 text-slate-600',
+  cliente: 'bg-blink-fill-strong text-blink-muted',
   nuevo: 'bg-blink-soft text-blink-action-hover',
   contactado: 'bg-amber-100 text-amber-700',
   completado: 'bg-emerald-100 text-emerald-700',
-  cancelado: 'bg-slate-200 text-slate-600',
+  cancelado: 'bg-blink-fill-strong text-blink-muted',
 }
 
 export function Badge({ value }: { value: string }) {
-  const color = badgeColors[value] ?? 'bg-slate-200 text-slate-600'
+  const color = badgeColors[value] ?? 'bg-blink-fill-strong text-blink-muted'
   return (
     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${color}`}>
       {value}
@@ -109,9 +109,9 @@ export function Badge({ value }: { value: string }) {
 // ---------- Tarjetas ----------
 export function Card({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-blink-line bg-white p-5 shadow-sm">
       {title ? (
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-blink-ink-mute">
           {title}
         </h2>
       ) : null}
@@ -130,10 +130,10 @@ export function StatCard({
   hint?: string
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
+    <div className="rounded-xl border border-blink-line bg-white p-5 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-blink-ink-mute">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-blink-dark">{value}</p>
+      {hint ? <p className="mt-1 text-xs text-blink-ink-mute">{hint}</p> : null}
     </div>
   )
 }
@@ -152,10 +152,10 @@ export function Modal({
 }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-blink-scrim p-4">
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+          <h3 className="text-lg font-semibold text-blink-dark">{title}</h3>
           <Button variant="ghost" onClick={onClose} aria-label="Cerrar">
             <IconX />
           </Button>
@@ -168,7 +168,7 @@ export function Modal({
 
 // ---------- Estados de carga/error ----------
 export function Loading() {
-  return <p className="py-8 text-center text-sm text-slate-400">Cargando…</p>
+  return <p className="py-8 text-center text-sm text-blink-ink-mute">Cargando…</p>
 }
 
 export function ErrorMsg({ message }: { message: string }) {
@@ -190,8 +190,8 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-        {subtitle ? <p className="text-sm text-slate-500">{subtitle}</p> : null}
+        <h1 className="text-xl font-bold text-blink-dark">{title}</h1>
+        {subtitle ? <p className="text-sm text-blink-ink-mute">{subtitle}</p> : null}
       </div>
       {children}
     </header>
@@ -210,7 +210,7 @@ export function Buscador({
 }) {
   return (
     <div className="relative max-w-sm">
-      <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blink-ink-mute" />
       <Input
         className="pl-9"
         placeholder={placeholder ?? 'Buscar…'}
@@ -223,7 +223,7 @@ export function Buscador({
 
 // ---------- Estado vacío ----------
 export function EmptyState({ message = 'Sin registros por ahora.' }: { message?: string }) {
-  return <p className="py-8 text-center text-sm text-slate-400">{message}</p>
+  return <p className="py-8 text-center text-sm text-blink-ink-mute">{message}</p>
 }
 
 // ---------- Pie de modal estándar (Cancelar + Guardar) ----------

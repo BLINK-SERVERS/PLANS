@@ -129,7 +129,7 @@ export default function Clientes() {
         placeholder="Buscar por nombre, email o teléfono…"
       />
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-blink-ink-mute">
         Mostrando {filtrados.length} de {clientes.length} clientes.
       </p>
 
@@ -204,7 +204,7 @@ export default function Clientes() {
               </Select>
             </Field>
           ) : (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-blink-ink-mute">
               El referido no se modifica aquí (política de trazabilidad).
             </p>
           )}
@@ -217,7 +217,7 @@ export default function Clientes() {
         </div>
       </Modal>
 
-      <div className="text-xs text-slate-400">
+      <div className="text-xs text-blink-ink-mute">
         <Badge value="cliente" /> rol asignado automáticamente a los clientes
       </div>
     </div>

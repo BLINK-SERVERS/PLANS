@@ -31,7 +31,7 @@ function Protegida() {
   const { session, cargando, rol, rolCargando } = useAuth()
   if (cargando || (session && rolCargando))
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-slate-400">
+      <div className="flex min-h-screen items-center justify-center text-sm text-blink-ink-mute">
         Verificando sesión…
       </div>
     )
@@ -46,7 +46,7 @@ export default function App() {
       <HashRouter>
         <Suspense
           fallback={
-            <div className="flex min-h-screen items-center justify-center gap-2 text-sm text-slate-400">
+            <div className="flex min-h-screen items-center justify-center gap-2 text-sm text-blink-ink-mute">
               <IconLock className="h-4 w-4 animate-pulse" /> Cargando…
             </div>
           }

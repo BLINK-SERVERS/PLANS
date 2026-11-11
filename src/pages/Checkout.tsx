@@ -143,14 +143,14 @@ export default function Checkout() {
   // ---------- Pantalla de éxito ----------
   if (completado) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-blink-fill">
         <BarraTienda volver />
         <div className="mx-auto max-w-xl px-4 py-16 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">
             ✅
           </div>
-          <h1 className="mt-4 text-2xl font-bold text-slate-900">¡Pedido enviado!</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <h1 className="mt-4 text-2xl font-bold text-blink-dark">¡Pedido enviado!</h1>
+          <p className="mt-2 text-sm text-blink-ink-mute">
             Te abrimos WhatsApp con tu pedido y las instrucciones de pago. Una vez que pagues, el
             equipo de Blink Plans confirma la entrega por el mismo chat.
           </p>
@@ -168,11 +168,11 @@ export default function Checkout() {
   // ---------- Carrito vacío ----------
   if (lineas.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-blink-fill">
         <BarraTienda volver />
         <div className="mx-auto max-w-xl px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">No hay nada que pagar</h1>
-          <p className="mt-2 text-sm text-slate-500">Tu carrito está vacío. Añade algo primero.</p>
+          <h1 className="text-2xl font-bold text-blink-dark">No hay nada que pagar</h1>
+          <p className="mt-2 text-sm text-blink-ink-mute">Tu carrito está vacío. Añade algo primero.</p>
           <Link
             to="/tienda"
             className="mt-6 inline-block rounded-full bg-blink-action px-8 py-3 text-sm font-semibold text-white hover:bg-blink-action-hover"
@@ -185,11 +185,11 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-blink-fill">
       <BarraTienda volver />
       <div className="mx-auto max-w-3xl px-4 py-10">
-        <h1 className="text-2xl font-bold text-slate-900">Checkout</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-blink-dark">Checkout</h1>
+        <p className="mt-1 text-sm text-blink-ink-mute">
           Revisa tu pedido, elige cómo pagar y confirma. Se abrirá WhatsApp con todo listo.
         </p>
 
@@ -216,54 +216,54 @@ export default function Checkout() {
         ) : null}
 
         {/* 1 · Resumen */}
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-bold text-slate-900">1 · Resumen del pedido</h2>
+        <section className="mt-6 rounded-2xl border border-blink-line bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-bold text-blink-dark">1 · Resumen del pedido</h2>
           <div className="mt-3 space-y-2">
             {lineas.map((l) => (
               <div key={l.clave} className="flex items-baseline justify-between gap-3 text-sm">
-                <p className="min-w-0 flex-1 truncate text-slate-700">
+                <p className="min-w-0 flex-1 truncate text-blink-muted">
                   <span className="font-semibold">
                     {l.cantidad > 1 ? `${l.cantidad}× ` : ''}
                     {l.titulo}
                   </span>
-                  <span className="ml-1 text-xs text-slate-400">({l.detalle})</span>
+                  <span className="ml-1 text-xs text-blink-ink-mute">({l.detalle})</span>
                 </p>
-                <p className="shrink-0 text-xs text-slate-500">{precioRefLinea(l)} c/u</p>
+                <p className="shrink-0 text-xs text-blink-ink-mute">{precioRefLinea(l)} c/u</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* 2 · Tus datos */}
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-bold text-slate-900">2 · Tus datos</h2>
+        <section className="mt-4 rounded-2xl border border-blink-line bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-bold text-blink-dark">2 · Tus datos</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <label className="block text-xs font-medium text-slate-600">
+            <label className="block text-xs font-medium text-blink-muted">
               Nombre *
               <input
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Tu nombre"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blink-primary focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-blink-line-strong px-3 py-2 text-sm text-blink-dark focus:border-blink-primary focus:outline-none"
               />
             </label>
-            <label className="block text-xs font-medium text-slate-600">
+            <label className="block text-xs font-medium text-blink-muted">
               Teléfono (para coordinar la entrega)
               <input
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 placeholder="+58 412 000 00 00"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blink-primary focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-blink-line-strong px-3 py-2 text-sm text-blink-dark focus:border-blink-primary focus:outline-none"
               />
             </label>
           </div>
         </section>
 
         {/* 3 · Método de pago */}
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-bold text-slate-900">3 · Método de pago</h2>
+        <section className="mt-4 rounded-2xl border border-blink-line bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-bold text-blink-dark">3 · Método de pago</h2>
 
-          <div className="mt-2 text-[11px] text-slate-400">
+          <div className="mt-2 text-[11px] text-blink-ink-mute">
             {tasas.bcv ? `Tasa BCV: ${round2(tasas.bcv).toFixed(2)} Bs/USD` : 'Tasa BCV: pendiente'} ·{' '}
             {tasas.eur ? `Tasa € en Bs: ${round2(tasas.eur).toFixed(2)}` : 'Tasa €: pendiente'}
           </div>
@@ -281,14 +281,14 @@ export default function Checkout() {
                   className={`rounded-2xl border-2 p-4 text-left transition-all ${
                     activo
                       ? 'border-blink-action bg-blink-soft'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
+                      : 'border-blink-line bg-white hover:border-blink-line-strong'
                   } ${disponible ? '' : 'cursor-not-allowed opacity-50'}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-lg">{m.icono}</span>
-                    <span className="text-sm font-bold text-slate-900">{m.nombre}</span>
+                    <span className="text-sm font-bold text-blink-dark">{m.nombre}</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">{m.descripcion}</p>
+                  <p className="mt-1 text-xs text-blink-ink-mute">{m.descripcion}</p>
                   <p className="mt-2 text-base font-extrabold text-blink-action">
                     {disponible ? fmtMonedaCobro(monedaCobro(m.id), total!) : '—'}
                   </p>
@@ -298,10 +298,10 @@ export default function Checkout() {
           </div>
 
           {/* Instrucciones del método + nota de Pago Móvil anclado al € */}
-          <div className="mt-4 rounded-xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-600">
+          <div className="mt-4 rounded-xl bg-blink-fill p-4 text-xs leading-relaxed text-blink-muted">
             {DATOS_COBRO[metodo] ? (
               <p>
-                <strong className="text-slate-800">Cómo pagar · {etiquetaMetodo(metodo)}:</strong>{' '}
+                <strong className="text-blink-dark">Cómo pagar · {etiquetaMetodo(metodo)}:</strong>{' '}
                 {DATOS_COBRO[metodo]}
               </p>
             ) : (
@@ -311,7 +311,7 @@ export default function Checkout() {
               </p>
             )}
             {metodo === 'pagomovil' ? (
-              <p className="mt-1 text-[11px] text-slate-400">
+              <p className="mt-1 text-[11px] text-blink-ink-mute">
                 Pago Móvil: las Apple Gift Cards van ancladas al euro (€ → Bs); los planes usan la
                 tasa BCV (USD → Bs).
               </p>

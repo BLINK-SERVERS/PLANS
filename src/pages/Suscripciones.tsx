@@ -161,7 +161,7 @@ export default function Suscripciones() {
         placeholder="Buscar por cliente, plataforma o cuenta…"
       />
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-blink-ink-mute">
         Mostrando {filtradas.length} de {susc.length} suscripciones.
       </p>
 
@@ -287,7 +287,7 @@ export default function Suscripciones() {
               <option value="cancelada">Cancelada</option>
             </Select>
           </Field>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-blink-ink-mute">
             Para suscripciones vendidas antes del sistema: escribe la fecha real de inicio y el
             estado actual.
           </p>

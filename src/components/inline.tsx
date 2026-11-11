@@ -415,7 +415,7 @@ export function NuevaPlataforma({ onCreated }: { onCreated: (id: string) => void
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             />
           </Field>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-blink-muted">
             <input
               type="checkbox"
               className="h-4 w-4 accent-blink-action"

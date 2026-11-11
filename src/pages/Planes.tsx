@@ -187,7 +187,7 @@ export default function Planes() {
                   <Td>{precioUsd(pl.precio_venta_usd)}</Td>
                   <Td>
                     {pl.precio_referencia_usd != null ? (
-                      <span className="text-sm line-through text-slate-400">
+                      <span className="text-sm line-through text-blink-ink-mute">
                         {precioUsd(pl.precio_referencia_usd)}
                       </span>
                     ) : (
@@ -222,7 +222,7 @@ export default function Planes() {
               <select
                 value={form.plataforma_id}
                 onChange={(e) => setForm({ ...form, plataforma_id: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blink-primary focus:outline-none"
+                className="w-full rounded-lg border border-blink-line-strong bg-white px-3 py-2 text-sm text-blink-dark focus:border-blink-primary focus:outline-none"
               >
                 {plataformas.map((p) => (
                   <option key={p.id} value={p.id}>

@@ -84,7 +84,7 @@ export default function Comisiones() {
         ) : (
           <>
             <div className="mb-3 flex items-center gap-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <span className="text-xs font-medium uppercase tracking-wide text-blink-ink-mute">
                 Filtrar
               </span>
               <Select
@@ -112,7 +112,7 @@ export default function Comisiones() {
                         Liquidar
                       </Button>
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <span className="text-xs text-blink-ink-mute">—</span>
                     )}
                   </Td>
                 </tr>

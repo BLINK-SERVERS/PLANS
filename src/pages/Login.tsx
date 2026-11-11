@@ -32,18 +32,18 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-blink-fill px-4">
       <form
         onSubmit={enviar}
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="w-full max-w-sm space-y-4 rounded-2xl border border-blink-line bg-white p-6 shadow-sm"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
             <MarcaBlink className="h-5 w-auto" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Blink Plans</h1>
-            <p className="text-sm text-slate-500">Gestión de suscripciones</p>
+            <h1 className="text-xl font-bold text-blink-dark">Blink Plans</h1>
+            <p className="text-sm text-blink-ink-mute">Gestión de suscripciones</p>
           </div>
         </div>
 
@@ -76,7 +76,7 @@ export default function Login() {
           {cargando ? 'Entrando…' : 'Entrar'}
         </Button>
         {cargando ? null : (
-          <p className="text-center text-xs text-slate-400">
+          <p className="text-center text-xs text-blink-ink-mute">
             Acceso restringido al personal autorizado.
           </p>
         )}
