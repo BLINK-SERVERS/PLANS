@@ -1,5 +1,13 @@
 # 07 — Despliegue
 
+> **Estado (2026-11-10):** los apartados 1 a 7 son el procedimiento del
+> proyecto Supabase y se conservan como referencia. El despliegue vigente está
+> en el **apartado 8** (verificación extremo a extremo), la tabla de
+> tecnologías del `README.md` y `docs/ADR/002`. Lo que cambió: las Edge
+> Functions pasan a Neon Functions (`functions/`), `pg_cron` pasa a un Function
+> Trigger (`tasas-y-vencimientos`, `0 22 * * *` en UTC) y el frontend se publica
+> en GitHub Pages con Variables del repo en vez de claves de Supabase.
+
 ## 1. Modelo de despliegue
 
 | Pieza | Dónde | Cómo |
@@ -129,3 +137,68 @@ curl http://localhost:5173   # frontend arriba
 - **local**: `npm run dev` contra el mismo Supabase (uno solo por ahora).
 - **producción**: build estático + Supabase gestionado.
 - Para añadir un entorno separado de DB: crear otro proyecto Supabase y apuntar `VITE_SUPABASE_URL` en el host.
+
+---
+
+## 8. Verificación extremo a extremo de la migración a Neon (vigente)
+
+Los apartados 1 a 7 describen el despliegue sobre Supabase y se conservan como
+historial. Esta es la lista que se corre antes de cortar el tráfico, en orden,
+sobre la rama que recibe los datos reales. Cada bloque dice **qué se mira** y
+**cuál es el fallo que lo delata**; un bloque en rojo para el corte.
+
+**A — autenticación.** Entrar con un correo restaurado y su contraseña vieja da
+200 y token de sesión. Después de ese login, `public.account.password` ya no
+empieza por `$2` y tiene la forma `32 hex : 128 hex`; un segundo login con la
+misma clave vuelve a dar 200 y **no** reescribe el hash. Un registro nuevo crea
+su fila en `public.usuarios` con `rol='cliente'`. El rol `authenticated` existe
+y está otorgado (sin él todo es 42501). El admin aterriza en el Dashboard y un
+cliente rebota a `/tienda`. → `node piloto/sonda-bcrypt.mjs` cubre todo el
+bloque menos el enrutado, que se ve en el navegador.
+
+**B — dinero (lo que más duele).** `select count(*), min(fecha), max(fecha) from
+tasas_cambio` coincide con el origen, sin huecos. Una conversión BS→USD da el
+mismo número en los dos paneles abiertos lado a lado, con la misma tasa del día.
+El cobro de un pedido coincide con lo cotizado en Checkout. → si difiere, el
+sospechoso es la emisión de numéricos como texto (`::text`) o el redondeo, no
+RLS.
+
+**C — negocio.** Un pago de Google One con cliente referido genera `comisiones`
+por `round(monto*0.30, 2)`. `cupos_ocupados` sube y baja, y llenar un cupo lanza
+excepción con su mensaje. Asignar un plan de Spotify a una cuenta madre de
+Netflix se rechaza. `editar_pago` recalcula como admin y falla como anónimo. →
+esto ejercita el compilador de `datos` y las funciones plpgsql portadas en
+`db/0001`.
+
+**D — tienda.** El catálogo sale de `v_catalogo_publico` con el precio de
+referencia tachado, **sin sesión**. Carrito → checkout → fila en `pedidos` con
+`cliente_id` real. Un cliente solo ve sus pedidos. → la prueba inversa cuenta
+igual: un anónimo que consulte `usuarios` debe recibir 403.
+
+**E — automatización.** `neon triggers list` muestra `tasas-y-vencimientos` con
+`0 22 * * *` y `next_run_at` coherente; el cron se interpreta **en UTC**, así
+que 22:00Z son 18:00 VET, dos horas después de que el BCV publica. Tras forzar
+un `POST /` con token de datos, `tasas_cambio` tiene la fila del día con
+`tasa_eur_bs` no nula y la respuesta trae `suscripciones_marcaron_vencidas`.
+Ningún log contiene `xbmewcmpfnligeodggop`. Disparar dos veces el mismo día no
+duplica la fila (`on conflict (fecha)`, `efecto: "update"`).
+
+**F — entrega.** `gh run list` en verde. `curl -sI https://plans.blink.com.ve/`
+da 200 y `https://plans.blink.com.ve` responde **301 a https** si el Forzar HTTPS
+está activo. Los assets salen con ruta absoluta (`/assets/…`), no relativa.
+`grep -rlE "service_role|sb_secret|postgresql://[^ ]*:[^ ]*@" dist/` no devuelve
+nada — este es el control de que ningún secreto se horneó en el bundle. El
+barrido de referencias viejas da 0 coincidencias fuera de
+`docs/historia-proyecto-viejo.md`. `https://go-plans.github.io/suscripciones/#/tienda`
+redirige **conservando el hash**.
+
+### Rollback de esta migración
+
+- **Functions**: `neon deploy` del commit anterior (cada rama conserva su
+  despliegue; un redeploy no recicla un isolate caliente, así que los cambios de
+  `env` se verifican en el siguiente arranque en frío).
+- **Datos**: la rama por defecto no se toca hasta que el import se verificó en
+  una rama hija; el proyecto Supabase viejo **no se archiva ni se borra** — es
+  el único respaldo hasta que el corte se considere definitivo.
+- **Tráfico**: se revierte publicando de nuevo la rama `gh-pages` vieja de
+  `go-plans/suscripciones`, que conserva el panel original intacto.

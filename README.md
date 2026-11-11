@@ -21,11 +21,16 @@ esté verificado de extremo a extremo.
 |---|---|
 | Frontend | Vite 8 + React 19 + TypeScript estricto (SPA estática, `HashRouter`) |
 | Estilos | Tailwind CSS 4 con los tokens de marca de Blink |
-| Base de datos | **Neon** (PostgreSQL), proyecto aislado para este panel |
-| Acceso a datos | **Neon Data API** (protocolo PostgREST) desde el navegador, solo con JWT |
-| Autenticación | **Better Auth self-hosted** en una Neon Function, modo bearer |
-| Automatización | **Neon Functions** con disparador programado (tasa BCV y vencimientos) |
+| Base de datos | **Neon** (Lakebase Postgres), proyecto aislado para este panel |
+| Acceso a datos | **Neon Function `datos`**: verifica nuestro JWT, hace `SET ROLE` y deja decidir a RLS |
+| Autenticación | **Better Auth self-hosted** en la Function `auth`, modo bearer (sin cookies) |
+| Automatización | **Neon Function Trigger** sobre `tasabcv`: tasa BCV a las 22:00 UTC y vencimientos |
 | Hosting | GitHub Pages (`dist` publicado por Actions), dominio propio |
+
+No hay Data API en la arquitectura. El piloto la midió con proveedor externo
+de JWKS y alterna 200 y 400 `jwk not found` con el mismo JWT válido; la
+decisión completa y sus mediciones están en
+[`docs/ADR/002-neon-en-lugar-de-supabase.md`](./docs/ADR/002-neon-en-lugar-de-supabase.md).
 
 La documentación del proyecto viejo sigue siendo la referencia del negocio:
 [`docs/`](./docs/README.md), con el historial completo en
@@ -36,32 +41,53 @@ La documentación del proyecto viejo sigue siendo la referencia del negocio:
 ```
 PLANS/
 ├── src/                    frontend React (páginas por dominio del negocio)
-│   ├── lib/                auth, datos, dinero, tienda, pedidos
+│   ├── lib/                auth, datos (db.ts), sesión (sesion.ts), entorno
 │   ├── pages/              panel admin + tienda pública
 │   └── components/         Layout, UI, tienda, marca Blink
-├── functions/              server-side en Neon (auth, tasa-bcv)
+├── functions/              server-side en Neon: auth, datos, tasa-bcv, _shared
+├── db/                     esquema portado a Neon (0000 roles … 0003 Better Auth)
+├── piloto/                 los 7 experimentos del gate y sus sondas
 ├── supabase/               esquema histórico: 12 migraciones del proyecto viejo
 │   └── functions/          Edge Function Deno fetch-bcv (portada a functions/)
-├── docs/                   arquitectura, BD, integraciones, flujos, seguridad
+├── docs/                   arquitectura, BD, integraciones, flujos, seguridad, ADR
+├── neon.ts                 infraestructura como código: las tres Functions y su env
 ├── public/                 CNAME, favicon, diseños de gift cards
 └── .github/workflows/      pages.yml
 ```
 
+`db/` es el esquema **vivo** y se aplica en orden: `0000` crea los roles
+`authenticated`/`anonymous` (sin ellos, todo es 42501), `0001` porta el modelo
+de negocio con sus políticas RLS, `0002` da permisos y `0003` fija las cuatro
+tablas de Better Auth en `public`. `db/_port_raw.sql` es el material crudo del
+que sale `0001`, versionado para que el port sea revisable contra el original.
+
+`db/importar/` son las dos patas de la migración de datos: `volcar.sh` mueve el
+`public` del proyecto viejo con los triggers dormidos y exige paridad de
+filas y sumas, y `cuentas.mjs` traduce `auth.users`/`auth.identities` a las
+tablas de Better Auth conservando el UUID y el bcrypt de cada cliente. Ambos
+son **seco por defecto** (`--aplicar` para escribir) y `db/README.md` documenta
+las cuatro trampas que midieron.
+
 `supabase/` se conserva como **registro histórico**, no como script a ejecutar:
 las migraciones 0003, 0004, 0005 y 0011 contienen `INSERT` de datos demo con
 UUIDs fijos, un `DROP CONSTRAINT` y un `DELETE` que borrarían datos reales si
-volvieran a aplicarse. El esquema vivo es el que resultó del volcado, y lo nuevo
-se numera desde `0013`.
+volvieran a aplicarse.
 
 ## Scripts
 
 | Comando | Para qué |
 |---|---|
-| `npm run dev` | desarrollo local contra el proyecto de Neon que diga `.env.local` |
+| `npm run dev` | desarrollo local del front contra el proyecto de Neon que diga `.env.local` |
 | `npm run typecheck` | TypeScript sin emitir |
 | `npm run lint` | oxlint |
 | `npm run build` | `tsc -b` + `vite build` → `dist/` |
 | `npm run preview` | servir el `dist` local |
+| `neon dev --source functions/auth/index.mjs --port 4000 --env .env.local` | una Function en local, con recarga |
+| `neon deploy --env .env.local` | aplicar `neon.ts` a la rama enlazada (bundlea y sube las tres Functions) |
+| `node piloto/sonda-bcrypt.mjs` | la verificación de la Fase 5, contra las Functions desplegadas |
+
+`neon dev` se lanza **de una en una**: arrancadas en paralelo, dos Functions
+distintas terminaban sirviendo el mismo código en puertos distintos.
 
 ## Entorno
 
@@ -69,34 +95,59 @@ Solo llegan al bundle valores **públicos**. La cadena de conexión de Neon nunc
 viaja al navegador, ni siquiera la del pooler.
 
 ```
-VITE_NEON_DATA_API_URL=https://<endpoint>/rest/v1
-VITE_NEON_AUTH_URL=https://<funcion-de-auth>
+VITE_BLINK_AUTH_URL=https://<rama>-auth.compute.<región>.neon.tech
+VITE_BLINK_DATOS_URL=https://<rama>-datos.compute.<región>.neon.tech
+VITE_BLINK_TASA_URL=https://<rama>-tasabcv.compute.<región>.neon.tech
 ```
 
-En GitHub están como Variables del repo (`Settings → Secrets and variables →
-Actions → Variables`), y se consumen en `.github/workflows/pages.yml`. No son
-Secrets porque no hay nada privado en ellas.
+Son el campo `invocation_url` de cada Function (`neon functions get auth`), y
+cada rama tiene el suyo. [`.env.example`](./.env.example) explica cuáles son
+públicas, cuáles son secretas (`BETTER_AUTH_SECRET`, `BLINK_DATA_JWT_SECRET`,
+`BETTER_AUTH_URL`, `BLINK_ALLOWED_ORIGINS`) y por qué no son intercambiables.
+
+En GitHub las tres `VITE_*` están como **Variables** del repo
+(`Settings → Secrets and variables → Actions → Variables`) y las consume
+`.github/workflows/pages.yml`. No son Secrets porque no hay nada privado en
+una URL de Function.
 
 ## Seguridad
 
-- Cada request a la Data API lleva el JWT de la sesión; el API hace `SET ROLE`
-  con el claim `role` y expone `auth.user_id()` desde el claim `sub`.
+- Un solo camino de datos: la Function `datos` verifica el JWT HS256 que acuña
+  `auth`, abre una transacción, hace `set local role` con el claim `role` y
+  deja `request.jwt.claims` en `set_config` para que las políticas lean `sub`.
+  El compilador no decide permisos; los decide RLS.
 - Sin sesión existe el rol `anonymous`, con `GRANT SELECT` únicamente sobre la
   vista del catálogo público: la tienda funciona sin cuenta, el resto del panel
-  no.
+  no. Medido: `usuarios` responde 403 al anónimo.
 - RLS en todas las tablas de negocio. Las vistas corren con
   `security_invoker = true` para que hereden las políticas del que consulta.
-- El rol admin no se deduce del token sino de la fila `public.usuarios.rol`, que
-  es la fuente de verdad del negocio.
+- El rol admin no se deduce del token sino de la fila `public.usuarios.rol`,
+  que es la fuente de verdad del negocio: promover a un admin sigue siendo un
+  `UPDATE` de una columna.
 - Las contraseñas de los clientes del proyecto viejo se verifican con bcrypt y
   se re-hashean a scrypt en el primer inicio de sesión correcto: nadie tiene que
-  restablecer su contraseña (ver `docs/ADR/002-...`).
+  restablecer su contraseña (ver `docs/ADR/002-...` y `piloto/sonda-bcrypt.mjs`).
+- La única excepción documentada a RLS es `GET /tasa` en `tasabcv`: lectura de
+  la última tasa publicada, sin token, porque el dato es público por naturaleza
+  y la tabla `tasas_cambio` es de solo admin.
 
 ## Pendientes de esta migración
 
-1. `public/og.png` (1200×630) con la marca aprobada — sin él, los enlaces
+1. **Importar los datos reales.** El andamiaje está escrito y medido contra un
+   simulacro sintético (`db/importar/`, receta en `db/README.md`); falta la
+   credencial de entrada: el Personal Access Token de Supabase del dueño o la
+   contraseña correcta del rol `postgres`. Sin ella no se toca el `main` del
+   proyecto Neon — la importación real va primero a una rama desechable hasta
+   que las cuentas del `verificar.sql` cuadren.
+2. Desplegar las tres Functions en la rama por defecto y publicar el `dist` en
+   GitHub Pages, con la redirección del proyecto viejo **conservando el hash**.
+3. Verificación de extremo a extremo sobre datos reales (bloques A–F de
+   `docs/07-despliegue.md`).
+4. `public/og.png` (1200×630) con la marca aprobada — sin él, los enlaces
    compartidos salen sin imagen.
-2. `favicon` de Blink Plans.
-3. Barrido de los grises `slate-*` de Tailwind a los tokens de la marca, con
+5. `favicon` de Blink Plans.
+6. Barrido de los grises `slate-*` de Tailwind a los tokens de la marca, con
    revisión visual en escritorio y móvil.
-4. Actualizar `docs/01`…`docs/07` al backend nuevo (hoy describen Supabase).
+7. `docs/02`, `03`, `05`, `06` y `07` aún describen Supabase. `docs/ADR/002`
+   es la corrección de fondo; cada capítulo marcado como histórico dice qué
+   sigue vigente y qué no.

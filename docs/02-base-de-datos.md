@@ -1,5 +1,12 @@
 # 02 — Base de datos
 
+> **Estado (2026-11-10):** el modelo de datos de este capítulo sigue vigente —
+> entidades, relaciones, dinero y conversiones no cambiaron con el proveedor.
+> Lo que ya no existe es el proyecto Supabase del encabezado: el esquema vivo
+> es [`db/`](../db/) (0000 roles · 0001 negocio+RLS · 0002 permisos ·
+> 0003 Better Auth), y `auth.uid()` pasó a leerse del claim `sub` de
+> `request.jwt.claims`. Las automatizaciones del final no usan `cron.job`.
+
 > Proyecto Supabase: `xbmewcmpfnligeodggop` · Región: `us-west-2`
 > Migraciones fuente: [`supabase/migrations/`](../supabase/migrations/)
 > Pooler: `aws-0-us-west-2.pooler.supabase.com:5432` (usuario `postgres.<ref>`; el host directo `db.<ref>.supabase.co` no resuelve)

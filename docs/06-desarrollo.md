@@ -1,5 +1,13 @@
 # 06 — Desarrollo local
 
+> **Estado (2026-11-10): el setup cambió.** Ya no hay `supabase start` ni
+> `supabase db push`. El ciclo local es `neon dev --source <function> --port
+> <n> --env .env.local` —**de una en una**, porque lanzadas en paralelo dos
+> Functions terminaban sirviendo el mismo código—, `npm run dev` para el front,
+> y `neon deploy --env .env.local` para aplicar `neon.ts` a la rama enlazada.
+> El esquema se aplica con `psql` sobre `DATABASE_URL_UNPOOLED` en el orden de
+> `db/`. Las convenciones de código de este capítulo no cambiaron.
+
 ## 1. Requisitos
 
 - Node.js **24+** y npm **11+** (verificar: `node --version`, `npm --version`)

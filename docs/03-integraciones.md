@@ -1,5 +1,13 @@
 # 03 — Integraciones y claves
 
+> **Estado (2026-11-10): capítulo histórico.** Describe el proyecto Supabase
+> (project ref, anon key, service_role, Edge Functions). Nada de eso forma
+> parte ya del panel: no viaja ninguna clave en el bundle y la autorización la
+> decide RLS sobre el rol del token. Las variables actuales —públicas y
+> secretas, y por qué no son intercambiables— están en
+> [`.env.example`](../.env.example) y en `neon.ts`. Lo que sí sigue vigente es
+> la parte de GitHub y del BCV como fuente externa.
+
 > ⚠️ Este documento NO contiene valores reales. Los secretos viven solo en `.env` (debidamente restringido) y se referencian con placeholders.
 
 ## 1. Supabase

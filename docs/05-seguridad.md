@@ -1,5 +1,14 @@
 # 05 — Seguridad
 
+> **Estado (2026-11-10):** el modelo de roles, RLS y `security_invoker` sigue
+> siendo el descrito. Dos cosas cambiaron: (1) ya no existe la `service_role`
+> ni la anon key —bajo Neon no hay ninguna credencial en el navegador y por lo
+> tanto nada que publicar por error—, y (2) la cadena de conexión de Neon
+> (`DATABASE_URL`) es el secreto más sensible del sistema, vive solo en el
+> despliegue de la Function y nunca puede acabar en `VITE_*`. La política de
+> rotación de `BETTER_AUTH_SECRET` y `BLINK_DATA_JWT_SECRET` está en
+> `docs/ADR/002`.
+
 ## 1. Principios
 
 1. **El `service_role` nunca se expone en el frontend.** Solo Edge Functions y scripts de administración.

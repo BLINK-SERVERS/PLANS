@@ -1,6 +1,13 @@
 # 01 — Arquitectura
 
-> Fecha: 2026-09-19 · Estado: vigente
+> Fecha: 2026-09-19 · Estado: **superado en su capa de servicios**
+> El modelo cliente-servidor de este documento sigue siendo el correcto. Lo que
+> cambió el 2026-11-10 fue quién ejecuta cada pieza: Supabase (BaaS) pasó a
+> **Neon** con tres Functions propias. Ver
+> [`ADR/002-neon-en-lugar-de-supabase.md`](./ADR/002-neon-en-lugar-de-supabase.md)
+> y la tabla de tecnologías del `README.md` del repo. Donde este documento dice
+> «Edge Function», hoy lee «Neon Function»; donde dice «PostgREST desde el
+> navegador», hoy lee «Function `datos`».
 
 ## 1. Visión general
 
