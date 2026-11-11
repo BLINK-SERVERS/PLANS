@@ -44,7 +44,11 @@ SET row_security = off;
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA public;
+-- `IF NOT EXISTS` añadido: pg_dump emite `CREATE SCHEMA public` pelado y en
+-- Neon la base recién creada YA trae `public` (es de pg_database_owner), así
+-- que el montaje de una base nueva se caía en esta línea con 42P06. Medido en
+-- el simulacro de db/importar/.
+CREATE SCHEMA IF NOT EXISTS public;
 
 
 --

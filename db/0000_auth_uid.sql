@@ -10,6 +10,36 @@
 -- y las 2 funciones del esquema viejo se puertan sin tocar una coma.
 create schema if not exists auth;
 
+-- Los dos roles con los que la Function `datos` hace `SET ROLE`. Nadie los
+-- creaba: en la rama del piloto ya existían porque Neon los trae al
+-- aprovisionar la Data API, y la producción ya no usa Data API (ADR-002).
+-- Medido en db/importar/ (simulacro sobre una base recién creada): una base
+-- nueva de Neon no trae NINGUNO, y el montaje se caía en el primer `grant`.
+--
+-- También se otorgan al dueño de la base — el rol con el que conectan las
+-- Functions. Sin membresía, `set local role authenticated` responde 42501 y
+-- toda la capa de datos se cae; con ella, RLS decide y el dueño no se salta
+-- nada porque el `SET ROLE` siempre ocurre antes de consultar.
+do $$
+declare
+    r text;
+begin
+    foreach r in array array['authenticated', 'anonymous'] loop
+        if not exists (select 1 from pg_roles where rolname = r) then
+            execute format('create role %I nologin', r);
+        end if;
+        if not exists (
+            select 1 from pg_auth_members m
+              join pg_roles mem on mem.oid = m.member
+             where m.roleid = (select oid from pg_roles where rolname = r)
+               and mem.rolname = current_user
+        ) then
+            execute format('grant %I to %I', r, current_user);
+        end if;
+    end loop;
+end
+$$;
+
 -- Devuelve un claim como texto, o NULL si no hay JWT (petición anónima).
 -- `nullif(...,'')` importa: current_setting('request.jwt.claims', true)
 -- responde la cadena vacía cuando la variable no está puesta, y
@@ -47,9 +77,8 @@ as $$
     select coalesce(auth.claim('role'), 'anonymous')
 $$;
 
--- Los roles de la Data API existen desde que Neon aprovisiona el servicio y no
--- se pueden crear ni otorgar desde aquí (piloto/RESULTADOS.md, experimento 1).
--- Solo hace falta abrir el esquema `auth`.
+-- Los roles ya estaban creados arriba (bloque DO), así que aquí solo se abre
+-- el esquema `auth` y se publican las tres funciones.
 grant usage on schema auth to authenticated, anonymous;
 grant execute on function auth.claim(text), auth.uid(), auth.role() to authenticated, anonymous;
 
