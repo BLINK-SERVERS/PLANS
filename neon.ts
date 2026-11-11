@@ -43,6 +43,19 @@ export default defineConfig({
     tasabcv: {
       name: "Tasa BCV diaria + vencimientos",
       source: "functions/tasa-bcv/index.mjs",
+      env: {
+        // No es un adorno: sin esta variable el POST manual del panel
+        // (botón «Actualizar tasa» en Pagos) responde 500
+        // «BLINK_DATA_JWT_SECRET falta o tiene menos de 32 caracteres»,
+        // medido en la rama desplegada el 2026-11-10. El trigger de Neon
+        // entra por cabecera y no lo necesita, así que el fallo solo aparece
+        // cuando un humano pide el refresco — que es justo el camino que el
+        // plan deja para el día en que el BCV publica tarde.
+        // `required: true` convierte ese 500 silencioso en un deploy que
+        // revienta antes de tocar nada.
+        BLINK_DATA_JWT_SECRET: { value: process.env.BLINK_DATA_JWT_SECRET, required: true },
+        BLINK_ALLOWED_ORIGINS: { value: process.env.BLINK_ALLOWED_ORIGINS, required: false },
+      },
     },
   },
   branch: (branch) => {

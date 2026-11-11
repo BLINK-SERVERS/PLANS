@@ -4,7 +4,8 @@ name: Publicar en Pages
 # diferencias reales respecto a ese repo:
 #   · el proyecto de origen no tenía `test`, así que no hay paso de tests;
 #   · la configuración viaja por Variables del repo, no por Secrets, porque
-#     solo se exponen valores públicos (endpoint de datos y de auth).
+#     solo se exponen valores públicos: las tres URLs de Function (auth,
+#     datos, tasa).
 # El repo tiene que ser PÚBLICO: GitHub Pages en plan gratuito no funciona en
 # repos privados.
 
@@ -37,10 +38,16 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
         env:
-          # Las dos las fija el panel del repo:
+          # Las fija el panel del repo:
           #   Settings → Secrets and variables → Actions → Variables
-          VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL }}
-          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL }}
+          # Son las tres URLs de Function de la rama de producción, una por
+          # cada servicio (login, datos, tasa). `neon functions get auth` da el
+          # valor exacto en `invocation_url`. No son Secrets: una URL de
+          # Function ya la ve quien abra la pestaña de Red del navegador, y el
+          # bundle no recibe ninguna credencial.
+          VITE_BLINK_AUTH_URL: ${{ vars.VITE_BLINK_AUTH_URL }}
+          VITE_BLINK_DATOS_URL: ${{ vars.VITE_BLINK_DATOS_URL }}
+          VITE_BLINK_TASA_URL: ${{ vars.VITE_BLINK_TASA_URL }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
