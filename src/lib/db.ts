@@ -51,6 +51,23 @@ async function enviar(
   cuerpo: unknown,
   reintento = true,
 ): Promise<Resultado> {
+  // Sin la URL no hay fetch que hacer, y el fallo que produce dejarlo pasar
+  // es peor que confesarlo: `fetch('/consulta')` recae en el propio host
+  // estático y la tienda muestra «la base de datos respondió HTTP 404»
+  // cuando lo que falta es una Variable del repo (Fase 9) o una línea de
+  // `.env.local`. Se corta aquí, con el nombre de la variable.
+  if (!URL_DATOS) {
+    return {
+      data: null,
+      count: null,
+      error: {
+        message:
+          'falta VITE_BLINK_DATOS_URL: el bundle se construyó sin la URL de la Function `datos`',
+        code: 'ENV',
+      },
+    }
+  }
+
   let token: string | null
   try {
     token = await tokenParaDatos()

@@ -80,6 +80,20 @@ async function pedir<T>(
   opciones: RequestInit = {},
   conSesion = true,
 ): Promise<Respuesta<T>> {
+  // Mismo corte que en db.ts: sin URL la petición recae en el host estático
+  // y el usuario ve un 404 en la pantalla de acceso cuando lo que falta es
+  // la Variable del repo. Se nombra la variable, no el síntoma.
+  if (!URL_AUTH) {
+    return {
+      data: null,
+      error: {
+        message:
+          'falta VITE_BLINK_AUTH_URL: el bundle se construyó sin la URL de la Function `auth`',
+        code: 'ENV',
+      },
+    }
+  }
+
   const cabeceras = new Headers({ 'Content-Type': 'application/json', ...(opciones.headers ?? {}) })
   // El bearer va en cada llamada: Better Auth identifica la sesión por el
   // token (tabla session) y no por cookie, así que `credentials: 'omit'` de
