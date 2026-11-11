@@ -43,7 +43,9 @@ PLANS/
 ├── src/                    frontend React (páginas por dominio del negocio)
 │   ├── lib/                auth, datos (db.ts), sesión (sesion.ts), entorno
 │   ├── pages/              panel admin + tienda pública
-│   └── components/         Layout, UI, tienda, marca Blink
+│   ├── components/         Layout, UI, tienda, marca Blink
+│   └── assets/             marca/ (SVG maestros copiados literal) y fonts/
+├── scripts/                marca, grises, contraste, capturas
 ├── functions/              server-side en Neon: auth, datos, tasa-bcv, _shared
 ├── db/                     esquema portado a Neon (0000 roles … 0003 Better Auth)
 ├── piloto/                 los 7 experimentos del gate y sus sondas
@@ -51,7 +53,7 @@ PLANS/
 │   └── functions/          Edge Function Deno fetch-bcv (portada a functions/)
 ├── docs/                   arquitectura, BD, integraciones, flujos, seguridad, ADR
 ├── neon.ts                 infraestructura como código: las tres Functions y su env
-├── public/                 CNAME, favicon, diseños de gift cards
+├── public/                 CNAME, favicon, iconos, og.png, diseños de gift cards
 └── .github/workflows/      pages.yml
 ```
 
@@ -82,12 +84,45 @@ volvieran a aplicarse.
 | `npm run lint` | oxlint |
 | `npm run build` | `tsc -b` + `vite build` → `dist/` |
 | `npm run preview` | servir el `dist` local |
+| `npm run marca` | regenera favicon, iconos y `og.png` desde los SVG maestros; **sale con error** si un trazo del isotipo no es idéntico al del master |
+| `npm run grises` | barre los grises `slate-*` de Tailwind a los tokens de la marca sobre `src/**/*.tsx` y falla si queda alguno |
+| `npm run contraste` | mide la ratio WCAG de cada tinta de la marca sobre sus tres superficies y falla si alguna baja del umbral que declara el CSS |
+| `npm run capturas -- /tmp/despues` | captura tienda, acceso y carrito en 1440×900 y 390×844 para la revisión visual |
 | `neon dev --source functions/auth/index.mjs --port 4000 --env .env.local` | una Function en local, con recarga |
 | `neon deploy --env .env.local` | aplicar `neon.ts` a la rama enlazada (bundlea y sube las tres Functions) |
 | `node piloto/sonda-bcrypt.mjs` | la verificación de la Fase 5, contra las Functions desplegadas |
 
 `neon dev` se lanza **de una en una**: arrancadas en paralelo, dos Functions
 distintas terminaban sirviendo el mismo código en puertos distintos.
+
+## Marca
+
+Los activos no se redibujan: `src/assets/marca/` guarda copias **byte a byte**
+de los maestros del ecosistema (`blink-isotipo.svg`, `blink-wordmark.svg`,
+`blink-lockup.svg`) y `scripts/marca.mjs` compone sobre ellos el favicon, los
+iconos de app y el `og.png` de 1200×630. Antes de rasterizar, el script
+compara los tres trazos del isotipo con los del master y **sale con código 1**
+si alguno difiere, así que un "lo arreglé de ojo" no puede colarse en un
+`npm run marca`. La rasterización va por Chromium (`playwright-core` +
+`CHROMIUM_PATH`), no por ImageMagick: su delegada SVG ignora `currentColor` y
+los `transform`, y eso cambia la silueta.
+
+La tipografía de marca no se redistribuye. El `og.png` fija **Inter**, servida
+embebida como data URL desde `src/assets/fonts/inter-latin.woff2` (licencia
+SIL OFL, `src/assets/fonts/LICENSE-Inter.txt`), porque SF Pro no se puede
+publicar en un PNG ajeno; en el panel la pila sí pide SF Pro al sistema con
+`local()` y cae en Inter. El razonamiento completo está en el comentario de
+CAPA 1 de `src/index.css`.
+
+Los grises del panel son los de la casa, no los de Tailwind: `@theme` en
+`src/index.css` declara `blink-dark`, `blink-muted`, `blink-ink-mute`,
+`blink-line`, `blink-line-strong`, `blink-fill`, `blink-fill-strong`,
+`blink-soft` y `blink-scrim`, y la tabla de equivalencias `slate-* → token`
+vive en el comentario de ese bloque. `npm run grises` aplica la tabla y
+`npm run contraste` verifica las ratios: la tinta secundaria es **#6A6A6F**
+porque da 5,38:1 sobre blanco, 5,03:1 sobre `blink-fill` y 4,57:1 sobre
+`blink-fill-strong`, mientras que el `slate-400` anterior daba 2,56:1 y no
+pasaba ni el AA de texto grande.
 
 ## Entorno
 
@@ -143,11 +178,6 @@ una URL de Function.
    GitHub Pages, con la redirección del proyecto viejo **conservando el hash**.
 3. Verificación de extremo a extremo sobre datos reales (bloques A–F de
    `docs/07-despliegue.md`).
-4. `public/og.png` (1200×630) con la marca aprobada — sin él, los enlaces
-   compartidos salen sin imagen.
-5. `favicon` de Blink Plans.
-6. Barrido de los grises `slate-*` de Tailwind a los tokens de la marca, con
-   revisión visual en escritorio y móvil.
-7. `docs/02`, `03`, `05`, `06` y `07` aún describen Supabase. `docs/ADR/002`
+4. `docs/02`, `03`, `05`, `06` y `07` aún describen Supabase. `docs/ADR/002`
    es la corrección de fondo; cada capítulo marcado como histórico dice qué
    sigue vigente y qué no.

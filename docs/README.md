@@ -31,8 +31,9 @@
 | 03 | Integraciones y claves | **Histórico.** Describe el proyecto Supabase (ref, anon/service key, Edge Functions). Las variables actuales están en `.env.example`. |
 | 04 | Flujos de negocio | **Vigente.** Los flujos (referidos 30 %, cupos, BCV, multi-suscripción) no cambiaron con el proveedor. |
 | 05 | Seguridad | Vigente en el modelo de roles y RLS. Obsoleto en todo lo que mencione la `service_role` o la anon key: aquí no viaja ninguna clave en el bundle. |
-| 06 | Desarrollo | **Histórico** para el setup (ya no `supabase start` / `supabase db push`, sino `neon dev` / `neon deploy`). |
+| 06 | Desarrollo | **Vigente** para el ciclo de trabajo de este repo: §3 lista los scripts reales (`marca`, `grises`, `contraste`, `capturas`), §3b las dependencias actuales y §6 las convenciones de color y marca. §4, §5 y §7 siguen describiendo el ciclo viejo (`supabase/migrations`, la CLI de Supabase y `src/lib/supabase.ts`): el esquema vivo es `db/` y el cliente es `src/lib/db.ts`. |
 | 07 | Despliegue | **Histórico** para Edge Functions y pg_cron; sustituidos por Neon Functions y un Function Trigger (`0 22 * * *`, UTC). |
+| 08 | Changelog | **Vigente**: la entrada del 2026-11-10 cierra las fases ejecutadas; debajo queda el historial v0.1–v0.5 del proyecto viejo, tal como se escribió entonces. |
 
 La regla 1 de más abajo se sigue cumpliendo: un capítulo se actualiza en el
 mismo commit que cambia el código. Donde aún no se reescribió el capítulo, la

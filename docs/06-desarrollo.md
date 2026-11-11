@@ -6,13 +6,19 @@
 > Functions terminaban sirviendo el mismo código—, `npm run dev` para el front,
 > y `neon deploy --env .env.local` para aplicar `neon.ts` a la rama enlazada.
 > El esquema se aplica con `psql` sobre `DATABASE_URL_UNPOOLED` en el orden de
-> `db/`. Las convenciones de código de este capítulo no cambiaron.
+> `db/`. Las convenciones de negocio (§6) no cambiaron; sí se añadieron las de
+> color y marca, y §3 y §3b corresponden ya a los scripts y dependencias de
+> este repo.
 
 ## 1. Requisitos
 
 - Node.js **24+** y npm **11+** (verificar: `node --version`, `npm --version`)
 - Git 2.53+
-- Supabase CLI (opcional, para edge functions y `db push`): `supabase --version`
+- **Neon CLI** (`neon --version`; se instala con `npm i -g neon`): aplica
+  `neon.ts`, lanza las Functions en local y despliega. Es la que reemplazó a la
+  Supabase CLI de este capítulo, que ya no interviene en el ciclo.
+- Chromium en `/usr/bin/chromium` (o `CHROMIUM_PATH`) solo para `npm run marca`
+  y `npm run capturas`.
 
 ## 2. Setup
 
@@ -39,16 +45,29 @@ npm run dev          # http://localhost:5173
 | build | `npm run build` | build de producción (tsc + vite) |
 | preview | `npm run preview` | sirve el build localmente |
 | lint | `npm run lint` | oxlint (config `.oxlintrc.json`) |
+| typecheck | `npm run typecheck` | `tsc -b` sin emitir |
+| marca | `npm run marca` | favicon, iconos de app y `og.png` desde los SVG maestros; **falla si un trazo del isotipo difiere del master** |
+| grises | `npm run grises` | aplica la tabla `slate-* → token` de `src/index.css` sobre los `.tsx`; **falla si queda algún `slate-*`** |
+| contraste | `npm run contraste` | ratios WCAG de cada tinta sobre sus tres superficies; **falla si alguna baja del umbral que declara el CSS** |
+| capturas | `npm run capturas -- /tmp/despues` | las rutas públicas a 1440×900 y 390×844, para la revisión visual antes/después |
+
+`marca` y `capturas` necesitan Chromium (`CHROMIUM_PATH`, por defecto
+`/usr/bin/chromium`). Los cuatro son **comprobaciones**, no pasos del build: un
+`npm run build` limpio no garantiza que la marca sea la aprobada ni que el gris
+nuevo pase AA, y esas son justamente las dos cosas que se cuelan.
 
 ## 3b. Dependencias del frontend (Fase 2)
 
 | Paquete | Uso |
 |---|---|
-| `@supabase/supabase-js` | cliente REST (PostgREST) |
-| `react-router-dom` (v7) | rutas `/`, `/clientes`, `/suscripciones`, `/plataformas`, `/cuentas-madre`, `/proveedores`, `/pagos`, `/comisiones` |
-| `tailwindcss` + `@tailwindcss/vite` (v4) | estilos utilitarios (plugin de Vite, import en `index.css`) |
+| `src/lib/db.ts` (propio) | el cliente de datos, **con la forma de `supabase-js`** pero sin `@supabase/supabase-js`: registra la cadena que se habría escrito y la manda a la Function `datos`. `api.ts` sigue diciendo `.from('suscripciones').select(...).eq(...)`. |
+| `react-router-dom` (v7) | `HashRouter`. Panel: `clientes`, `suscripciones`, `plataformas`, `cuentas-madre`, `proveedores`, `pagos`, `comisiones`, `pedidos`, `planes`. Tienda y acceso: `/`, `/tienda`, `/tienda/:slug`, `/carrito`, `/checkout`, `/login`, `/registro`, `/ingreso`. |
+| `tailwindcss` + `@tailwindcss/vite` (v4) | estilos utilitarios (plugin de Vite, import en `index.css`), con los tokens de `@theme` |
+| `playwright-core` (dev) | solo para rasterizar la marca y capturar las revisiones visuales; **no** es framework de test |
 
-> `date-fns` **no** se usa: las utilidades de fecha/moneda viven en `src/lib/format.ts` (Intl nativo).
+> `@supabase/supabase-js` **ya no es dependencia**: se fue con la Fase 6 (no hay
+> anon key que embutir). `date-fns` **no** se usa: las utilidades de
+> fecha/moneda viven en `src/lib/format.ts` (Intl nativo).
 > ⚠️ npm puede fallar en Windows si se lanzan dos `npm install` a la vez en la misma carpeta
 > (colisiones de extracción). Si `node_modules` queda corrupto: borrar `node_modules` y
 > `package-lock.json` y volver a instalar.
@@ -84,6 +103,26 @@ supabase functions deploy fetch-bcv --no-verify-jwt
 - **Commits**: mensajes tipo Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`).
 - Cada cambio que afecte comportamiento se refleja en `docs/08-changelog.md`.
 - **Consultas a datos**: todas a través de `src/lib/api.ts` (capa única); cambiar aquí es cambiar todo.
+- **Color**: utilidades `blink-*` de `@theme`, nunca `slate-*` de Tailwind ni
+  hex sueltos. La escala de grises de la casa es neutra; la de Tailwind trae
+  subtono azul y, mezclas, se ven como dos familias distintas en la misma
+  tarjeta. Si hace falta un gris nuevo, se declara en `@theme`, se le pasa su
+  par a `scripts/contraste.mjs` y se corre `npm run grises` para arrastrar los
+  usos viejos.
+- **Marca**: los SVG de `src/assets/marca/` son copias literales de los
+  maestros del ecosistema y no se redibujan a mano; cualquier derivado (favicon,
+  iconos, `og.png`) sale de `npm run marca`, que comprueba trazo a trazo contra
+  el master. Un PNG nunca es la fuente.
+- **Tailwind solo escruta la app**: `src/index.css` importa con `source(none)`
+  y declara `@source "./**/*.{ts,tsx}"` y `@source "../index.html"`. Con la
+  detección automática encendida, cualquier archivo del repo es una fuente y se
+  lee cadena por cadena: la tabla de `scripts/grises.mjs`, los comentarios del
+  propio CSS y este changelog que citan clases las reinyectaban en el bundle
+  justo después de barrerlas del código (medido: `.bg-slate-100{}` en el `dist`
+  con cero `slate-*` en los `.tsx`, más cuatro utilidades fantasma —
+  `contents`, `isolate`, `table`, `transform`— que nadie usa). Si se añade una
+  carpeta de código de aplicación, entra en el `@source`; si se añade una de
+  herramientas, no.
 
 ## 7. Estructura del frontend (Fase 2 / 2.1)
 
