@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1" shape-rendering="geometricPrecision" fill="none">
+  <title>Blink Plans — favicon</title>
+  <desc>Campo azul de marca #007AFF con el isotipo de Blink en blanco de marca #FFFEFB, centrado. Esquina redondeada a 230/1024, la misma proporción del favicon maestro del ecosistema. Los tres trazos del rostro son los del master aprobado (src/assets/marca/blink-isotipo.svg), copiados byte a byte y llevados al centro con translate(512 512) scale(1.7778) translate(-256 -256): la caja del isotipo es 76 114 360 284, así que su centro de tinta ES (256, 256) y la marca queda ópticamente centrada sin mover un punto. Ninguna geometría nueva: ver scripts/marca.mjs, que comprueba los `d` contra el master y corta si difieren.</desc>
+  <g inkscape:groupmode="layer" inkscape:label="Fondo" id="capa-fondo">
+    <rect id="fondo" x="0" y="0" width="1024" height="1024" rx="230" fill="#007AFF"/>
+  </g>
+  <g inkscape:groupmode="layer" inkscape:label="Isotipo" id="capa-isotipo">
+    <g id="isotipo" transform="translate(512 512) scale(1.7778) translate(-256 -256)" fill="#FFFEFB">
+      <path id="ojo-guino" d="M 122 164 H 178 C 198 164 224 164 224 198 C 224 232 198 232 178 232 H 122 C 102 232 76 232 76 198 C 76 164 102 164 122 164 Z"/>
+      <path id="ojo-abierto" d="M 436 182 A 68 68 0 1 1 299.99 182 A 68 68 0 1 1 436 182 Z"/>
+      <path id="boca" d="M 212 286 H 300 C 331.55 286 340.42 286 337.5 314 C 332.064081 366.125250 298 398 256 398 C 214 398 179.935919 366.125250 174.5 314 C 171.58 286 180.45 286 212 286 Z"/>
+    </g>
+  </g>
+</svg>

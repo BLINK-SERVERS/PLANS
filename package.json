@@ -8,7 +8,11 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "marca": "CHROMIUM_PATH=${CHROMIUM_PATH:-/usr/bin/chromium} node scripts/marca.mjs",
+    "grises": "node scripts/grises.mjs",
+    "contraste": "node scripts/contraste.mjs",
+    "capturas": "CHROMIUM_PATH=${CHROMIUM_PATH:-/usr/bin/chromium} node scripts/capturas.mjs"
   },
   "dependencies": {
     "@neon/config": "^1.14.0",
@@ -29,6 +33,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
     "pg": "^8.23.1",
+    "playwright-core": "^1.65.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"

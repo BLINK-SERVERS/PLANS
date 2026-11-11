@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Blink Plans — reventa y gestión de suscripciones digitales: proveedores, cuentas madre, clientes, referidos y control cambiario BCV." />
     <title>Blink Plans · Gestión de suscripciones</title>
@@ -19,15 +22,18 @@
     <meta property="og:image" content="https://plans.blink.com.ve/og.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Blink Plans — elige tu plataforma, contrata el plan. Pagas en USDT, USD o Bs a la tasa oficial del BCV.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Blink Plans — Gestión de suscripciones digitales">
     <meta name="twitter:description" content="Elige tu plataforma, contrata el plan y pagas en USDT, USD o BS a la tasa oficial del BCV.">
     <meta name="twitter:image" content="https://plans.blink.com.ve/og.png">
 
-    <!-- og.png (1200x630) todavía no existe: es entrega de diseño con la
-         marca aprobada. Sin ese archivo, los enlaces compartidos salen sin
-         imagen de preview. Hay que subirlo ANTES de cortar la redirección
-         de go-plans.github.io (Fase 9). -->
+    <!-- favicon.*, apple-touch-icon.png, icono-512.png y og.png no se diseñan
+         a mano ni se editan: los produce `npm run marca` (scripts/marca.mjs)
+         desde los masters aprobados de src/assets/marca/, y ese script sale
+         con código distinto de cero si un solo carácter de los trazos del
+         isotipo difiere del master. Si hay que cambiar la marca, se cambia
+         el master del ecosistema y se vuelve a correr el script. -->
   </head>
   <body>
     <div id="root"></div>
