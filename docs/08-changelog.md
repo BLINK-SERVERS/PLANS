@@ -30,7 +30,7 @@ acá es lo que se ejecutó y midió, no lo que el plan prometía.
   dormidos y exige paridad de filas y sumas), `cuentas.mjs` (traduce
   `auth.users`/`auth.identities` a Better Auth conservando UUID y bcrypt) y
   `verificar.sql`. Ambos scripts son **seco por defecto**.
-- **docs** `db/README.md` con las cuatro trampas medidas, y la corrección de la
+- **docs** `db/README.md` con las cinco trampas medidas, y la corrección de la
   primera: `pg_restore` **sí** sale con código 1 cuando ignora errores de COPY;
   el `0` que se había anotado venía de leer `$?` detrás de una tubería.
 - **security** Los volcados nunca se versionan: `supabase/migrations/0002_...`
@@ -92,9 +92,25 @@ acá es lo que se ejecutó y midió, no lo que el plan prometía.
 
 ### Pendiente al cerrar esta entrada
 
-La importación real de datos sigue bloqueada por la credencial de entrada del
-proyecto Supabase, y el despliegue en la rama por defecto (Functions + Pages +
-redirección que conserve el hash) requiere la aprobación del dueño.
+La importación real de datos sigue bloqueada por **una credencial que no
+cuadra**, y ya está acotado de qué tipo es el bloqueo. Medido desde esta
+máquina contra el proyecto viejo:
+
+- El host directo `db.xbmewcmpfnligeodggop.supabase.co` responde solo con AAAA y
+  aquí no hay salida IPv6 → `Network is unreachable`. Eso no es la base caída ni
+  un firewall; es la familia de direcciones (trampa 5 en `db/README.md`).
+- El pooler de sesión `aws-0-us-west-2.pooler.supabase.com:5432`, usuario
+  `postgres.xbmewcmpfnligeodggop`, **sí** llega: hay handshake TLS y el servidor
+  contesta. Con la contraseña guardada en `~/.config/blink-plans/viejo-db-pass`
+  responde `FATAL: password authentication failed for user "postgres"`.
+
+O sea: el camino funciona y lo que falta es el secreto correcto. Sirve cualquiera
+de las dos — la contraseña actual del rol `postgres` de ese proyecto (en el
+dashboard: Settings → Database → Reset database password) o un Personal Access
+Token, con el que además se puede rotar esa contraseña y bajar el volcado desde
+`Database → Backups` sin abrir el pooler. El despliegue en la rama por defecto
+(Functions + Pages + redirección que conserve el hash) no pide credencial: pide
+aprobación del dueño.
 
 ## Historial del proyecto viejo (`go-plans/suscripciones`)
 

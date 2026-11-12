@@ -67,7 +67,7 @@ node db/importar/cuentas.mjs --aplicar     # 2 · traduce auth.users → user/ac
 pagos, comisiones, tasas) y `cuentas.mjs` mueve **las identidades**, que son las
 tablas `auth.*` de Supabase — esas no se vuelcan porque aquí no existen.
 
-## Cuatro trampas que este directorio ya midió
+## Cinco trampas que este directorio ya midió
 
 ### 1 · Restaurar con los disparadores despiertos no es un traslado: es una recalculación
 
@@ -138,6 +138,25 @@ Sin esa igualdad, con un solo `account` de `credential` por usuario, el SignIn
 responde `USER_NOT_FOUND` aunque el bcrypt esté perfecto (piloto,
 `RESULTADOS.md` → «lo que hay que arrastrar», punto 3). El importador lo escribe
 así y lo comprueba después, junto con que el bcrypt viajó byte a byte.
+
+### 5 · El host directo del viejo es IPv6-only, y desde esta máquina no hay ruta
+
+`db.xbmewcmpfnligeodggop.supabase.co` responde **solo con AAAA** (medido:
+`getent ahostsv4` no devuelve nada, `ahostsv6` sí) y esta máquina no tiene
+salida IPv6 (`ip -6 route get …` → `Network is unreachable`). Con la cadena de
+conexión «la de siempre» de el dashboard, `volcar.sh` corta en el preflight con
+
+```
+psql: error: connection to server at "db.xbmewcmpfnligeodggop.supabase.co" failed: Network is unreachable
+```
+
+que se lee como «la base está caída» o «el firewall me bloquea» y no es ninguna
+de las dos: es la familia de direcciones. El camino que sí llega es el **pooler
+de sesión**, que tiene registro A — `aws-0-us-west-2.pooler.supabase.com:5432`,
+usuario `postgres.<ref>` (lo documenta `docs/03-integraciones.md`) — y desde ahí
+el servidor contesta hasta el `password authentication failed`, que es un
+problema de credencial y no de red. La diferencia importa porque el primer
+mensaje te hace esperar caído algo que está levantado.
 
 ## El fixture: cómo volver a medir todo esto sin datos de clientes
 

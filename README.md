@@ -68,7 +68,7 @@ que sale `0001`, versionado para que el port sea revisable contra el original.
 filas y sumas, y `cuentas.mjs` traduce `auth.users`/`auth.identities` a las
 tablas de Better Auth conservando el UUID y el bcrypt de cada cliente. Ambos
 son **seco por defecto** (`--aplicar` para escribir) y `db/README.md` documenta
-las cuatro trampas que midieron.
+las cinco trampas que midieron.
 
 `supabase/` se conserva como **registro histórico**, no como script a ejecutar:
 las migraciones 0003, 0004, 0005 y 0011 contienen `INSERT` de datos demo con
@@ -170,10 +170,13 @@ una URL de Function.
 
 1. **Importar los datos reales.** El andamiaje está escrito y medido contra un
    simulacro sintético (`db/importar/`, receta en `db/README.md`); falta la
-   credencial de entrada: el Personal Access Token de Supabase del dueño o la
-   contraseña correcta del rol `postgres`. Sin ella no se toca el `main` del
-   proyecto Neon — la importación real va primero a una rama desechable hasta
-   que las cuentas del `verificar.sql` cuadren.
+   credencial de entrada. Acotado: el pooler del proyecto viejo responde (la
+   contraseña que tenemos da `password authentication failed`, y el host directo
+   `db.…supabase.co` es IPv6-only desde una máquina sin IPv6 — trampa 5). Hace
+   falta una de las dos: la contraseña actual del rol `postgres` de
+   `xbmewcmpfnligeodggop` o un Personal Access Token de Supabase. Sin ella no se
+   toca el `main` del proyecto Neon — la importación real va primero a una rama
+   desechable hasta que las cuentas del `verificar.sql` cuadren.
 2. Desplegar las tres Functions en la rama por defecto y publicar el `dist` en
    GitHub Pages, con la redirección del proyecto viejo **conservando el hash**.
 3. Verificación de extremo a extremo sobre datos reales (bloques A–F de
