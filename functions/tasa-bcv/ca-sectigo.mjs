@@ -1,13 +1,63 @@
 // Cadena de certificación que hace falta para verificar bcv.org.ve.
 //
-// El servidor del BCV envía el leaf firmado por «Sectigo Public Server
-// Authentication CA DV R36» pero NO envía ese intermedio (manda el antiguo
-// «Sectigo RSA DV Secure Server CA»). OpenSSL no persigue el AIA por sí
-// solo, así que cualquier cliente estricto corta la verificación con
-// UNABLE_TO_VERIFY_LEAF_SIGNATURE — medido en la Etapa B: ni fetch ni
-// https.get del sistema lo pasan. Se fijan el intermedio R36 y la raíz
-// R46, descargados de http://crt.sectigo.com y del almacén público de
-// Debian: son certificados de CA públicos, no material sensible.
+// El servidor del BCV manda el leaf y UNA intermedia que no es su issuer, así
+// que ningún cliente estricto arma la cadena con lo que viene del peer: hay que
+// fijar a mano el eslabón que falta.
+//
+// Medido el 2026-11-25 contra www.bcv.org.ve, tres combinaciones posibles:
+//   · [DV R36, Raíz R46]  → unable to verify the first certificate
+//   · [DV R36, OV R36, Raíz R46]  → unable to verify the first certificate
+//   · [OV R36, Raíz R46]  → HTTP 200 y fecha valor 2026-11-26
+// El BCV cambió de perfil: la hoja de hoy la emitió «Sectigo Public Server
+// Authentication CA OV R36» (el AKI de la hoja, E3:66:74:BB…9C:82:92, es el SKI
+// de ese cross-cert). Juntar las dos R36 en el mismo almacén no sirve de "por si
+// acaso": rompe la verificación, es la segunda fila de la tabla.
+//
+// De ahí salen dos cadenas en orden de intento, para que un regreso al perfil DV
+// no deje el cobro en bolívares sin tasa.
+//
+// Los cross-certificados se bajaron de crt.sectigo.com por HTTP, porque ese host
+// no negocia TLS desde esta red. El transporte no es la garantía: cada uno quedó
+// validado por firma contra la Raíz R46 ya pinneada
+// (`openssl verify -CAfile raiz_r46.pem ov_r36.pem` → OK). Son certificados de CA
+// públicos, no material sensible.
+
+export const INTERMEDIO_OV_R36 = `-----BEGIN CERTIFICATE-----
+MIIGTDCCBDSgAwIBAgIQLBo8dulD3d3/GRsxiQrtcTANBgkqhkiG9w0BAQwFADBf
+MQswCQYDVQQGEwJHQjEYMBYGA1UEChMPU2VjdGlnbyBMaW1pdGVkMTYwNAYDVQQD
+Ey1TZWN0aWdvIFB1YmxpYyBTZXJ2ZXIgQXV0aGVudGljYXRpb24gUm9vdCBSNDYw
+HhcNMjEwMzIyMDAwMDAwWhcNMzYwMzIxMjM1OTU5WjBgMQswCQYDVQQGEwJHQjEY
+MBYGA1UEChMPU2VjdGlnbyBMaW1pdGVkMTcwNQYDVQQDEy5TZWN0aWdvIFB1Ymxp
+YyBTZXJ2ZXIgQXV0aGVudGljYXRpb24gQ0EgT1YgUjM2MIIBojANBgkqhkiG9w0B
+AQEFAAOCAY8AMIIBigKCAYEApkMtJ3R06jo0fceI0M52B7K+TyMeGcv2BQ5AVc3j
+lYt76TvHIu/nNe22W/RJXX9rWUD/2GE6GF5x0V4bsY7K3IeJ8E7+KzG/TGboySfD
+u+F52jqQBbY62ofhYjMeiAbLI02+FqwHeM8uIrUtcX8b2RCxF358TB0NHVccAXZc
+FYgZndZCeXxjuca7pJJ20LLUnXtgXcjAE1vY4WvbReW0W6mkeZyNGdmpTcFs5Y+s
+yy6LtE5Zocji9J9NlNnReox2RWVyEXpA1ChZ4gqN+ZpVSIQ0HBorVFbBKyhdZyEX
+gZgNSNtBRwxqwIzJePJhYd4ZUhO1vk+/uP3nwDk0p95q/j7naXNCSvESnrHPypaB
+WRK066nKfPRPi9m9kIOhMdYfS8giFRTcdgL24Ycilj7ecAK9Trh0VbjwouJ4WH+x
+bt47u68ZFCD/ac55I0DNHkCpaPruj6e9Rmr7K46wZDAYXuEAqB7tGG/jd6JAA+H2
+O44CV98NRsU213f1kScIZntNAgMBAAGjggGBMIIBfTAfBgNVHSMEGDAWgBRWc1hk
+lfmSGrASKgRieaFAFYghSTAdBgNVHQ4EFgQU42Z0u3BojSxdTg6mSo+bNyKcgpIw
+DgYDVR0PAQH/BAQDAgGGMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0lBBYwFAYI
+KwYBBQUHAwEGCCsGAQUFBwMCMBsGA1UdIAQUMBIwBgYEVR0gADAIBgZngQwBAgIw
+VAYDVR0fBE0wSzBJoEegRYZDaHR0cDovL2NybC5zZWN0aWdvLmNvbS9TZWN0aWdv
+UHVibGljU2VydmVyQXV0aGVudGljYXRpb25Sb290UjQ2LmNybDCBhAYIKwYBBQUH
+AQEEeDB2ME8GCCsGAQUFBzAChkNodHRwOi8vY3J0LnNlY3RpZ28uY29tL1NlY3Rp
+Z29QdWJsaWNTZXJ2ZXJBdXRoZW50aWNhdGlvblJvb3RSNDYucDdjMCMGCCsGAQUF
+BzABhhdodHRwOi8vb2NzcC5zZWN0aWdvLmNvbTANBgkqhkiG9w0BAQwFAAOCAgEA
+BZXWDHWC3cubb/e1I1kzi8lPFiK/ZUoH09ufmVOrc5ObYH/XKkWUexSPqRkwKFKr
+7r8OuG+p7VNB8rifX6uopqKAgsvZtZsq7iAFw04To6vNcxeBt1Eush3cQ4b8nbQR
+MQLChgEAqwhuXp9P48T4QEBSksYav7+aFjNySsLYlPzNqVM3RNwvBdvp6vgDtGwc
+xlKQZVuuNVIaoYyls8swhxDeSHKpRdxRauTLZ+pl+wGvy0pnrLEJGSz9mOEmfbod
+e/XopR2NGqaHJ6bIjyxPu6UtyQGI26En7UAEozACrHz06Nx2jTAY9E6NeB6XuobE
+wLK025ZRmvglcURG1BrV24tGHHTgxCe8M3oGlpUSMTKQ2dkgljZVYt+gKdFtWELZ
+MuRdi+X3XsrR8LFz+aLUiDRfQqhmw3RxjIyVKvvu9UPYY1nsvxYmFnUSeM+2q1z/
+iPUry+xDY9MC6+IhleKT094VKdFVp7LXH42+wvU+17lRolQ2mK2N/nBLVBwaIhib
+QXw4VYKwB86Bc6eS6iqsc94KEgD/U4VsjmgfhK+Xp4NM+VYzTTa3QeV3p8xOM0cw
+q1p8oZFA+OBcz3FYWpDIe5j0NWKlw9hXsTyPY/HeZUV59akskSOSRSmDfe8wJDPX
+58uB9/7lud0G3x0pxQAcffP0ayKavNwDTw4UfJ34cEw=
+-----END CERTIFICATE-----`
 
 export const INTERMEDIO_R36 = `-----BEGIN CERTIFICATE-----
 MIIGTDCCBDSgAwIBAgIQOXpmzCdWNi4NqofKbqvjsTANBgkqhkiG9w0BAQwFADBf
@@ -79,7 +129,10 @@ LvKRRFHQV80MNNVIIb/bE/FmJUNS0nAiNs2fxBx1IK1jcmMGDw4nztJqDby1ORrp
 QqszKbrAKbkTidOIijlBO8n9pu0f9GBj39ItVQGL
 -----END CERTIFICATE-----`
 
-export const CADENA_BCV = [INTERMEDIO_R36, RAIZ_R46]
+// Orden de intento para el raspado: la OV es con la que el BCV responde hoy y
+// la DV queda de respaldo por si el certificado vuelve a perfil DV.
+export const CADENA_BCV = [INTERMEDIO_OV_R36, RAIZ_R46]
+export const CADENAS_BCV = [CADENA_BCV, [INTERMEDIO_R36, RAIZ_R46]]
 // Caducidades (openssl x509 -enddate):
 // notBefore=Mar 22 00:00:00 2021 GMT
 // notAfter=Mar 21 23:59:59 2036 GMT

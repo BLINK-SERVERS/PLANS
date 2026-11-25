@@ -70,8 +70,10 @@ const ORIGENES = (
 // Funciones invocables por /rpc, en lista blanca explícita. En el esquema hay
 // 43 funciones y la inmensa mayoría son triggers o auxiliares de trigger; que
 // una ruta pública pueda llamar a cualquiera es un inventario de sorpresas.
-// El front solo llama a editar_pago (src/lib/api.ts, actualizarPago).
-const RPC_PERMITIDAS = new Set(['editar_pago'])
+// El front llama a editar_pago (src/lib/api.ts, actualizarPago) y a
+// validar_renovacion (migración 0006, src/lib/api.ts, validarRenovacion), que
+// ya se autoriza sola con es_admin() dentro de la función.
+const RPC_PERMITIDAS = new Set(['editar_pago', 'validar_renovacion'])
 
 const METODOS_FILTRO = new Set([
   'eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'like', 'ilike', 'is', 'in',
@@ -584,16 +586,22 @@ async function manejarRpc(body, ident, origin) {
     return json(f.body, f.estado, origin)
   }
 
+  let filas
   try {
-    await enRol(plan.texto, plan.valores, ident.rol, ident.claims)
+    filas = await enRol(plan.texto, plan.valores, ident.rol, ident.claims)
   } catch (e) {
     const code = e.code ?? 'P0001'
     const estado = code === '42501' ? 403 : code === 'P0001' ? 400 : 500
     const f = sinDatos(code, e.message, estado)
     return json(f.body, f.estado, origin)
   }
-  // editar_pago devuelve void: supabase-js también reporta data null.
-  return json({ data: null, error: null, count: null }, 200, origin)
+  // `compilarRpc` arma `select fn(...) as r`, así que el escalar sale en esa
+  // columna. Las dos funciones de la lista blanca devuelven un solo valor:
+  // editar_pago es void (rows[0].r = null → data null, idéntico a antes) y
+  // validar_renovacion devuelve el uuid del pago, o null si el pedido ya
+  // estaba validado. Descartar el resultado, como hacía esta ruta, borraba el
+  // uuid y el panel leía "ya estaba validado" en cada validación buena.
+  return json({ data: filas?.rows[0]?.r ?? null, error: null, count: null }, 200, origin)
 }
 
 export default {

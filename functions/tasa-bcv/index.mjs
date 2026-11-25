@@ -14,6 +14,12 @@
 //      sistema cortan con UNABLE_TO_VERIFY_LEAF_SIGNATURE. Acá no se baja el
 //      nivel de TLS: en un panel que mueve plata, una tasa intermediada por un
 //      MITM sería un fallo grave.
+//    · el 2026-11-25 ese fijado dejó de alcanzar. El BCV reemitió su certificado
+//      bajo el perfil OV y la Function respondía «unable to verify the first
+//      certificate»: la tasa llevaba 66 días sin refrescar (42,50 del 2026-09-20
+//      contra 924,35 reales). Ahora se intentan las dos cadenas y la respuesta
+//      dice cuál verificó. Medido contra la Function desplegada tras el arreglo:
+//      HTTP 200, USD 924,3534, fecha valor 2026-11-26.
 //    · Function Trigger con `--cron` despierta el compute (escala a cero) y
 //      entrega at-least-once; la cabecera x-neon-trigger-invocation-id la
 //      pone Neon y el borde la quita a los clientes, así que su presencia es
@@ -34,7 +40,7 @@ import { Pool } from 'pg'
 import { attachDatabasePool } from '@neon/functions'
 import { parseTriggerDelivery } from '@neon/functions/triggers'
 import { verificarToken } from '../_shared/token.mjs'
-import { CADENA_BCV } from './ca-sectigo.mjs'
+import { CADENAS_BCV } from './ca-sectigo.mjs'
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 })
 attachDatabasePool(pool)
@@ -96,22 +102,39 @@ function obtener(url, headers = {}, ca = undefined) {
   })
 }
 
+// El BCV cambió de perfil de certificación sin avisar y la cadena equivocada no
+// da un error útil: Node corta la verificación del leaf. Se prueban las dos
+// cadenas fijadas y se devuelve cuál pasó, para que el log y la respuesta digan
+// algo cuando la tasa se retrase.
 async function ragparBcv() {
-  const t0 = performance.now()
-  const res = await obtener(BCV_URL, { 'User-Agent': UA, Accept: 'text/html' }, CADENA_BCV)
-  const ms = Math.round(performance.now() - t0)
-  if (res.estado !== 200) throw new Error(`bcv.org.ve respondió ${res.estado} (${ms} ms)`)
-
-  const tasaUsd = extraerTasa(res.cuerpo, 'dolar')
-  if (!tasaUsd) throw new Error('no se encontró el valor USD en el HTML del BCV')
-  return {
-    tasaUsd,
-    tasaEur: extraerTasa(res.cuerpo, 'euro'),
-    fecha: extraerFechaValor(res.cuerpo),
-    ms,
-    bytes: res.cuerpo.length,
-    estado: res.estado,
+  let ultimoError = 'ninguna cadena intentada'
+  for (let i = 0; i < CADENAS_BCV.length; i++) {
+    const etiqueta = i === 0 ? 'ov-r36' : 'dv-r36'
+    const t0 = performance.now()
+    try {
+      const res = await obtener(
+        BCV_URL,
+        { 'User-Agent': UA, Accept: 'text/html' },
+        CADENAS_BCV[i],
+      )
+      const ms = Math.round(performance.now() - t0)
+      if (res.estado !== 200) throw new Error(`bcv.org.ve respondió ${res.estado} (${ms} ms)`)
+      const tasaUsd = extraerTasa(res.cuerpo, 'dolar')
+      if (!tasaUsd) throw new Error('no se encontró el valor USD en el HTML del BCV')
+      return {
+        tasaUsd,
+        tasaEur: extraerTasa(res.cuerpo, 'euro'),
+        fecha: extraerFechaValor(res.cuerpo),
+        ms,
+        bytes: res.cuerpo.length,
+        estado: res.estado,
+        cadena: etiqueta,
+      }
+    } catch (e) {
+      ultimoError = `${etiqueta}: ${e?.message ?? e}`
+    }
   }
+  throw new Error(`bcv.org.ve no verificó con ninguna cadena fijada — ${ultimoError}`)
 }
 
 // ── escritura ──────────────────────────────────────────────────────────
@@ -181,7 +204,7 @@ async function trabajar(cabecera, request) {
       tasa_eur_bs: raspado.tasaEur,
       efecto,
       suscripciones_marcaron_vencidas: vencidas,
-      bcv: { estado: raspado.estado, bytes: raspado.bytes, ms_egreso: raspado.ms },
+      bcv: { estado: raspado.estado, bytes: raspado.bytes, ms_egreso: raspado.ms, cadena: raspado.cadena },
     },
     200,
     request.headers.get('Origin') ?? '',
