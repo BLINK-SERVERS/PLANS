@@ -134,8 +134,8 @@ export default function Checkout() {
 
     if (falloGuardado) {
       setError(
-        `El pedido se envió por WhatsApp ✅ pero no se guardó en el panel (${falloMsg}). ` +
-          'Pide al admin que aplique la migración 0012 para que los pedidos queden registrados.',
+        `El pedido se envió por WhatsApp ✅ pero no se guardó (${falloMsg}). ` +
+          'Anotanos el monto y el comprobante por el chat para que no se pierda.',
       )
       return
     }

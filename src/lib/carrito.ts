@@ -27,7 +27,9 @@ export function leerCarrito(): LineaCarrito[] {
     const raw = localStorage.getItem(CLAVE_CARRITO)
     if (!raw) return []
     const arr = JSON.parse(raw) as LineaCarrito[]
-    return Array.isArray(arr) ? arr : []
+    // Un carrito guardado por una versión anterior trae `precio_ref` como texto;
+    // tal cual echaba abajo Checkout con `.toFixed is not a function`.
+    return Array.isArray(arr) ? arr.map((l) => ({ ...l, precio_ref: Number(l.precio_ref) })) : []
   } catch {
     return []
   }

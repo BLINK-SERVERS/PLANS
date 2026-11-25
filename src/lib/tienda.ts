@@ -54,6 +54,11 @@ interface Agrupado {
 }
 
 export function agruparCatalogo(items: CatalogoItem[]): PlataformaTienda[] {
+  // `numeric` sale de la Function como texto (es la forma en que no se convierte
+  // la plata en float64), así que el `number` del tipo es una promesa que hay que
+  // cumplir acá: sin el `Number` el carrito guarda "1.99" y Checkout revienta en
+  // el primer `.toFixed()`.
+  const usd = (v: number | string | null): number | null => (v == null ? null : Number(v))
   const mapa = new Map<string, Agrupado>()
   for (const it of items) {
     const g = mapa.get(it.plataforma)
@@ -64,12 +69,17 @@ export function agruparCatalogo(items: CatalogoItem[]): PlataformaTienda[] {
   for (const [nombre, g] of mapa) {
     const ordenados = [...g.filas].sort((a, b) => a.duracion_dias - b.duracion_dias)
     const mensual = ordenados.find((p) => p.duracion_dias === MES)
-    const base = mensual?.precio_venta_usd ?? null
+    const base = usd(mensual?.precio_venta_usd ?? null)
     lista.push({
       nombre,
       logo_url: g.logo_url,
       precioMensual: base,
-      planes: ordenados.map((p) => {
+      planes: ordenados.map((raw) => {
+        const p = {
+          duracion_dias: raw.duracion_dias,
+          precio_venta_usd: Number(raw.precio_venta_usd),
+          precio_referencia_usd: usd(raw.precio_referencia_usd),
+        }
         const meses = mesesDe(p.duracion_dias)
         // Ahorro visible:
         //  · el plan mensual se compara con su precio de referencia (tachado), si existe;
