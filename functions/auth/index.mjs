@@ -200,6 +200,25 @@ export const auth = betterAuth({
   },
 })
 
+// better-auth 1.7.19 usa `cors` para resolver el preflight, pero NO pinta
+// `Access-Control-Allow-Origin` en las respuestas de sus propias rutas: medido en
+// la rama desplegada, OPTIONS devuelve 204 con cabeceras y el 401 (o el 200 de
+// `get-session`) salen sin ninguna. Sin ACAO el navegador no puede leer el body y
+// el login se ve muerto aunque la base haya respondido bien. La Function es la
+// dueña del origen, así que lo agrega ella sobre lo que devuelva better-auth.
+const conCors = (res, origin) => {
+  const h = new Headers(res.headers)
+  h.set('Access-Control-Allow-Origin', ORIGENES.includes(origin) ? origin : ORIGENES[0])
+  h.set('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+  h.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+  h.set('Vary', 'Origin')
+  return new Response(res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers: h,
+  })
+}
+
 const json = (obj, estado = 200, origin) =>
   new Response(JSON.stringify(obj), {
     status: estado,
@@ -262,7 +281,7 @@ export default {
       const propia = await rutasPropias(request, url, origin)
       if (propia) return propia
 
-      return await auth.handler(request)
+      return conCors(await auth.handler(request), origin)
     } catch (e) {
       // Legible en `neon logs query --source function`.
       console.error('[auth] handler lanzó:', e?.stack ?? e)

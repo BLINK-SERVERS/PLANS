@@ -4,6 +4,32 @@
 > cambios de código. Formato de líneas: `- [tipo] descripción`
 > (tipo: feat / fix / docs / chore / security / refactor).
 
+## 2026-11-25 — Fase 9: las Functions sobre `main` y el CORS que better-auth no pinta
+
+Rama `migracion-neon`. Las tres Functions se desplegaron sobre la rama `main` de
+Neon (la de producción), con `.env.local` apuntando a `br-rough-shadow-bdyzi3a5`,
+y la identidad de administración se renombró a `admin@blink.com.ve` en la misma
+transacción que su fila de `public.usuarios`. La sonda de salud responde
+`{"ok":true,"function":"auth","rama":"main"}`.
+
+- **fix** `functions/auth/index.mjs` pinta ahora `Access-Control-Allow-Origin`
+  sobre lo que devuelve `auth.handler`. better-auth 1.7.19 resuelve el preflight
+  con su opción `cors`, pero **no** agrega la cabecera en las respuestas de sus
+  propias rutas: medido en la rama desplegada, `OPTIONS` salía 204 con cabeceras
+  y el `401` de sign-in —y el `200` de `get-session`— salían sin ninguna. El
+  navegador no puede leer un body sin ACAO, así que el login se veía muerto
+  aunque la base hubiera respondido. La Function es la dueña del origen, así que
+  lo agrega ella (`conCors`).
+- **medido** tras el redepliegue, con `Origin: https://plans.blink.com.ve`:
+  sign-in → `http=401` con `access-control-allow-origin: https://plans.blink.com.ve`
+  y body `INVALID_EMAIL_OR_PASSWORD`; `get-session` → `http=200` con la misma
+  cabecera. El 401 dice dos cosas buenas a la vez: la identidad importada
+  resuelve y el bcrypt del viejo compara contra la hash importada.
+- **fix** también salió al desplegar: la primera sonda a `/sign-in/email` dio
+  404 y se leyó como despliegue roto. Era mi sonda — falta el `basePath`
+  `/api/auth` que usa el front (`src/lib/sesion.ts`). Las dos ramas se
+  comportaban igual, así que no era regresión de `main` contra `esquema-base`.
+
 ## 2026-11-25 — Fase 4: el traslado, ensayado contra los datos reales
 
 Rama `migracion-neon`. El bloqueo de la Fase 4 era una credencial, y resultó ser
