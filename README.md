@@ -169,7 +169,7 @@ una URL de Function.
 ## Pendientes de esta migración
 
 1. **Cotejar a mano las cifras importadas.** Los datos reales ya están en la rama
-   `main` de Neon (`db/importar/`, receta y siete trampas en `db/README.md`): 70 filas,
+   `main` de Neon (`db/importar/`, receta y ocho trampas en `db/README.md`): 70 filas,
    paridad exacta con el viejo en las 11 tablas, `2 user / 2 account` con los bcrypt
    byte a byte y las nueve comprobaciones en verde. Lo que el `diff` no puede probar es
    que `suscripciones 17`, `usuarios 19` y `equivalente_usd 53.57` sean lo que el dueño
@@ -181,12 +181,17 @@ una URL de Function.
    el hash: vive en la rama `gh-pages` de `go-plans/suscripciones`, y esta sesión
    tiene `pull` pero no `push` sobre ese repo. O lo empuja su dueño o da permiso de
    escritura.
-3. Verificación de extremo a extremo sobre datos reales (bloques A–F de
+3. **El cron de producción no existe todavía.** `neon triggers list --branch main`
+   no devuelve nada; el `tasas-y-vencimientos` con `0 22 * * *` solo está en la rama
+   del piloto. Sin él, la rama `main` no publica la tasa del día ni marca
+   vencimientos. Se crea en un minuto, pero escribe en `tasas_cambio` cada día: se
+   hace con consentimiento explícito.
+4. Verificación de extremo a extremo sobre datos reales (bloques A–F de
    `docs/07-despliegue.md`). Lo primero y lo que más pesa: **el primer login real
    con la contraseña vieja**. Con `admin@blink.com.ve` ya renombrado, ese acceso es
    el que comprueba dos cosas que ninguna sonda intermedia puede comprobar — que la
    identidad importada entra sin restablecer nada, y que el bcrypt pasa a scrypt en
    `public.account` en la misma llamada.
-4. `docs/02`, `03`, `05`, `06` y `07` aún describen Supabase. `docs/ADR/002`
+5. `docs/02`, `03`, `05`, `06` y `07` aún describen Supabase. `docs/ADR/002`
    es la corrección de fondo; cada capítulo marcado como histórico dice qué
    sigue vigente y qué no.

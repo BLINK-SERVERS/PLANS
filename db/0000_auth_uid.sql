@@ -20,6 +20,17 @@ create schema if not exists auth;
 -- Functions. Sin membresía, `set local role authenticated` responde 42501 y
 -- toda la capa de datos se cae; con ella, RLS decide y el dueño no se salta
 -- nada porque el `SET ROLE` siempre ocurre antes de consultar.
+--
+-- Pero **membresía no es lo mismo que poder hacer SET ROLE**, y esto se midió
+-- del peor modo: la rama de producción quedó con toda la capa de datos caída
+-- (42501 `permission denied to set role "anonymous"`) teniendo la guarda de
+-- arriba satisfecha. Desde PostgreSQL 16 la fila de `pg_auth_members` trae
+-- opciones propias (`inherit_option`, `set_option`), y Neon otorga estos dos
+-- roles al dueño con `admin_option = true` pero `set_option = false`. La
+-- guarda antigua veía la membresía y saltaba el `grant`, dejando un `SET ROLE`
+-- prohibido. En la rama del piloto no se notaba porque allí el `grant` del
+-- piloto había añadido una segunda fila con `set_option = true`.
+-- Se comprueba `set_option`, no la existencia.
 do $$
 declare
     r text;
@@ -33,6 +44,7 @@ begin
               join pg_roles mem on mem.oid = m.member
              where m.roleid = (select oid from pg_roles where rolname = r)
                and mem.rolname = current_user
+               and m.set_option
         ) then
             execute format('grant %I to %I', r, current_user);
         end if;

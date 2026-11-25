@@ -4,6 +4,42 @@
 > cambios de código. Formato de líneas: `- [tipo] descripción`
 > (tipo: feat / fix / docs / chore / security / refactor).
 
+## 2026-11-25 — Fase 9, segunda pasada: la capa de datos estaba caída en producción
+
+Después de publicar se fue `docs/07-despliegue.md` §8 bloque por bloque, con
+medición y no con la lista de verificación por delante. Salió un P0 y un hueco.
+
+- **fix (P0)** `datos` respondía `42501 permission denied to set role "anonymous"`
+  a **todo**, autenticado y anónimo: la capa de datos de la rama `main` entera
+  caída. Causa: desde PG 16 la membresía en `pg_auth_members` trae opciones, y
+  Neon otorga `authenticated`/`anonymous` al dueño con `admin_option=true` pero
+  `set_option=false`. La guarda de `db/0000_auth_uid.sql` comprobaba *existencia*
+  de la membresía, veía la fila de Neon y se saltaba el `grant`. En
+  `esquema-base` no se notaba porque el piloto había corrido un `grant` suelto y
+  existía una segunda fila con `set_option=true`. Arreglado en la rama viva con
+  el `grant` pelado y en el archivo comprobando `m.set_option`.
+- **medido** el arreglo con la prueba en la que se ve el estado roto sin romperlo
+  (`grant … with inherit false, set false` dentro de una transacción con
+  `rollback`): guarda vieja `t`, guarda nueva `f`, `set role` → 42501. Después,
+  sobre `main`: `planes` anónimo devuelve 200 con precios reales, `0000` corregido
+  corre idempotente, y `set local role authenticated` vuelve a funcionar.
+- **descubierto** el bloque E ni siquiera estaba intentado en producción:
+  `neon triggers list --branch main` dice *No triggers found*, mientras
+  `esquema-base` tiene `tasas-y-vencimientos` con `0 22 * * *` y próxima ejecución
+  `2026-11-25T22:00Z`. Sin ese trigger la rama `main` no publica la tasa del día
+  ni marca vencimientos. Se crea con consentimiento, porque escribe en
+  `tasas_cambio` una vez al día.
+- **pendiente de medición honesta**: el token de datos que acuñé a mano con el
+  secreto de `.env.local` no lo acepta la Function desplegada en ninguna de las
+  dos ramas (`usuarios` → 403 por rol `anonymous`). Mientras no se compruebe lo
+  contrario, lo que está probado es el camino anónimo y el `SET ROLE`; el
+  autenticado se cierra con el primer login real, que es además donde tiene que
+  verse el re-hash bcrypt → scrypt. No se rotaron secretos para forzar la
+  coincidencia: `BETTER_AUTH_SECRET` comparte archivo y una rotación equivocada
+  desloguea a quien esté dentro.
+- **docs** `db/README.md` pasa de siete a ocho trampas, con la 8 escrita a partir
+  de esta medición.
+
 ## 2026-11-25 — Fase 9: las Functions sobre `main` y el CORS que better-auth no pinta
 
 Rama `migracion-neon`. Las tres Functions se desplegaron sobre la rama `main` de

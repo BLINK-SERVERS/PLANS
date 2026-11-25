@@ -67,7 +67,7 @@ node db/importar/cuentas.mjs --aplicar     # 2 · traduce auth.users → user/ac
 pagos, comisiones, tasas) y `cuentas.mjs` mueve **las identidades**, que son las
 tablas `auth.*` de Supabase — esas no se vuelcan porque aquí no existen.
 
-## Siete trampas que este directorio ya midió
+## Ocho trampas que este directorio ya midió
 
 ### 1 · Restaurar con los disparadores despiertos no es un traslado: es una recalculación
 
@@ -196,6 +196,59 @@ de los tres sitios. El script ya preguntaba al catálogo por `is_sso_user` y
 `email_confirmed_at` en `auth.users`; ahora pregunta también por `credentials` en
 `auth.identities` y arma el `union all` solo si existe. Un informe que se cae por
 una columna ausente es peor que un informe que la echa de menos y lo dice.
+
+## La trampa 8 la encontró la producción, no el simulacro
+
+### 8 · Tener la membresía del rol no es poder hacer `SET ROLE`
+
+Al publicar (`docs/08-changelog.md`, Fase 9), la Function `datos` respondió a
+**toda** consulta autenticada y anónima:
+
+```
+HTTP 403 · {"code":"42501","message":"permission denied to set role \"anonymous\""}
+```
+
+O sea toda la capa de datos caída, justo el síntoma que el punto 1 de este
+archivo prometía evitar. La diferencia está en una columna: desde PostgreSQL 16
+la fila de `pg_auth_members` trae opciones propias, y Neon otorga
+`authenticated` / `anonymous` al dueño con `admin_option = true` pero
+`set_option = false`. Medido en las dos ramas:
+
+```
+main (roto)          authenticated | inh f | set f | adm t     ← solo la fila de Neon
+esquema-base (OK)    authenticated | inh f | set f | adm t     ← la de Neon
+                     authenticated | inh t | set t | adm f     ← y el grant del piloto
+```
+
+La guarda de `0000` preguntaba *si existe alguna membresía del dueño*, veía la
+fila de Neon y se saltaba el `grant`. En el piloto el resultado era el mismo por
+accidente: allí sí se había corrido un `grant` suelto, así que existía la segunda
+fila con `set_option = true`. Ninguna rama ni ningún simulacro podía delatarlo,
+porque el simulacro monta `0000` sobre bases donde la pregunta nunca se había
+hecho con las opciones por en medio.
+
+Se comprueba `m.set_option`, no la existencia. Probado en una transacción con
+`rollback` — que es la forma de ver el estado roto sin romper nada:
+
+```sql
+begin;
+grant authenticated to current_user with inherit false, set false;
+-- guarda vieja: t   ·  guarda nueva: f   ·  set role authenticated → 42501
+rollback;
+```
+
+Y el `grant` que lo arregla en la rama viva es la forma pelada, que en PG 18
+produce la fila con `inherit`/`set` en `true`:
+
+```bash
+psql "$NUEVO" -c 'grant authenticated to current_user' -c 'grant anonymous to current_user'
+```
+
+La lección de forma es sobre **el tipo de control**, no sobre el SQL: una guarda
+que comprueba *existencia* cuando lo que se necesita es *una propiedad* deja
+pasar el estado exactamente opuesto al que quiere prevenir. `verificar.sql`
+compara filas e ids; esto falló en una columna de un catálogo que ninguna
+comparación de datos mira.
 
 ## El fixture: cómo volver a medir todo esto sin datos de clientes
 
