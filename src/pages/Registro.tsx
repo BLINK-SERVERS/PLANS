@@ -38,7 +38,7 @@ export default function Registro() {
         // Sin confirmación de correo (requireEmailVerification:false a
         // propósito):Better Auth responde con sesión y el cliente entra
         // directo a la tienda.
-        navigate('/tienda', { replace: true, state: { registrado: true } })
+        navigate('/', { replace: true, state: { registrado: true } })
       } else {
         // Camino defensivo: hoy es inalcanzable, porque `registrar` lanza si
         // el alta no devuelve sesión. Se queda por si algún día se enciende
@@ -60,10 +60,10 @@ export default function Registro() {
     <div className="flex min-h-screen items-center justify-center bg-blink-fill px-4 py-10">
       <div className="w-full max-w-md space-y-4">
         <Link
-          to="/tienda"
+          to="/"
           className="inline-flex items-center gap-1 text-sm font-medium text-blink-action hover:text-blink-action-hover"
         >
-          ← Volver a la tienda
+          ← Volver al inicio
         </Link>
 
         <div className="rounded-2xl border border-blink-line bg-white p-6 shadow-sm">

@@ -64,7 +64,7 @@ export default function TiendaPlataforma() {
     )
   }
 
-  if (noEncontrada) return <Navigate to="/tienda" replace />
+  if (noEncontrada) return <Navigate to="/" replace />
 
   return (
     <div className="min-h-screen bg-white">

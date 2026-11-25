@@ -17,16 +17,16 @@ import {
 } from './icons'
 
 const nav = [
-  { to: '/', label: 'Dashboard', icon: IconDashboard, end: true },
-  { to: '/clientes', label: 'Clientes', icon: IconUsers },
-  { to: '/suscripciones', label: 'Suscripciones', icon: IconPackage },
-  { to: '/pedidos', label: 'Pedidos', icon: IconInbox },
-  { to: '/plataformas', label: 'Plataformas', icon: IconStore },
-  { to: '/planes', label: 'Planes', icon: IconList },
-  { to: '/cuentas-madre', label: 'Cuentas madre', icon: IconServer },
-  { to: '/proveedores', label: 'Proveedores', icon: IconStore },
-  { to: '/pagos', label: 'Pagos', icon: IconCard },
-  { to: '/comisiones', label: 'Comisiones', icon: IconPercent },
+  { to: '/panel', label: 'Dashboard', icon: IconDashboard, end: true },
+  { to: '/panel/clientes', label: 'Clientes', icon: IconUsers },
+  { to: '/panel/suscripciones', label: 'Suscripciones', icon: IconPackage },
+  { to: '/panel/pedidos', label: 'Pedidos', icon: IconInbox },
+  { to: '/panel/plataformas', label: 'Plataformas', icon: IconStore },
+  { to: '/panel/planes', label: 'Planes', icon: IconList },
+  { to: '/panel/cuentas-madre', label: 'Cuentas madre', icon: IconServer },
+  { to: '/panel/proveedores', label: 'Proveedores', icon: IconStore },
+  { to: '/panel/pagos', label: 'Pagos', icon: IconCard },
+  { to: '/panel/comisiones', label: 'Comisiones', icon: IconPercent },
 ]
 
 interface NavItem {

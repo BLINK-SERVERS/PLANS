@@ -40,7 +40,7 @@ export default function Carrito() {
             Añade una gift card o un plan desde la tienda y vuelve aquí para pagar.
           </p>
           <Link
-            to="/tienda"
+            to="/"
             className="mt-6 inline-block rounded-full bg-blink-action px-8 py-3 text-sm font-semibold text-white hover:bg-blink-action-hover"
           >
             Ir a la tienda
@@ -135,7 +135,7 @@ export default function Carrito() {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Link to="/tienda" className="text-sm font-medium text-blink-action hover:underline">
+          <Link to="/" className="text-sm font-medium text-blink-action hover:underline">
             ← Seguir comprando
           </Link>
           <Link

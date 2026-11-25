@@ -1,4 +1,4 @@
-// Tipos que reflejan el esquema de Supabase (docs/02-base-de-datos.md)
+// Tipos que reflejan el esquema de la base (docs/02-base-de-datos.md)
 
 export type Rol = 'admin' | 'agente' | 'cliente'
 
@@ -66,6 +66,24 @@ export interface Pedido {
   metodo_pago: string | null
   moneda_cobro: string | null
   monto_cobro: number | null
+  // Renovación declarada desde la landing (migración 0006). En los pedidos de
+  // tienda sigue nulo: es lo único que distingue una renovación de una venta,
+  // porque `tipo` conserva 'plan' — el CHECK no cambió.
+  suscripcion_id?: string | null
+}
+
+// Fila de la vista v_mis_suscripciones (migración 0006): lo que el cliente ve
+// para renovar. Son 7 columnas y ninguna sensible; el costo de la cuenta madre
+// queda afuera a propósito. `dias_restantes` lo calcula Postgres
+// (fecha_corte_cliente - current_date), así que puede salir negativo.
+export interface MiSuscripcion {
+  suscripcion_id: string
+  plataforma: string
+  duracion_dias: number
+  monto_renovacion_usd: number
+  estado: EstadoSuscripcion
+  fecha_corte_cliente: string
+  dias_restantes: number
 }
 
 export interface Proveedor {

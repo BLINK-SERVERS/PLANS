@@ -15,7 +15,7 @@ export default function Login() {
 
   // Si ya hay sesión (p.ej. tras recargar), ir directo al panel
   useEffect(() => {
-    if (session) navigate('/', { replace: true })
+    if (session) navigate('/panel', { replace: true })
   }, [session, navigate])
 
   const enviar = async (e: FormEvent) => {
@@ -24,7 +24,7 @@ export default function Login() {
     setError('')
     try {
       await entrar(email.trim(), password)
-      navigate('/', { replace: true })
+      navigate('/panel', { replace: true })
     } catch (err) {
       setError(errMsg(err))
       setCargando(false)

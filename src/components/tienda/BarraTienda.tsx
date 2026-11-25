@@ -4,7 +4,7 @@ import { IconCart, IconLogout } from '../icons'
 import { MarcaBlink } from '../marca-blink'
 import { useCarrito } from './CarritoProvider'
 
-// Barra superior compartida de la tienda pública (#/tienda y detalle de plataforma)
+// Barra superior compartida del sitio público (landing y detalle de plataforma)
 export default function BarraTienda({ volver = false }: { volver?: boolean }) {
   const { session, rol, perfil, salir } = useAuth()
   const { total } = useCarrito()
@@ -12,7 +12,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
 
   const salirDeTienda = async () => {
     await salir()
-    navigate('/tienda', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const saludo = perfil?.nombre || (session?.user.email ?? '').split('@')[0] || ''
@@ -23,13 +23,13 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
         <div className="flex items-center gap-3">
           {volver ? (
             <Link
-              to="/tienda"
+              to="/"
               className="inline-flex items-center gap-1.5 rounded-full border border-blink-line-strong px-3 py-1.5 text-sm font-medium text-blink-muted hover:bg-blink-soft"
             >
-              ← Tienda
+              ← Inicio
             </Link>
           ) : null}
-          <Link to="/tienda" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
               <MarcaBlink className="h-5 w-auto" />
             </span>
@@ -53,7 +53,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
             <>
               {rol === 'admin' ? (
                 <Link
-                  to="/"
+                  to="/panel"
                   className="rounded-full bg-blink-action px-4 py-2 font-semibold text-white hover:bg-blink-action-hover"
                 >
                   Panel admin

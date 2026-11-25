@@ -18,7 +18,19 @@ import { mkdirSync } from "node:fs";
 
 const DESTINO = process.argv[2] ?? "/tmp/capturas";
 const BASE = process.env.BASE_URL ?? "http://localhost:5173";
-const RUTAS = ["/", "/tienda", "/tienda/google", "/login", "/registro", "/carrito"];
+// `/tienda` ya no es una página: redirige a la landing, así que se capturan las
+// puertas de producto reales y `/renovar`, que sin sesión manda al login y eso
+// también hay que verlo.
+const RUTAS = [
+  '/',
+  '/tienda/canva',
+  '/tienda/spotify',
+  '/tienda/apple',
+  '/renovar',
+  '/login',
+  '/registro',
+  '/carrito',
+];
 const VIEWPORTS = [
   { nombre: "escritorio", width: 1440, height: 900 },
   { nombre: "movil", width: 390, height: 844 },

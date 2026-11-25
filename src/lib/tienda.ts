@@ -1,6 +1,5 @@
 // Helpers del catálogo público de venta (#/tienda)
 import type { CatalogoItem } from './types'
-import { round2 } from './format'
 
 export const MES = 30
 
@@ -13,7 +12,7 @@ export interface PlanTienda {
   meses: number
   etiqueta: string // 'Por 1 mes' · 'Por 6 meses' · 'Por 1 año'
   etiquetaCorta: string // '1 mes' · '6 meses' · '1 año'
-  precioMes: number // equivalente mensual del plan
+  precioMes: number // equivalente mensual del plan, truncado al centavo
   ahorroPct: number | null // null cuando no hay descuento visible
 }
 
@@ -23,6 +22,15 @@ export interface PlataformaTienda {
   precioMensual: number | null // plan de 1 mes (base de los ahorros)
   planes: PlanTienda[]
 }
+
+// Equivalente mensual del plan, TRUNCADO al centavo.
+// Las tarjetas aprobadas de Canva y Spotify no redondean: 9.69 / 6 es 1.615
+// y la tarjeta dice 1.61; 28.99 / 12 es 2.4158 y la tarjeta dice 2.41. Con
+// `round2` la landing salía con 1.62 y 2.42, dos cifras que no existen en el
+// arte aprobado. Se trabaja en centavos enteros para que el truncado no
+// dependa de cómo cae la división en binario flotante.
+const centavosPorMes = (usd: number, meses: number): number =>
+  Math.floor(Math.round(usd * 100) / meses) / 100
 
 export const etiquetaDuracion = (dias: number): string => {
   const m = mesesDe(dias)
@@ -83,7 +91,7 @@ export function agruparCatalogo(items: CatalogoItem[]): PlataformaTienda[] {
           meses,
           etiqueta: etiquetaDuracion(p.duracion_dias),
           etiquetaCorta: etiquetaCorta(p.duracion_dias),
-          precioMes: round2(p.precio_venta_usd / meses),
+          precioMes: centavosPorMes(p.precio_venta_usd, meses),
           ahorroPct,
         }
       }),
