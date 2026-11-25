@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import BarraTienda from '../components/tienda/BarraTienda'
 import { useCarrito } from '../components/tienda/CarritoProvider'
 import { useAuth } from '../lib/auth'
-import { crearPedido, fetchTasaBcv, fetchTasaEurDelDia } from '../lib/api'
+import { crearPedido, fetchTasaBcv, fetchTasaEurDelDia, tasaVigente } from '../lib/api'
 import {
   DATOS_COBRO,
   METODOS_PAGO,
@@ -44,7 +44,11 @@ export default function Checkout() {
     let vivo = true
     const cargar = async () => {
       const [bv, eur] = await Promise.all([fetchTasaBcv(), fetchTasaEurDelDia()])
-      if (vivo) setTasas({ bcv: bv.tasa, eur })
+      // La tasa del BCV que contestó la Function puede ser la última guardada,
+      // y si su fecha valor ya pasó no es un precio: es un número viejo. Sin
+      // raspe fresco `bcv` queda null y el método en Bs sale «pendiente» en
+      // lugar de un total falso.
+      if (vivo) setTasas({ bcv: tasaVigente(bv.fecha) ? bv.tasa : null, eur })
     }
     void cargar()
     return () => {
@@ -155,7 +159,7 @@ export default function Checkout() {
             equipo de Blink Plans confirma la entrega por el mismo chat.
           </p>
           <Link
-            to="/tienda"
+            to="/"
             className="mt-6 inline-block rounded-full bg-blink-action px-8 py-3 text-sm font-semibold text-white hover:bg-blink-action-hover"
           >
             Volver a la tienda
@@ -174,7 +178,7 @@ export default function Checkout() {
           <h1 className="text-2xl font-bold text-blink-dark">No hay nada que pagar</h1>
           <p className="mt-2 text-sm text-blink-ink-mute">Tu carrito está vacío. Añade algo primero.</p>
           <Link
-            to="/tienda"
+            to="/"
             className="mt-6 inline-block rounded-full bg-blink-action px-8 py-3 text-sm font-semibold text-white hover:bg-blink-action-hover"
           >
             Ir a la tienda

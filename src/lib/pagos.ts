@@ -7,6 +7,37 @@
 
 export type MetodoPago = 'pagomovil' | 'usdt' | 'usdc' | 'zinli' | 'binance'
 
+/**
+ * El vocabulario del libro de ingresos (`pagos_ingresos.metodo_pago`), que es
+ * otro mundo distinto al de los ids del checkout: lo fija
+ * `pagos_ingresos_metodo_pago_check` en la base y así están escritas las filas
+ * históricas. Quien valide una renovación tiene que mandar una de estas seis
+ * cadenas, o el INSERT revierte la transacción completa con 23514.
+ */
+export const METODOS_LIBRO = [
+  'Zelle',
+  'Pago Movil',
+  'Pago Movil Binance',
+  'Binance',
+  'Transferencia',
+  'Otro',
+] as const
+
+// Traducción de lo que el cliente eligió en #/renovar a lo que acepta el libro.
+// Solo hay equivalencia segura en dos: el Pago Móvil y el P2P de Binance, que son
+// el mismo medio de pago en los dos vocabularios. USDT, USDC y Zin dicen la
+// moneda o el producto, no por dónde entró la plata — un USDT puede venir de
+// Binance, de una billetera externa o de un pago entre personas — así que caen en
+// 'Otro' y el admin elige el medio correcto al validar, que es quien ve el
+// comprobante.
+export const METODO_LIBRO: Record<MetodoPago, string> = {
+  pagomovil: 'Pago Movil',
+  binance: 'Binance',
+  usdt: 'Otro',
+  usdc: 'Otro',
+  zinli: 'Otro',
+}
+
 export interface MetodoInfo {
   id: MetodoPago
   nombre: string
@@ -39,6 +70,12 @@ export const DATOS_COBRO: Record<MetodoPago, string | null> = {
 
 export const etiquetaMetodo = (m: MetodoPago): string =>
   METODOS_PAGO.find((x) => x.id === m)?.nombre ?? m
+
+// Lo que se muestra cuando el método todavía no tiene datos de cobro cargados.
+// Una sola frase para el checkout y para /renovar, porque las dos dicen lo
+// mismo y no hay que inventar ni un teléfono mientras el dueño no los dé.
+export const AVISO_DATOS_POR_CONFIRMAR =
+  'Los datos de cobro te los pasamos por WhatsApp apenas registres la renovación.'
 
 // ---------- Cálculo del cobro ----------
 

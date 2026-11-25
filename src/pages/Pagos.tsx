@@ -13,6 +13,7 @@ import {
 import type { Moneda, PagoRow, SuscripcionRow, Usuario } from '../lib/types'
 import { fmtDate, fmtNum, fmtUSDT, fmtUSD, fmtVES, hoy, round2 } from '../lib/format'
 import { errMsg } from '../lib/err'
+import { METODOS_LIBRO as METODOS_PAGO } from '../lib/pagos'
 import {
   Button,
   Card,
@@ -29,15 +30,6 @@ import {
 import { SelectCliente } from '../components/SelectCliente'
 import { NuevoCliente } from '../components/inline'
 import { IconPencil, IconRefresh, IconTrash } from '../components/icons'
-
-const METODOS_PAGO = [
-  'Zelle',
-  'Pago Movil',
-  'Pago Movil Binance',
-  'Binance',
-  'Transferencia',
-  'Otro',
-]
 
 // Moneda que se preselecciona según el método de pago (editable después)
 const MONEDA_POR_METODO: Record<string, Moneda> = {

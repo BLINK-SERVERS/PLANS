@@ -9,6 +9,7 @@ import type {
   CuentaMadre,
   CuentaMadreRow,
   EstadoPedido,
+  MiSuscripcion,
   Moneda,
   PagoRow,
   Pedido,
@@ -325,6 +326,111 @@ export async function actualizarEstadoPedido(id: string, estado: EstadoPedido): 
   invalidar('pedidos')
 }
 
+// ------------------------------------------------- Renovación desde la landing
+// Migración 0006. El cliente DECLARA, el admin VALIDA, el trigger renueva.
+// Ninguna de estas tres funciones toca `pago_suscripciones`: la única puerta
+// sigue siendo `validar_renovacion`, que corre como security definer y pide
+// es_admin().
+
+// Lo que el cliente ve de sus propias suscripciones. Sin sesión la vista
+// responde 42501 (no hay grant para anonymous), así que la pantalla tiene que
+// pedir ingreso antes de llamar.
+export async function fetchMisSuscripciones(): Promise<MiSuscripcion[]> {
+  const { data, error } = await db
+    .from('v_mis_suscripciones')
+    .select('*')
+    .order('dias_restantes')
+  if (error) throw new Error(errMsg(error))
+  return (data ?? []) as MiSuscripcion[]
+}
+
+/**
+ * Registra la renovación que el cliente declara. `tipo` sigue siendo 'plan'
+ * (el CHECK de la tabla no admite un valor nuevo y la renovación vende el
+ * mismo plan); lo que la distingue es `suscripcion_id`.
+ *
+ * Mismas columnas de cobro que el checkout: `metodo_pago`, `moneda_cobro`,
+ * `monto_cobro`, redondeadas a centavo igual que en Checkout.tsx.
+ *
+ * El índice parcial `pedidos_renovacion_abierta` deja UN pedido 'nuevo' por
+ * suscripción, así que el doble click o una declaración repetida salen con
+ * 23505 → HTTP 409. No se lanza contra eso: se devuelve { ok:false, conflicto:true }
+ * para que la pantalla lo cuente como "ya la declaraste", no como fallo rojo.
+ */
+export async function crearRenovacion(input: {
+  suscripcion_id: string
+  plataforma: string
+  duracion_dias: number
+  precio_usd: number
+  cliente_id: string
+  cliente_nombre: string | null
+  cliente_contacto: string | null
+  metodo_pago: string
+  moneda_cobro: string
+  monto_cobro: number
+}): Promise<{ ok: boolean; conflicto: boolean; error?: string }> {
+  const { error } = await db.from('pedidos').insert({
+    tipo: 'plan',
+    suscripcion_id: input.suscripcion_id,
+    plataforma: input.plataforma,
+    duracion_dias: input.duracion_dias,
+    precio_usd: round2(input.precio_usd),
+    cliente_id: input.cliente_id,
+    cliente_nombre: input.cliente_nombre,
+    cliente_contacto: input.cliente_contacto,
+    metodo_pago: input.metodo_pago,
+    moneda_cobro: input.moneda_cobro,
+    monto_cobro: round2(input.monto_cobro),
+    estado: 'nuevo',
+  })
+  if (error) {
+    const code = error.code ?? ''
+    const yaDeclarada =
+      code === '23505' || code === '409' || /duplicate key/i.test(error.message ?? '')
+    return {
+      ok: false,
+      conflicto: yaDeclarada,
+      error: errMsg(error),
+    }
+  }
+  invalidar('pedidos')
+  return { ok: true, conflicto: false }
+}
+
+/**
+ * El admin cierra la renovación (RPC validar_renovacion). Devuelve el uuid del
+ * pago creado, o null cuando el pedido ya estaba validado: la función responde
+ * `return null` antes de tocar dinero, así que reintentar es inofensivo.
+ * Falla con excepción si el pedido no es renovación o si la fecha retrocede el
+ * corte vigente (el `greatest` del trigger no sumaría días).
+ */
+export async function validarRenovacion(
+  pedidoId: string,
+  input: {
+    monto_pagado: number
+    moneda: Moneda
+    tasa_bcv_aplicada: number | null
+    tasa_cambio_binance: number | null
+    equivalente_usd: number
+    metodo_pago: string
+    fecha_pago: string
+  },
+): Promise<string | null> {
+  const { data, error } = await db.rpc<string | null>('validar_renovacion', {
+    p_pedido: pedidoId,
+    p_monto_pagado: input.monto_pagado,
+    p_moneda: input.moneda,
+    p_tasa_bcv_aplicada: input.tasa_bcv_aplicada,
+    p_tasa_cambio_binance: input.tasa_cambio_binance,
+    p_equivalente_usd: input.equivalente_usd,
+    p_metodo_pago: input.metodo_pago,
+    p_fecha_pago: input.fecha_pago,
+  })
+  if (error) throw new Error(errMsg(error))
+  invalidar('pedidos', 'pagos', 'comisiones', 'resumen', 'susc')
+  return data ?? null
+}
+
 // ---------------------------------------------------------- Cuentas madre
 export async function fetchCuentasMadre(): Promise<CuentaMadreRow[]> {
   return cached('cuentas', async () => {
@@ -481,6 +587,14 @@ export async function fetchTasaEurDelDia(): Promise<number | null> {
 
 export type FuenteTasa = 'bcv-directo' | 'sistema' | 'ninguna'
 
+// La fila de `tasas_cambio` se guarda con el «Fecha Valor» que publica el BCV,
+// y esa fecha es un día adelante (el 25 se publica con fecha valor 26). Una
+// fila vigente, entonces, tiene fecha mayor o igual a hoy. Si está por debajo,
+// es el residuo de la última vez que alguien refrescó: usarla como «monto de
+// hoy» es cobrar mal.
+export const tasaVigente = (fecha: string | null | undefined): boolean =>
+  fecha != null && fecha.slice(0, 10) >= hoy()
+
 interface TasaPublicada {
   ok?: boolean
   fecha?: string
@@ -495,20 +609,23 @@ interface TasaPublicada {
  *                   guarde la fila (el botón «Refrescar» del panel de pagos;
  *                   requiere sesión porque la Function la autoriza con el
  *                   token de datos).
- * `forzar: false` → lectura simple de `GET /tasa`: lo último guardado, sin
- *                   egreso al BCV y sin sesión. Es el camino del checkout,
- *                   que ahora despierta el Function Trigger todas las tardes.
+ * `forzar: false` → lectura de `GET /tasa`: lo último guardado, sin egreso al
+ *                   BCV y sin sesión. Pero si esa fila ya no está vigente (su
+ *                   fecha valor quedó atrás) se baja a raspar igual, porque el
+ *                   número sale en una pantalla donde el cliente va a pagar.
  *
  * En la versión de Supabase el checkout rapeaba en cada carga usando la anon
- * key; con el trigger diario eso dejó de tener sentido (un egreso y una
- * escritura por visita). Queda una excepción: si en la tabla no hay nada —las
- * primeras horas tras la migración, o una rama recién creada— se pide el
- * scrape aunque se haya llamado por lectura, porque lo contrario es un
- * checkout que no puede cobrar.
+ * key. Con la tasa del día ya guardada eso dejó de tener sentido (un egreso y
+ * una escritura por visita), así que ahora el raspe solo ocurre cuando lo
+ * guardado no sirve: tabla vacía —las primeras horas tras la migración, o una
+ * rama recién creada— o fecha vencida. Medido el 2026-11-25: sin esta
+ * condición `tasas_cambio` tenía una sola fila, del 2026-09-20 a 42,50, cuando
+ * el BCV publicaba 924,35. Un cobro en Bs calculado con esa fila sale mal por
+ * 21 veces.
  */
 export async function fetchTasaBcv(
   opciones: { forzar?: boolean } = {},
-): Promise<{ tasa: number | null; eur: number | null; fuente: FuenteTasa }> {
+): Promise<{ tasa: number | null; eur: number | null; fuente: FuenteTasa; fecha: string | null }> {
   const leidos = await tasaGuardada()
 
   const irAlBcv = async () => {
@@ -529,27 +646,36 @@ export async function fetchTasaBcv(
       // El raspado escribió: las lecturas anteriores quedan obsoletas.
       invalidar('tasa', 'tasa-publica')
       const eur = Number(data.tasa_eur_bs)
-      return { tasa: t, eur: eur > 0 ? eur : null, fuente: 'bcv-directo' as const }
+      return {
+        tasa: t,
+        eur: eur > 0 ? eur : null,
+        fuente: 'bcv-directo' as const,
+        fecha: data.fecha ?? null,
+      }
     } catch {
       // Function dormida, sin sesión o sin conexión.
       return null
     }
   }
 
-  if (opciones.forzar || leidos.tasa == null) {
+  if (opciones.forzar || leidos.tasa == null || !tasaVigente(leidos.fecha)) {
     const fresca = await irAlBcv()
     if (fresca) return fresca
   }
   return leidos.tasa != null
     ? { ...leidos, fuente: 'sistema' }
-    : { tasa: null, eur: null, fuente: 'ninguna' }
+    : { tasa: null, eur: null, fuente: 'ninguna', fecha: null }
 }
 
 // Última tasa en tabla, por la ruta pública de la Function; si esa Function
 // todavía no está desplegada, se intenta la lectura normal (solo admin).
 // Con caché corta: el checkout pide USD y EUR en paralelo, y sin ella serían
 // dos viajes por cada vez que alguien abre la página.
-async function tasaGuardada(): Promise<{ tasa: number | null; eur: number | null }> {
+async function tasaGuardada(): Promise<{
+  tasa: number | null
+  eur: number | null
+  fecha: string | null
+}> {
   return cached('tasa-publica', async () => {
     try {
       const res = await fetch(`${URL_TASA}/tasa`)
@@ -560,13 +686,16 @@ async function tasaGuardada(): Promise<{ tasa: number | null; eur: number | null
         return {
           tasa: t > 0 ? t : null,
           eur: Number.isFinite(e) && e > 0 ? e : null,
+          fecha: d.fecha ?? null,
         }
       }
     } catch {
       /* URL_TASA vacío en desarrollo local, o la Function no contesta */
     }
     const t = await fetchTasaDelDia().catch(() => null)
-    return { tasa: t, eur: null }
+    // Sin fecha no se puede afirmar que sea la del día: `fetchTasaBcv` lo
+    // interpreta como no vigente y baja al raspe.
+    return { tasa: t, eur: null, fecha: null }
   })
 }
 
