@@ -266,7 +266,7 @@ El paso 5, en cambio, deja `suscripciones` y `pago_suscripciones` en 0 con
 > pillar: el diff se corre **después** de restaurar, contra la base que se acaba
 > de restaurar, y nombra la base en cada paso.
 
-## La importación real: ensayada, qué falta
+## La importación real: ensayada y ejecutada
 
 El bloqueo de credenciales se levantó el 2026-11-25: la contraseña de base no era
 la que se había pasado antes, y con la correcta el pooler de sesión responde
@@ -298,10 +298,32 @@ el historial del repo pero jamás corrió contra `xbmewcmpfnligeodggop`, así qu
 de paridad una tabla extra vacía es ruido: se lee «el destino tiene una tabla más»,
 no «falta algo».
 
-Lo que queda es la decisión de fondo, no el mecanismo: correr estos mismos comandos
-contra la rama `main` de Neon — hoy **literalmente vacía**: 0 tablas, 0 disparadores,
-0 roles — y después el despliegue de la Fase 9. La cadena de conexión del viejo
-**nunca** se escribe en el repo: vive en `~/.config/blink-plans/viejo.env` (modo 600)
-y `cuentas.mjs` la lee con `VIEJO_FILE=`, para que ni siquiera pase por `argv`. Los
-`dumps/` que genera `volcar.sh` caen en `/dumps/` de `.gitignore`: con datos de
-clientes, un volcado es información de terceros y no va a git ni por accidente.
+El ciclo se corrió dos veces: primero en `import-a-real` (rama desechable hija de
+`main`, borrada después de verificar — no había motivo para dejar otra copia de los
+hashes de los clientes dando vueltas) y luego contra `main` con los mismos comandos y
+el mismo resultado. `main` quedó así:
+
+```
+user=2 · account=2 · session=0 · usuarios=19 · suscripciones=17 · pagos_ingresos=6
+usd=53.57 · cupos_ocupados=16 · tasa_bcv=42.5000
+6/6 disparadores activos · tres invariantes en 0
+firmas idénticas al origen: suscripciones 602df4d8… · usuarios daae9c09… ·
+                            pago_suscripciones dc13f644…
+```
+
+Esas firmas son las que comparó `verificar.sql` contra el recuento del viejo, y salen
+iguales en el ensayo que en `main`. Lo que **no** prueba el diff es que esas 17
+suscripciones y 19 usuarios sean los que el dueño ve en el panel: prueba fealidad del
+traslado, no justicia del negocio.
+
+La cadena de conexión del viejo **nunca** se escribe en el repo: vive en
+`~/.config/blink-plans/viejo.env` (modo 600) y `cuentas.mjs` la lee con `VIEJO_FILE=`,
+para que ni siquiera pase por `argv`. Los `dumps/` que genera `volcar.sh` caen en
+`/dumps/` de `.gitignore`: con datos de clientes, un volcado es información de terceros
+y no va a git ni por accidente.
+
+Resetear la contraseña de `xbmewcmpfnligeodggop` no tumbó la producción: medido después
+del reset, `go-plans.github.io/suscripciones/` da 200, `/rest/v1/planes` con la
+publishable da 200 y `/auth/v1/token` responde. El panel viejo habla con la API por
+clave anónima, no con la contraseña de base, así que la importación se pudo hacer sin
+cortar el servicio.

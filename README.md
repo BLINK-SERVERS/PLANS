@@ -168,13 +168,12 @@ una URL de Function.
 
 ## Pendientes de esta migración
 
-1. **Importar los datos reales en `main`.** La credencial ya está y el ciclo
-   completo corrió contra el proyecto viejo **en una rama desechable**
-   (`db/importar/`, receta y siete trampas en `db/README.md`): 70 filas, paridad
-   exacta en las 11 tablas, `2 user / 2 account` con los bcrypt byte a byte y las
-   nueve comprobaciones en verde. Lo que falta es cruzar esas cifras a mano con el
-   panel viejo y dar el sí para repetir el ciclo contra la rama `main` de Neon, que
-   hoy está vacía. El `dist` todavía no apunta a la base de producción.
+1. **Cotejar a mano las cifras importadas.** Los datos reales ya están en la rama
+   `main` de Neon (`db/importar/`, receta y siete trampas en `db/README.md`): 70 filas,
+   paridad exacta con el viejo en las 11 tablas, `2 user / 2 account` con los bcrypt
+   byte a byte y las nueve comprobaciones en verde. Lo que el `diff` no puede probar es
+   que `suscripciones 17`, `usuarios 19` y `equivalente_usd 53.57` sean lo que el dueño
+   ve en el panel. Hay que leerlos contra el panel viejo antes de mover un cliente.
 2. Desplegar las tres Functions en la rama por defecto y publicar el `dist` en
    GitHub Pages, con la redirección del proyecto viejo **conservando el hash**.
 3. Verificación de extremo a extremo sobre datos reales (bloques A–F de

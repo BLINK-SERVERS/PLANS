@@ -36,13 +36,21 @@ corrió contra `xbmewcmpfnligeodggop` en una rama desechable de `main`
   nuevo tiene esa tabla y la producción del viejo nunca la tuvo — la migración
   `0011` nunca corrió contra ese proyecto. Tabla extra vacía ≠ datos faltantes.
 
-**Pendiente al cerrar esta entrada**: correr el mismo ciclo contra la rama `main`
-de Neon, que hoy está vacía (0 tablas, 0 disparadores, 0 roles), después de
-cotejar las cifras de arriba a mano en el panel viejo. Y Fase 9 entera: `main` del
-repo sigue en el estado del piloto (`migracion-neon` sin mergear), cero Functions
-desplegadas en la rama de producción, el repo está **private** y Pages responde
-404 — el DNS de `plans.blink.com.ve` ya apunta a `blink-servers.github.io`, así que
-el fallo de TLS de hoy es «no hay sitio», no «mal apuntado».
+**Cerrado el mismo día**: el ciclo se repitió contra la rama `main` de Neon — que
+estaba vacía (0 tablas, 0 disparadores, 0 roles) — con idéntico resultado: `user=2`,
+`account=2`, `session=0`, `suscripciones 17`, `usuarios 19`, `usd 53.57`, `cupos 16`,
+`tasa 42.5000`, 6/6 disparadores activos y las mismas firmas de `verificar.sql`. La rama
+de ensayo se borró después, para no dejar una segunda copia de los hashes de los
+clientes. Resetear la contraseña del viejo no cortó el servicio: el panel publicado y su
+API siguen en 200 porque hablan por clave anónima, no por contraseña de base.
+
+**Pendiente al cerrar esta entrada**: cotejar a mano esas cifras contra el panel viejo
+(el `diff` prueba fealidad del traslado, no que el número coincida con lo que el dueño
+recuerda). Y Fase 9 entera: `main` del repo sigue en el estado del piloto
+(`migracion-neon` sin mergear), cero Functions desplegadas en la rama de producción, el
+repo está **private** y Pages responde 404 — el DNS de `plans.blink.com.ve` ya apunta a
+`blink-servers.github.io`, así que el fallo de TLS de hoy es «no hay sitio», no «mal
+apuntado».
 
 ## 2026-11-10 — Migración a Neon y rebranding Blink Plans
 
