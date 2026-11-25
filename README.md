@@ -182,7 +182,11 @@ una URL de Function.
    tiene `pull` pero no `push` sobre ese repo. O lo empuja su dueño o da permiso de
    escritura.
 3. Verificación de extremo a extremo sobre datos reales (bloques A–F de
-   `docs/07-despliegue.md`).
+   `docs/07-despliegue.md`). Lo primero y lo que más pesa: **el primer login real
+   con la contraseña vieja**. Con `admin@blink.com.ve` ya renombrado, ese acceso es
+   el que comprueba dos cosas que ninguna sonda intermedia puede comprobar — que la
+   identidad importada entra sin restablecer nada, y que el bcrypt pasa a scrypt en
+   `public.account` en la misma llamada.
 4. `docs/02`, `03`, `05`, `06` y `07` aún describen Supabase. `docs/ADR/002`
    es la corrección de fondo; cada capítulo marcado como histórico dice qué
    sigue vigente y qué no.

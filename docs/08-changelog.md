@@ -23,8 +23,14 @@ transacción que su fila de `public.usuarios`. La sonda de salud responde
 - **medido** tras el redepliegue, con `Origin: https://plans.blink.com.ve`:
   sign-in → `http=401` con `access-control-allow-origin: https://plans.blink.com.ve`
   y body `INVALID_EMAIL_OR_PASSWORD`; `get-session` → `http=200` con la misma
-  cabecera. El 401 dice dos cosas buenas a la vez: la identidad importada
-  resuelve y el bcrypt del viejo compara contra la hash importada.
+  cabecera.
+- **aclaración sobre esa medición**, escrita después de matizarla: el 401 prueba
+  que el navegador **lee** el body cross-origin, que era el bug. No prueba que la
+  identidad importada exista ni que el bcrypt compare — better-auth contesta el
+  mismo 401 genérico tanto a usuario inexistente como a clave errada, así que el
+  resultado era compatible con las dos cosas. Lo que de verdad cierra esa duda es
+  el primer login real con la contraseña vieja (Fase 10), que además es el
+  momento en que debe verse el re-hash bcrypt → scrypt en `public.account`.
 - **fix** también salió al desplegar: la primera sonda a `/sign-in/email` dio
   404 y se leyó como despliegue roto. Era mi sonda — falta el `basePath`
   `/api/auth` que usa el front (`src/lib/sesion.ts`). Las dos ramas se
