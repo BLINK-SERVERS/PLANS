@@ -37,10 +37,12 @@ transacción que su fila de `public.usuarios`. La sonda de salud responde
   coincidencia y el body crudo se pintaba tal cual. Ahora el patrón se prueba
   también contra el `code`, que es lo que no cambia entre versiones.
 - **medido** en navegador real contra `https://plans.blink.com.ve`: la raíz
-  monta, el login aparece, y con contraseña errónea la interfaz **leyó** el 401
-  de la Function (antes del arreglo CORS el body era ilegible cross-origin).
-  Cero requests fallidos; en consola solo el 401 esperado. Lo que pintó fue
-  todavía `Invalid email or password`, de ahí el fix de arriba.
+  monta y redirige a `#/login`, y con contraseña errónea la interfaz **leyó** el
+  401 de la Function — antes del arreglo CORS ese body era ilegible
+  cross-origin. Cero requests fallidos; en consola solo el 401 esperado. Tras el
+  fix del idioma, la misma prueba pinta `Correo o contraseña incorrectos`. El
+  bundle publicado (`assets/index-q8-lR9y0.js`) es el mismo que salió del build
+  local, así que lo que se midió es lo que se construyó.
 - **chore** las tres Variables `VITE_BLINK_{AUTH,DATOS,TASA}_URL` del repo
   apuntan a la rama `main` de Neon (`br-rough-shadow-bdyzi3a5-*`); el bundle
   publicado no contiene ni una referencia a `br-long-morning-bdq3ioau` ni a

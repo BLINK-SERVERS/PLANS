@@ -174,8 +174,13 @@ una URL de Function.
    byte a byte y las nueve comprobaciones en verde. Lo que el `diff` no puede probar es
    que `suscripciones 17`, `usuarios 19` y `equivalente_usd 53.57` sean lo que el dueño
    ve en el panel. Hay que leerlos contra el panel viejo antes de mover un cliente.
-2. Desplegar las tres Functions en la rama por defecto y publicar el `dist` en
-   GitHub Pages, con la redirección del proyecto viejo **conservando el hash**.
+2. **La redirección del proyecto viejo, que es lo único que falta de la Fase 9.**
+   Ya está desplegado: las tres Functions corren en la rama `main` de Neon, el repo
+   es público y GitHub Pages sirve el sitio en `plans.blink.com.ve` con HTTPS
+   forzado. Lo que no se pudo instalar es el `index.html` que redirige conservando
+   el hash: vive en la rama `gh-pages` de `go-plans/suscripciones`, y esta sesión
+   tiene `pull` pero no `push` sobre ese repo. O lo empuja su dueño o da permiso de
+   escritura.
 3. Verificación de extremo a extremo sobre datos reales (bloques A–F de
    `docs/07-despliegue.md`).
 4. `docs/02`, `03`, `05`, `06` y `07` aún describen Supabase. `docs/ADR/002`

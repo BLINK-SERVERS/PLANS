@@ -1,0 +1,52 @@
+<!doctype html>
+<!--
+  Redirección del panel viejo de go-plans al nuevo Blink Plans.
+
+  DÓNDE VA: en la raíz de la rama `gh-pages` de `go-plans/suscripciones`,
+  reemplazando el `index.html` que hoy carga la app vieja. Los `assets/`, el
+  resto de archivos y el historial del repo NO se tocan: borrar algo de ahí es
+  lo que el plan prohíbe.
+
+  POR QUÉ BASTA CON COPIAR EL HASH: medido en el bundle publicado
+  (`assets/index-CzWlD8LQ.js`), el panel viejo usa hash history de React Router,
+  así que sus URLs reales son `…/suscripciones/#/suscripciones`, `…/#/clientes`.
+  Las rutas nuevas tienen los mismos nombres (ver `src/App.tsx`), así que el
+  hash se traslada tal cual y el usuario aterriza en la misma pantalla, ya con
+  el dominio de Blink.
+
+  CÓMO SE EMPUJA (hace falta write en el repo viejo; esta sesión solo tiene
+  `pull`):
+
+    git clone --depth 1 -b gh-pages https://github.com/go-plans/suscripciones gh
+    cp index.html gh/index.html && git -C gh commit -am "redirige a Blink Plans"
+    git -C gh push
+
+  El `?` también viaja: si alguien tenía un enlace con parámetros, llegan.
+-->
+<html lang="es-VE">
+  <meta charset="utf-8" />
+  <title>Blink Plans · Gestión de suscripciones</title>
+  <meta
+    http-equiv="refresh"
+    content="0; url=https://plans.blink.com.ve/"
+  />
+  <link rel="canonical" href="https://plans.blink.com.ve/" />
+  <body style="font: 16px/1.5 system-ui, sans-serif; margin: 2rem">
+    <p>
+      Este panel ahora es
+      <a id="destino" href="https://plans.blink.com.ve/">Blink Plans</a>, en
+      <strong>plans.blink.com.ve</strong>. Te estamos llevando; si no ocurre,
+      toca el enlace.
+    </p>
+    <script>
+      var NUEVO = 'https://plans.blink.com.ve/'
+      // El hash del viejo ya trae la ruta interna (`#/clientes`); se conserva
+      // sin reinterpretarla. `search` va antes del hash, como lo espera el
+      // hash history del nuevo panel.
+      var hash = location.hash || ''
+      var query = location.search || ''
+      document.getElementById('destino').href = NUEVO + query + hash
+      location.replace(NUEVO + query + hash)
+    </script>
+  </body>
+</html>
