@@ -4,6 +4,46 @@
 > cambios de código. Formato de líneas: `- [tipo] descripción`
 > (tipo: feat / fix / docs / chore / security / refactor).
 
+## 2026-11-25 — Fase 4: el traslado, ensayado contra los datos reales
+
+Rama `migracion-neon`. El bloqueo de la Fase 4 era una credencial, y resultó ser
+**dos cosas distintas**: la contraseña de base no era la que se había pasado, y el
+host directo del proyecto viejo sigue sin ser alcanzable desde esta máquina
+(IPv6-only). Con la contraseña correcta y el pooler de sesión, el ciclo completo
+corrió contra `xbmewcmpfnligeodggop` en una rama desechable de `main`
+(`import-a-real`), y `main` no se tocó.
+
+- **fix** `cuentas.mjs` añadía `uselibpqcompat=true` a la conexión del viejo. El
+  paso 1 (`volcar.sh`) va por libpq, donde `sslmode=require` cifra sin validar la
+  cadena; el `pg` de Node la trata como `verify-full` desde v8, y el pooler de
+  Supabase trae un intermedio auto-firmado: `SELF_SIGNED_CERT_IN_CHAIN` antes de
+  leer una fila. Con el simulacro no aparecía jamás — sus dos extremos son Neon.
+- **fix** `cuentas.mjs` pregunta al catálogo si `auth.identities` tiene
+  `credentials` antes de mencionarla. El GoTrue del viejo no tiene esa columna, y
+  el informe entero se caía con `42703` mientras el bcrypt sí estaba, en
+  `auth.users.encrypted_password`.
+- **docs** `db/README.md`: de cinco a **siete** trampas, con las dos nuevas y el
+  motivo de forma — un traslado entre dos sistemas solo queda probado cuando se
+  prueba contra los dos sistemas reales.
+- **medido** origen ↔ destino sin diferencias en las 11 tablas reales: 70 filas
+  (`usuarios 19`, `suscripciones 17`, `pago_suscripciones 6`, `pagos_ingresos 6`,
+  `planes 11`, `cuentas_madre 5`, `plataformas 4`, `proveedores 1`,
+  `tasas_cambio 1`, `comisiones 0`, `pagos_egresos 0`), sumas
+  `equivalente_usd 53.57` / `cupos_ocupados 16` / `tasa_bcv 42.5000`, tres
+  invariantes en `0`, seis disparadores dormidos y reactivados, y `2 user / 2
+  account` con los bcrypt byte a byte y las nueve comprobaciones en verde.
+- **docs** La única diferencia del diff, `pedidos|0|`, queda explicada: el esquema
+  nuevo tiene esa tabla y la producción del viejo nunca la tuvo — la migración
+  `0011` nunca corrió contra ese proyecto. Tabla extra vacía ≠ datos faltantes.
+
+**Pendiente al cerrar esta entrada**: correr el mismo ciclo contra la rama `main`
+de Neon, que hoy está vacía (0 tablas, 0 disparadores, 0 roles), después de
+cotejar las cifras de arriba a mano en el panel viejo. Y Fase 9 entera: `main` del
+repo sigue en el estado del piloto (`migracion-neon` sin mergear), cero Functions
+desplegadas en la rama de producción, el repo está **private** y Pages responde
+404 — el DNS de `plans.blink.com.ve` ya apunta a `blink-servers.github.io`, así que
+el fallo de TLS de hoy es «no hay sitio», no «mal apuntado».
+
 ## 2026-11-10 — Migración a Neon y rebranding Blink Plans
 
 Rama `migracion-neon`. Las fases siguen el plan de migración; lo que está

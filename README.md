@@ -168,15 +168,13 @@ una URL de Function.
 
 ## Pendientes de esta migración
 
-1. **Importar los datos reales.** El andamiaje está escrito y medido contra un
-   simulacro sintético (`db/importar/`, receta en `db/README.md`); falta la
-   credencial de entrada. Acotado: el pooler del proyecto viejo responde (la
-   contraseña que tenemos da `password authentication failed`, y el host directo
-   `db.…supabase.co` es IPv6-only desde una máquina sin IPv6 — trampa 5). Hace
-   falta una de las dos: la contraseña actual del rol `postgres` de
-   `xbmewcmpfnligeodggop` o un Personal Access Token de Supabase. Sin ella no se
-   toca el `main` del proyecto Neon — la importación real va primero a una rama
-   desechable hasta que las cuentas del `verificar.sql` cuadren.
+1. **Importar los datos reales en `main`.** La credencial ya está y el ciclo
+   completo corrió contra el proyecto viejo **en una rama desechable**
+   (`db/importar/`, receta y siete trampas en `db/README.md`): 70 filas, paridad
+   exacta en las 11 tablas, `2 user / 2 account` con los bcrypt byte a byte y las
+   nueve comprobaciones en verde. Lo que falta es cruzar esas cifras a mano con el
+   panel viejo y dar el sí para repetir el ciclo contra la rama `main` de Neon, que
+   hoy está vacía. El `dist` todavía no apunta a la base de producción.
 2. Desplegar las tres Functions en la rama por defecto y publicar el `dist` en
    GitHub Pages, con la redirección del proyecto viejo **conservando el hash**.
 3. Verificación de extremo a extremo sobre datos reales (bloques A–F de

@@ -81,7 +81,24 @@ if (!VIEJO || !NUEVO) {
   process.exit(2)
 }
 
-const viejo = new Pool({ connectionString: VIEJO, max: 2 })
+// `volcar.sh` llega al viejo con libpq, donde sslmode=require cifra SIN validar
+// la cadena de certificados. El driver de Node no: desde pg v8 trata require,
+// prefer y verify-ca como verify-full, y el pooler de sesión de Supabase
+// presenta un intermedio auto-firmado — el informe moría en
+// SELF_SIGNED_CERT_IN_CHAIN sobre datos reales justo donde pg_dump pasaba
+// limpio, porque el simulacro apuntaba a dos bases Neon, que sí verifican.
+// uselibpqcompat alinea las dos mitades del traslado; el destino sigue validando.
+const conViejo = (() => {
+  try {
+    const u = new URL(VIEJO)
+    u.searchParams.set('uselibpqcompat', 'true')
+    return u.toString()
+  } catch {
+    return VIEJO
+  }
+})()
+
+const viejo = new Pool({ connectionString: conViejo, max: 2 })
 const nuevo = new Pool({ connectionString: NUEVO, max: 2 })
 const Q = (pool, texto, valores) => pool.query(texto, valores)
 
@@ -109,6 +126,10 @@ if (!cols.has('id') || !cols.has('email')) {
 }
 const tieneSSO = cols.has('is_sso_user')
 const tieneConfirmado = cols.has('email_confirmed_at')
+// `credentials` es de un GoTrue más nuevo: el proyecto viejo medido el
+// 2026-11-25 tiene identities sin esa columna, y referirla a pelo corta el
+// informe entero con 42703 aunque el hash esté en `encrypted_password`.
+const tieneCredenciales = (await columnas(viejo, 'auth', 'identities')).has('credentials')
 
 // ------------------------------------------------------------
 // 2) Leer la fuente.
@@ -134,10 +155,12 @@ const { rows: fuente } = await Q(
                      case when jsonb_typeof(i.identity_data) = 'object'
                           then i.identity_data else '{}' end)
             union all
-            select value
+            ${tieneCredenciales
+              ? `select value
               from jsonb_each_text(
                      case when jsonb_typeof(i.credentials) = 'object'
-                          then i.credentials else '{}' end)
+                          then i.credentials else '{}' end)`
+              : `select null::text where false`}
           ) kv
          where i.user_id = u.id
            and kv.v ~ '^\\$2[aby]\\$'

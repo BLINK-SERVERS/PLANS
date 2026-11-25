@@ -67,7 +67,7 @@ node db/importar/cuentas.mjs --aplicar     # 2 · traduce auth.users → user/ac
 pagos, comisiones, tasas) y `cuentas.mjs` mueve **las identidades**, que son las
 tablas `auth.*` de Supabase — esas no se vuelcan porque aquí no existen.
 
-## Cinco trampas que este directorio ya midió
+## Siete trampas que este directorio ya midió
 
 ### 1 · Restaurar con los disparadores despiertos no es un traslado: es una recalculación
 
@@ -144,7 +144,7 @@ así y lo comprueba después, junto con que el bcrypt viajó byte a byte.
 `db.xbmewcmpfnligeodggop.supabase.co` responde **solo con AAAA** (medido:
 `getent ahostsv4` no devuelve nada, `ahostsv6` sí) y esta máquina no tiene
 salida IPv6 (`ip -6 route get …` → `Network is unreachable`). Con la cadena de
-conexión «la de siempre» de el dashboard, `volcar.sh` corta en el preflight con
+conexión «la de siempre» del dashboard, `volcar.sh` corta en el preflight con
 
 ```
 psql: error: connection to server at "db.xbmewcmpfnligeodggop.supabase.co" failed: Network is unreachable
@@ -157,6 +157,45 @@ usuario `postgres.<ref>` (lo documenta `docs/03-integraciones.md`) — y desde a
 el servidor contesta hasta el `password authentication failed`, que es un
 problema de credencial y no de red. La diferencia importa porque el primer
 mensaje te hace esperar caído algo que está levantado.
+
+### 6 · `volcar.sh` y `cuentas.mjs` no hablan el mismo TLS, y el viejo solo lo delata a él
+
+Los dos pasos apuntan a la misma base con dos clientes distintos: `volcar.sh` usa
+libpq (`psql`/`pg_dump`), donde `sslmode=require` **cifra sin validar la cadena de
+certificados**; el driver `pg` de Node, desde pg v8, convierte `require` —y `prefer`
+y `verify-ca`— en `verify-full`. El pooler de sesión de Supabase presenta un
+intermedio auto-firmado, así que el paso 2 reventaba antes de leer una sola fila:
+
+```
+volcar.sh   →  ✓ datos restaurados, paridad verificada          (libpq: cifra y va)
+cuentas.mjs →  Error: self-signed certificate in certificate chain
+               code: 'SELF_SIGNED_CERT_IN_CHAIN'                 (Node: verifica)
+```
+
+El simulacro no podía verlo: sus dos extremos son bases de Neon, y Neon trae cadena
+de CA pública. El arreglo es `uselibpqcompat=true` en la conexión del viejo, que es
+literalmente lo que el propio aviso de Node recomienda, y deja el destino
+verificando como antes. La lección de forma: **un traslado entre dos sistemas solo
+queda probado cuando se prueba contra los dos sistemas reales**, no contra dos
+copias del mismo.
+
+### 7 · `auth.identities.credentials` no existe en todos los GoTrue
+
+El hash se busca en tres sitios (`users.encrypted_password`,
+`identities.identity_data`, `identities.credentials`). El proyecto viejo medido el
+2026-11-25 tiene `identities` con `provider_id, user_id, identity_data, provider,
+last_sign_in_at, created_at, updated_at, email, id, instance_id` — **sin
+`credentials`**—, y referirla a pelo cortaba el informe entero:
+
+```
+error: column i.credentials does not exist   (42703)
+```
+
+Irónico: el hash sí estaba, en `auth.users.encrypted_password`, o sea en el primer
+de los tres sitios. El script ya preguntaba al catálogo por `is_sso_user` y
+`email_confirmed_at` en `auth.users`; ahora pregunta también por `credentials` en
+`auth.identities` y arma el `union all` solo si existe. Un informe que se cae por
+una columna ausente es peor que un informe que la echa de menos y lo dice.
 
 ## El fixture: cómo volver a medir todo esto sin datos de clientes
 
@@ -227,26 +266,42 @@ El paso 5, en cambio, deja `suscripciones` y `pago_suscripciones` en 0 con
 > pillar: el diff se corre **después** de restaurar, contra la base que se acaba
 > de restaurar, y nombra la base en cada paso.
 
-## Qué falta para la importación real
+## La importación real: ensayada, qué falta
 
-El traslado de los datos de clientes está **bloqueado por credenciales**, no por
-código. Probado contra el pooler de sesión del proyecto viejo con la contraseña
-de base que pasó el dueño:
+El bloqueo de credenciales se levantó el 2026-11-25: la contraseña de base no era
+la que se había pasado antes, y con la correcta el pooler de sesión responde
+(`PostgreSQL 17.6`, `2 auth.users` legibles). Desde ahí el traslado entero **ya está
+ensayado contra los datos verdaderos**, en una rama desechable de `main`
+(`import-a-real`), sin escribir en `main`:
 
 ```
-psql "host=aws-0-us-west-2.pooler.supabase.com port=5432 user=postgres.xbmewcmpfnligeodggop"
-FATAL: password authentication failed for user "postgres"
+preflight    : 11 tablas de origen / 16 de destino · ✓ destino vacío
+volcado      : 12K · pg_dump avisa FK circulares en «usuarios», inofensivo
+               porque los disparadores del destino duermen durante la restauración
+restauración : 6 disparadores desactivados → ✓ datos restaurados → reactivados
+paridad      : una sola diferencia → pedidos|0| (se explica abajo)
+cuentas      : 2 user / 2 account · 9 comprobaciones en verde · 2 bcrypt byte a
+               byte · 0 emails con mayúsculas · 0 descartes · 0 ya existentes
 ```
 
-(con y sin el punto final; no se insistió para no activar el bloqueo de la
-instancia). Hace falta **una** de las dos:
+Las cifras, para cotejarlas a mano contra el panel viejo antes de tocar `main`:
+`usuarios 19 · suscripciones 17 · pago_suscripciones 6 · pagos_ingresos 6 ·
+planes 11 · cuentas_madre 5 · plataformas 4 · proveedores 1 · tasas_cambio 1 ·
+comisiones 0 · pagos_egresos 0` — 70 filas, con
+`pagos_ingresos.equivalente_usd = 53.57`, `cuentas_madre.cupos_ocupados = 16`,
+`tasas_cambio.tasa_bcv = 42.5000` y los tres invariantes en `0`.
 
-* la contraseña correcta del rol `postgres` de `xbmewcmpfnligeodggop`, o
-* un **Personal Access Token** de Supabase, que además permitiría pedir el
-  volcado desde el dashboard (`Database → Backups`) sin abrir el pooler.
+`pedidos|0|` no es datos que falten: es una tabla que el esquema nuevo tiene y la
+**producción del viejo nunca tuvo**. `0011_pedidos_y_ajustes_catalogo.sql` existe en
+el historial del repo pero jamás corrió contra `xbmewcmpfnligeodggop`, así que
+`verificar.sql` la nombra en el destino y no puede nombrarla en el origen. En un diff
+de paridad una tabla extra vacía es ruido: se lee «el destino tiene una tabla más»,
+no «falta algo».
 
-El PAT va en `~/.config/blink-plans/` (fuera del repo, modo 600), y la cadena de
-conexión del viejo **nunca** se escribe en el repo: viaja por entorno. Con
-alguna de las dos, el orden es el de arriba, pero sobre una **rama nueva** de
-Neon — nunca contra la rama `main` hasta que `verificar.sql` dé las cifras que
-salen del recuento a mano del panel viejo.
+Lo que queda es la decisión de fondo, no el mecanismo: correr estos mismos comandos
+contra la rama `main` de Neon — hoy **literalmente vacía**: 0 tablas, 0 disparadores,
+0 roles — y después el despliegue de la Fase 9. La cadena de conexión del viejo
+**nunca** se escribe en el repo: vive en `~/.config/blink-plans/viejo.env` (modo 600)
+y `cuentas.mjs` la lee con `VIEJO_FILE=`, para que ni siquiera pase por `argv`. Los
+`dumps/` que genera `volcar.sh` caen en `/dumps/` de `.gitignore`: con datos de
+clientes, un volcado es información de terceros y no va a git ni por accidente.
