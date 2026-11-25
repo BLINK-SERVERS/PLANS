@@ -30,6 +30,25 @@ transacción que su fila de `public.usuarios`. La sonda de salud responde
   `/api/auth` que usa el front (`src/lib/sesion.ts`). Las dos ramas se
   comportaban igual, así que no era regresión de `main` contra `esquema-base`.
 
+- **fix** el error de login salía **en inglés** en el panel español. El mapa de
+  `src/lib/sesion.ts` reconocía `Invalid login credentials` e
+  `Incorrect email or password`, pero la Function contestaba
+  `Invalid email or password` con `code: INVALID_EMAIL_OR_PASSWORD` — ninguna
+  coincidencia y el body crudo se pintaba tal cual. Ahora el patrón se prueba
+  también contra el `code`, que es lo que no cambia entre versiones.
+- **medido** en navegador real contra `https://plans.blink.com.ve`: la raíz
+  monta, el login aparece, y con contraseña errónea la interfaz **leyó** el 401
+  de la Function (antes del arreglo CORS el body era ilegible cross-origin).
+  Cero requests fallidos; en consola solo el 401 esperado. Lo que pintó fue
+  todavía `Invalid email or password`, de ahí el fix de arriba.
+- **chore** las tres Variables `VITE_BLINK_{AUTH,DATOS,TASA}_URL` del repo
+  apuntan a la rama `main` de Neon (`br-rough-shadow-bdyzi3a5-*`); el bundle
+  publicado no contiene ni una referencia a `br-long-morning-bdq3ioau` ni a
+  `supabase.co` (medido sobre `assets/index-*.js`).
+- **docs** el router es `HashRouter`: `/login`, `/panel` devuelven 404 en
+  GitHub Pages y **está bien** — el servidor nunca ve esas rutas, viven detrás
+  del `#`. Es la razón por la que la redirección del viejo conserva el hash.
+
 ## 2026-11-25 — Fase 4: el traslado, ensayado contra los datos reales
 
 Rama `migracion-neon`. El bloqueo de la Fase 4 era una credencial, y resultó ser

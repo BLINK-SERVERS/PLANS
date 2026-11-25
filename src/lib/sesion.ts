@@ -119,10 +119,16 @@ async function pedir<T>(
     const c = cuerpo as { message?: string; code?: string; error?: { message?: string; code?: string } } | null
     const mensaje = c?.message ?? c?.error?.message ?? `HTTP ${res.status}`
     // Better Auth devuelve 404 con USER_NOT_FOUND; el front quiere español.
+    // Se prueba también contra `code` porque la redacción de la mensaje cambió
+    // entre versiones: medido en producción, el sign-in incorrecto sale como
+    // `{"message":"Invalid email or password","code":"INVALID_EMAIL_OR_PASSWORD"}`,
+    // cadena que el patrón viejo no conocía y dejaba el error en inglés.
     return {
       data: null,
       error: {
-        message: /USER_NOT_FOUND|Invalid login credentials|Incorrect email or password/i.test(mensaje)
+        message: /USER_NOT_FOUND|INVALID_EMAIL_OR_PASSWORD|Invalid (login credentials|email or password)|Incorrect email or password/i.test(
+          `${mensaje} ${c?.code ?? c?.error?.code ?? ''}`,
+        )
           ? 'Correo o contraseña incorrectos'
           : /USER_ALREADY_EXISTS|already/i.test(mensaje)
             ? 'Ese correo ya está registrado'
