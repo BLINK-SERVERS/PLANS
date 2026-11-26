@@ -71,12 +71,14 @@ function SinSesion() {
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
           to="/ingreso"
+          state={{ volver: '/renovar' }}
           className="rounded-full bg-blink-action px-6 py-2.5 text-sm font-semibold text-white hover:bg-blink-action-hover"
         >
           Entrar
         </Link>
         <Link
           to="/registro"
+          state={{ volver: '/renovar' }}
           className="rounded-full border border-blink-line-strong bg-white px-6 py-2.5 text-sm font-semibold text-blink-muted hover:bg-blink-soft"
         >
           Crear cuenta
@@ -347,7 +349,7 @@ function FilaRenovacion({
 
 // ---------- Pantalla ----------
 export default function Renovar() {
-  const { session, cargando, rol, perfil } = useAuth()
+  const { session, cargando, rol, rolCargando, perfil } = useAuth()
   const [lista, setLista] = useState<MiSuscripcion[]>([])
   const [bcv, setBcv] = useState<number | null>(null)
   const [cargada, setCargada] = useState(false)
@@ -389,7 +391,10 @@ export default function Renovar() {
   // esto es solo para no ofrecer dos declaraciones en la misma visita.
   const bloqueada = declarada
 
-  if (cargando || rol === null)
+  // `rol === null` no sirve de candado: un anónimo nunca tiene rol y se quedaba
+  // mirando «Verificando tu sesión…» para siempre, sin ver nunca la pantalla de
+  // entrar. El que espera de verdad es `rolCargando`.
+  if (cargando || rolCargando)
     return (
       <div className="min-h-screen bg-blink-fill">
         <BarraTienda volver />

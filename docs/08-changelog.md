@@ -4,6 +4,67 @@
 > cambios de código. Formato de líneas: `- [tipo] descripción`
 > (tipo: feat / fix / docs / chore / security / refactor).
 
+## 2026-11-26 — El carrito estrena pie de compra y el que se va a registrar vuelve al pago
+
+El dueño lo dijo con su cliente en la cabeza: «cuando se añade un producto al carrito es
+confuso, debe salir un botón abajo de finalizar compra». Se midió primero la confusión y
+después se arregló, y la auditoría del mismo pedido sacó tres cosas más: la cabecera partida
+en dos filas a 390 px, un cliente anónimo varado de por vida en un spinner y, atrás de eso, un
+arranque de sesión que no cargaba el rol y botaba al admin del panel con solo recargar.
+
+- **fix** Medido el estado anterior: al tocar «Contratar» a 1400 px de profundidad en la
+  landing (scrollY 1401 de 3586) no había nada fijo en el pie del viewport. La única señal
+  era la etiqueta del botón y un enlace de 10 px a «Ver carrito». El cliente seguía bajando,
+  encontraba más botones «Contratar» y seguía tocando.
+- **feat** `BarraCompra`: `<div sticky bottom-0>` con el monto de referencia, el conteo de
+  artículos y un solo botón «Finalizar compra →». Está en Inicio, TiendaPlataforma (las dos
+  ramas, planes y Apple) y Carrito. `sticky` y no `fixed` porque toma espacio al final del
+  contenido: no tapa el pie de página ni exige un `padding-bottom` coordinado desde cada
+  vista. Desaparece sola con el carrito vacío y en `/checkout`, donde ya existe «Confirmar
+  pedido» con el monto convertido al medio de pago. Sin animación a propósito: un
+  `backdrop-blur` recomponiéndose por frame en esta máquina de dos núcleos se siente lento.
+  Medido: 65 px de alto, «1.99$ · 1 artículo en el carrito», y mezclado «3.10 € + 18.48$ ·
+  3 artículos».
+- **fix** `BarraTienda` se partía en dos filas a 390 px y tapaba el hero. El grupo de la
+  izquierda no tenía `min-w-0`, el wordmark no cedía y la navegación hacía `flex-wrap`. Ahora
+  va en una sola fila: atrás `shrink-0`, «Blink Plans» oculto debajo de `sm`, riel de enlaces
+  `flex-nowrap`. Medido a 390 y a 1440: alto 69 px, riel de 44, una fila.
+- **fix** Carrito: dos señales de pago idénticas apiladas al final de la pantalla. La pastilla
+  «Finalizar compra» de la página salió; el paso siguiente es la barra. Los steppers pasan de
+  28 a 36 px (estaban debajo del piso táctil) y cada renglón se rearmó en dos filas, porque a
+  390 px el título se cortaba a «C…», el precio se montaba sobre el botón «−» y «3.10 €»
+  saltaba en dos líneas.
+- **fix** `ContratarPlan` y `AnadeGiftCard`: el enlacecito de 10-12 px a «Ver carrito» se comía
+  el cambio de etiqueta como única señal de que algo pasó. Queda un botón con `aria-pressed`.
+- **feat** El anónimo que el checkout manda a registrarse ya no aterriza en la landing. Los
+  tres enlaces de `Checkout` y los dos de `Renovar` llevan `state={{ volver }}`, y
+  `Registro`/`Ingreso` respetan la ruta con `rutaVolver()` (`src/lib/nav.ts`, que solo acepta
+  ruta interna: `//host` sacaría del sitio). El enlace de vuelta pasa a decir «Volver al pago».
+  Medido de punta a punta con un alta real: queda en `#/checkout` con «Canva Pro (Por 1 mes)
+  1.99 $ c/u» y la tasa del día a la vista. Entrar sin destino sigue mandando al admin a
+  `#/panel`.
+- **fix** `Renovar` se portaba con `cargando || rol === null`, y un anónimo no tiene rol nunca:
+  se quedaba en «Verificando tu sesión…» para siempre. `SinSesion` era código inalcanzable. El
+  candado correcto es `rolCargando`, y desde la landing («Ya soy cliente, quiero renovar») ya
+  sale la pantalla de entrar.
+- **fix** Raíz de lo anterior, y pesaba más: `AuthProvider` solo cargaba el rol cuando
+  `publicar()` disparaba un evento, y publicar se llama en entrar, registrar y salir. Una recarga
+  fuerte con la sesión guardada no dispara nada, así que el usuario quedaba con token vivo y
+  `rol` nulo el resto de la vida de la pestaña. Medido antes de tocarlo: F5 en `#/panel` botaba
+  a la landing y F5 en `#/renovar` le mostraba al admin la pantalla de sus clientes. Ahora el
+  arranque revalida la sesión y carga el perfil antes de soltar `cargando`; con eso el F5 se
+  queda en el Dashboard y `#/renovar` sigue diciendo «Esta pantalla es para tus clientes».
+
+Verificado con Playwright sobre el dev server, cinco caminos reales y cero errores de consola:
+tienda→barra→checkout→registro (enlace «Volver al pago» → `#/checkout`), registro→ingreso
+conserva el destino, entrar desde el checkout, entrar desde la cabecera sin destino, y el alta
+nueva que termina pagando con el carrito intacto. Entrar sin destino sigue mandando al admin a
+`#/panel`. Y recarga fuerte (`reload()`) sobre `#/panel` y `#/renovar` con la sesión guardada:
+antes botaba a la landing y mostraba la pantalla equivocada, ahora se queda en el Dashboard y en
+«Esta pantalla es para tus clientes». `npm run typecheck` y `npm run build` limpios.
+Las cuentas `prueba-vuelta-*` que crearon las pruebas se borraron de la base: 20 filas entre
+`user`, `usuarios`, `session` y `account`, ningún pedido ni suscripción.
+
 ## 2026-11-26 — El panel rediseñado sobre HIG: vidrio, escala de controles y texto cortado
 
 El rediseño pidió fundamentos de Human Interface Guidelines sobre lo que ya estaba
@@ -58,7 +119,8 @@ pinta arriba de la primera. `npm run typecheck` y `npm run build` limpios, y en 
 CSS compilado están `bg-velo-danger`, `text-tinta-danger` y `sin-barra`.
 
 No se tocó la tienda (Carrito, Checkout, Inicio, Renovar, TiendaPlataforma): esas
-páginas no consumen el kit y su look ya estaba aceptado.
+páginas no consumen el kit y su look ya estaba aceptado. Ese límite se levantó el mismo
+día con la ronda del pie de compra, que está arriba.
 
 ## 2026-11-26 — Dos fuentes para la tasa y el libro de ganancias en bolívares
 

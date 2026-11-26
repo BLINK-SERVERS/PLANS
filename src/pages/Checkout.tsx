@@ -205,12 +205,14 @@ export default function Checkout() {
             <div className="mt-3 flex flex-wrap gap-2">
               <Link
                 to="/registro"
+                state={{ volver: '/checkout' }}
                 className="rounded-full bg-amber-600 px-5 py-2 text-xs font-semibold text-white hover:bg-amber-700"
               >
                 Crear cuenta
               </Link>
               <Link
                 to="/ingreso"
+                state={{ volver: '/checkout' }}
                 className="rounded-full border border-amber-400 px-5 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
               >
                 Ya tengo cuenta
@@ -343,6 +345,7 @@ export default function Checkout() {
           ) : (
             <Link
               to="/registro"
+              state={{ volver: '/checkout' }}
               className="rounded-full bg-blink-action px-10 py-3.5 text-center text-sm font-semibold text-white shadow-md hover:bg-blink-action-hover"
             >
               Crear cuenta para finalizar

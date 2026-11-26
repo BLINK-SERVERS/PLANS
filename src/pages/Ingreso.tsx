@@ -1,15 +1,18 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { db } from '../lib/db'
 import { getSesion } from '../lib/sesion'
 import { errMsg } from '../lib/err'
+import { rutaVolver } from '../lib/nav'
 import { Button, Field, Input } from '../components/ui'
 import { IconLock } from '../components/icons'
 
 export default function Ingreso() {
   const { entrar } = useAuth()
   const navigate = useNavigate()
+  // Quien venía pagando tiene que regresar al checkout, no a la landing.
+  const volver = rutaVolver(useLocation().state)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -21,14 +24,15 @@ export default function Ingreso() {
     setError('')
     try {
       await entrar(email.trim(), password)
-      // Redirige según el rol: admin al panel, cliente a la tienda. El id ya
-      // está en la sesión guardada; antes se pedía con supabase.auth.getUser(),
-      // que era una ida y vuelta más para lo mismo.
+      // Redirige según el rol: admin al panel, cliente a la tienda; salvo que
+      // haya venido pagando, en cuyo caso vuelve al checkout. El id ya está en
+      // la sesión guardada; antes se pedía con supabase.auth.getUser(), que era
+      // una ida y vuelta más para lo mismo.
       const uid = getSesion()?.user.id
       const { data: fila } = uid
         ? await db.from('usuarios').select('rol').eq('id', uid).maybeSingle()
         : { data: null }
-      navigate(fila?.rol === 'admin' ? '/panel' : '/', { replace: true })
+      navigate(volver ?? (fila?.rol === 'admin' ? '/panel' : '/'), { replace: true })
     } catch (err) {
       setError(errMsg(err))
       setCargando(false)
@@ -39,10 +43,10 @@ export default function Ingreso() {
     <div className="flex min-h-screen items-center justify-center bg-blink-fill px-4 py-10">
       <div className="w-full max-w-md space-y-4">
         <Link
-          to="/"
+          to={volver ?? '/'}
           className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-blink-action hover:text-blink-action-hover"
         >
-          ← Volver al inicio
+          ← {volver ? 'Volver al pago' : 'Volver al inicio'}
         </Link>
 
         <div className="rounded-2xl border border-blink-line bg-white p-6 shadow-sm">
@@ -89,7 +93,7 @@ export default function Ingreso() {
 
           <p className="mt-4 text-center text-sm text-blink-ink-mute">
             ¿No tienes cuenta?{' '}
-            <Link to="/registro" className="inline-flex min-h-11 items-center px-1 font-semibold text-blink-action hover:underline">
+            <Link to="/registro" state={{ volver }} className="inline-flex min-h-11 items-center px-1 font-semibold text-blink-action hover:underline">
               Regístrate
             </Link>
           </p>

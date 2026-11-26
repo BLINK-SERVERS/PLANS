@@ -11,6 +11,7 @@ import {
 import { errMsg } from '../lib/err'
 import { ErrorMsg } from '../components/ui'
 import BarraTienda from '../components/tienda/BarraTienda'
+import BarraCompra from '../components/tienda/BarraCompra'
 import TarjetasGoogle from '../components/tienda/TarjetasGoogle'
 import TarjetasHorizontales from '../components/tienda/TarjetasHorizontales'
 import TarjetasApple from '../components/tienda/TarjetasApple'
@@ -60,6 +61,7 @@ export default function TiendaPlataforma() {
             ser parte de un plan familiar compartido gestionado por <strong>Blink Plans</strong>.
           </p>
         </footer>
+        <BarraCompra />
       </div>
     )
   }
@@ -94,6 +96,8 @@ export default function TiendaPlataforma() {
           <strong>Blink Plans</strong>.
         </p>
       </footer>
+
+      <BarraCompra />
     </div>
   )
 }

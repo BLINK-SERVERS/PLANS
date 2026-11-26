@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   TARJETAS_APPLE,
   DISENOS_APPLE,
@@ -112,20 +111,16 @@ function AnadeGiftCard({ diseno, monto }: { diseno: DisenoGiftCard; monto: Tarje
     setAñadido(true)
   }
 
+  // La barra pegada al pie (BarraCompra) es el paso siguiente; el enlace de
+  // 12 px que había acá se comía el cambio de etiqueta como única señal.
   return (
-    <span className="flex flex-col items-stretch gap-1">
-      <button
-        onClick={añadir}
-        className="w-full rounded-full bg-[#0071E3] px-8 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-[#0077ED]"
-      >
-        {añadido ? '✓ En el carrito' : 'Añadir al carrito'}
-      </button>
-      {añadido ? (
-        <Link to="/carrito" className="text-center text-xs font-medium text-[#0071E3] underline">
-          Ver carrito →
-        </Link>
-      ) : null}
-    </span>
+    <button
+      onClick={añadir}
+      aria-pressed={añadido}
+      className="w-full min-h-11 rounded-full bg-[#0071E3] px-8 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-[#0077ED]"
+    >
+      {añadido ? '✓ En el carrito' : 'Añadir al carrito'}
+    </button>
   )
 }
 

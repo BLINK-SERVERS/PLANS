@@ -18,25 +18,32 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
   const saludo = perfil?.nombre || (session?.user.email ?? '').split('@')[0] || ''
 
   return (
-    <header className="sticky top-0 z-40 border-b border-blink-line bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-blink-line bg-white/92 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
           {volver ? (
             <Link
               to="/"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-blink-line-strong px-3 text-sm font-medium text-blink-muted hover:bg-blink-soft"
+              aria-label="Volver al inicio"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-blink-line-strong px-3 text-sm font-medium text-blink-muted hover:bg-blink-soft"
             >
-              ← Inicio
+              ←<span className="hidden sm:inline">Inicio</span>
             </Link>
           ) : null}
-          <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
+          <Link to="/" className="flex min-w-0 items-center gap-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
               <MarcaBlink className="h-5 w-auto" />
             </span>
-            <span className="text-lg font-bold text-blink-dark">Blink Plans</span>
+            {/* A 390 px el letrero escrito más los tres enlaces no caben en una
+                fila: `flex-wrap` los partía en dos filas de barra y el hero se
+                veía a través del vidrio. El letrero queda desde `sm` y en el
+                teléfono manda el isotipo, que es la marca igual. */}
+            <span className="hidden whitespace-nowrap text-lg font-bold text-blink-dark sm:inline">
+              Blink Plans
+            </span>
           </Link>
         </div>
-        <nav className="flex flex-wrap items-center justify-end gap-2 text-sm">
+        <nav className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5 text-sm sm:gap-2">
           <Link
             to="/carrito"
             aria-label={`Carrito (${total} artículo${total === 1 ? '' : 's'})`}

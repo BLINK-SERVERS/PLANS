@@ -108,9 +108,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Revalida lo que quedó en sessionStorage. Sin esto, un token de sesión
     // revocado en el servidor daría un panel "logueado" que falla en cada
     // consulta; con esto arranca limpio.
-    void cargarSesion().finally(() => {
-      if (activo) setCargando(false)
-    })
+    //
+    // El `cargarPerfil` de acá no es redundancia: una recarga fuerte no dispara
+    // ningún evento de sesión (`publicar` solo se llama en entrar, registrar y
+    // salir), así que sin esta línea el usuario recargado queda con sesión viva y
+    // `rol` nulo para siempre. Medido antes del arreglo: F5 en /panel botaba a la
+    // landing y F5 en /renovar le mostraba al admin la pantalla de sus clientes.
+    void cargarSesion()
+      .then(() => cargarPerfil(getSesion()?.user.id))
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
 
     return () => {
       activo = false

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useCarrito } from './CarritoProvider'
 import type { PlanTienda } from '../../lib/tienda'
 
@@ -35,16 +34,12 @@ export default function ContratarPlan({
     setAñadido(true)
   }
 
+  // Solo el cambio de etiqueta. El enlace «Ver carrito» de 10 px que había acá
+  // estaba bajo el piso táctil de HIG y competía con la barra pegada al pie,
+  // que ahora es el único paso siguiente visible.
   return (
-    <span className="flex flex-col items-center gap-1">
-      <button onClick={añadir} className={className}>
-        {añadido ? '✓ En el carrito' : etiqueta}
-      </button>
-      {añadido ? (
-        <Link to="/carrito" className="text-[10px] font-medium underline">
-          Ver carrito
-        </Link>
-      ) : null}
-    </span>
+    <button onClick={añadir} className={className} aria-pressed={añadido}>
+      {añadido ? '✓ En el carrito' : etiqueta}
+    </button>
   )
 }

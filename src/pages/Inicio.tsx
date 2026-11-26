@@ -15,6 +15,7 @@ import { errMsg } from '../lib/err'
 import { METODOS_PAGO } from '../lib/pagos'
 import { desdeGiftCardsEur } from '../lib/giftcards'
 import BarraTienda from '../components/tienda/BarraTienda'
+import BarraCompra from '../components/tienda/BarraCompra'
 import TarjetasHorizontales from '../components/tienda/TarjetasHorizontales'
 import { IconoApple, IconoCanvaC, IconoSpotify } from '../components/tienda/IconosMarca'
 
@@ -255,6 +256,8 @@ export default function Inicio() {
           <strong>Blink Plans</strong>.
         </p>
       </footer>
+
+      <BarraCompra />
     </div>
   )
 }
