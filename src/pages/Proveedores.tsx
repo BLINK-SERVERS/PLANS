@@ -14,6 +14,7 @@ import {
   PageHeader,
   Table,
   Td,
+  useConfirmar,
 } from '../components/ui'
 
 const vacio = { nombre: '', contacto: '', metodo_pago_preferido: '' }
@@ -56,8 +57,14 @@ export default function Proveedores() {
     }
   }
 
+  const { confirmar } = useConfirmar()
+
   const borrar = async (p: Proveedor) => {
-    if (!window.confirm(`¿Eliminar proveedor "${p.nombre}"?`)) return
+    const aceptado = await confirmar(`¿Eliminar a ${p.nombre}?`, {
+      detalle: 'Solo sale del listado de proveedores; las cuentas que te vendió quedan.',
+      boton: 'Eliminar',
+    })
+    if (!aceptado) return
     try {
       await eliminarProveedor(p.id)
       await cargar()

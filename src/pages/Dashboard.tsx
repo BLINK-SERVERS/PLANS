@@ -74,7 +74,7 @@ export default function Dashboard() {
 
       <Card title="Vencimientos de proveedores (próximos 3 días)">
         {vencimientos.length === 0 ? (
-          <p className="text-sm text-blink-ink-mute">
+          <p className="text-nota text-ink-secondary">
             No hay cuentas madre por vencer en los próximos 3 días.
           </p>
         ) : (
@@ -85,7 +85,7 @@ export default function Dashboard() {
               <tr key={v.id}>
                 <Td>{v.proveedor}</Td>
                 <Td>{v.plataforma}</Td>
-                <Td className="font-mono text-xs">{v.correo_cuenta}</Td>
+                <Td className="font-mono text-nota">{v.correo_cuenta}</Td>
                 <Td>
                   {v.cupos_ocupados}/{v.cupos_totales}
                 </Td>

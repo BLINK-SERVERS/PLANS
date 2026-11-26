@@ -20,8 +20,10 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Select,
   Table,
   Td,
+  useConfirmar,
 } from '../components/ui'
 import { IconPencil, IconPlus, IconTrash } from '../components/icons'
 
@@ -143,14 +145,15 @@ export default function Planes() {
     }
   }
 
+  const { confirmar } = useConfirmar()
+
   const borrar = async (pl: PlanRow) => {
     const nombre = pl.plataformas?.nombre ?? '?'
-    if (
-      !window.confirm(
-        `¿Eliminar el plan de ${etiquetaDuracion(pl.duracion_dias)} de "${nombre}"?\n\nSolo se borra del catálogo; no afecta suscripciones ya pagadas.`,
-      )
+    const aceptado = await confirmar(
+      `¿Eliminar el plan de ${etiquetaDuracion(pl.duracion_dias)} de ${nombre}?`,
+      { detalle: 'Solo sale del catálogo. Las suscripciones ya pagadas no se tocan.', boton: 'Eliminar' },
     )
-      return
+    if (!aceptado) return
     try {
       await eliminarPlan(pl.id)
       await cargar()
@@ -187,7 +190,7 @@ export default function Planes() {
                   <Td>{precioUsd(pl.precio_venta_usd)}</Td>
                   <Td>
                     {pl.precio_referencia_usd != null ? (
-                      <span className="text-sm line-through text-blink-ink-mute">
+                      <span className="text-subheadline line-through text-ink-secondary">
                         {precioUsd(pl.precio_referencia_usd)}
                       </span>
                     ) : (
@@ -195,7 +198,7 @@ export default function Planes() {
                     )}
                   </Td>
                   <Td>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button variant="secondary" onClick={() => abrirEditar(pl)}>
                         <IconPencil className="h-4 w-4" /> Editar
                       </Button>
@@ -219,17 +222,16 @@ export default function Planes() {
         <div className="space-y-3">
           {!editando ? (
             <Field label="Plataforma *">
-              <select
+              <Select
                 value={form.plataforma_id}
                 onChange={(e) => setForm({ ...form, plataforma_id: e.target.value })}
-                className="w-full rounded-lg border border-blink-line-strong bg-white px-3 py-2 text-sm text-blink-dark focus:border-blink-primary focus:outline-none"
               >
                 {plataformas.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.nombre} {p.activa ? '' : '(inactiva)'}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           ) : null}
           <Field label="Duración (días) *">

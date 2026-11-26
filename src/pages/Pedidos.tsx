@@ -8,6 +8,7 @@ import { etiquetaDuracion, precioUsd } from '../lib/tienda'
 import { linkWhatsApp, msjContactoPedido } from '../lib/pedidos'
 import { METODOS_LIBRO, METODOS_PAGO, METODO_LIBRO, fmtMonedaCobro, type MetodoPago } from '../lib/pagos'
 import {
+  Aviso,
   Badge,
   Button,
   EmptyState,
@@ -19,6 +20,7 @@ import {
   ModalFooter,
   PageHeader,
   Select,
+  Segmento,
   Table,
   Td,
 } from '../components/ui'
@@ -65,10 +67,10 @@ function detalle(p: Pedido): ReactNode {
           title={d.nombre}
         />
         <div>
-          <p className="text-sm font-medium text-blink-dark">
+          <p className="text-headline font-medium text-ink-label">
             Apple Gift Card · {dolar(p.valor_giftcard_usd ?? 0)}
           </p>
-          <p className="text-xs text-blink-ink-mute">
+          <p className="text-nota text-ink-secondary">
             {euro(p.precio_giftcard_eur ?? 0)} · {d.nombre}
           </p>
         </div>
@@ -77,15 +79,15 @@ function detalle(p: Pedido): ReactNode {
   }
   return (
     <div>
-      <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-blink-dark">
+      <p className="flex flex-wrap items-center gap-1.5 text-headline font-medium text-ink-label">
         {p.plataforma}
         {esRenovacion(p) ? (
-          <span className="inline-block rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+          <span className="inline-block rounded-full bg-[rgba(0,122,255,0.12)] px-2 py-0.5 text-legenda-2 font-semibold uppercase tracking-[0.03em] text-[#0062cc]">
             renovación
           </span>
         ) : null}
       </p>
-      <p className="text-xs text-blink-ink-mute">
+      <p className="text-nota text-ink-secondary">
         {etiquetaDuracion(p.duracion_dias ?? 0)} · {precioUsd(p.precio_usd ?? 0)}
       </p>
     </div>
@@ -223,26 +225,14 @@ export default function Pedidos() {
       />
 
       {error ? <ErrorMsg message={error} /> : null}
-      {aviso ? (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{aviso}</p>
-      ) : null}
+      {aviso ? <Aviso>{aviso}</Aviso> : null}
 
       {/* Filtros por estado */}
-      <div className="flex flex-wrap gap-2">
-        {FILTROS.map((f) => (
-          <button
-            key={f.id || 'todos'}
-            onClick={() => setFiltro(f.id)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              filtro === f.id
-                ? 'bg-blink-action text-white'
-                : 'bg-blink-fill text-blink-muted hover:bg-blink-fill-strong'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <Segmento
+        opciones={FILTROS.map((f) => ({ id: f.id, label: f.label }))}
+        valor={filtro}
+        onChange={setFiltro}
+      />
 
       {visibles.length === 0 ? (
         <EmptyState message="No hay pedidos en esta vista todavía." />
@@ -252,55 +242,55 @@ export default function Pedidos() {
             const telefono = (p.cliente_contacto ?? '').replace(/\D/g, '')
             return (
               <tr key={p.id}>
-                <Td className="whitespace-nowrap text-xs text-blink-ink-mute">
+                <Td className="whitespace-nowrap text-nota text-ink-secondary">
                   {fmtDateTime(p.created_at)}
                 </Td>
                 <Td>
-                  <p className="text-sm font-medium text-blink-dark">
+                  <p className="text-headline font-medium text-ink-label">
                     {p.cliente_nombre ?? '—'}
                   </p>
                   {p.cliente_contacto ? (
-                    <p className="text-xs text-blink-ink-mute">{p.cliente_contacto}</p>
+                    <p className="text-nota text-ink-secondary">{p.cliente_contacto}</p>
                   ) : null}
                 </Td>
                 <Td>{detalle(p)}</Td>
                 <Td>
                   {p.metodo_pago ? (
                     <div>
-                      <p className="text-xs font-semibold text-blink-muted">
+                      <p className="text-legenda font-semibold text-ink-secondary">
                         {METODOS_PAGO.find((x) => x.id === p.metodo_pago)?.nombre ?? p.metodo_pago}
                       </p>
                       {p.monto_cobro != null ? (
-                        <p className="mt-0.5 text-xs text-blink-ink-mute">
+                        <p className="mt-0.5 text-nota text-ink-secondary">
                           {fmtMonedaCobro(p.moneda_cobro ?? 'USDT', p.monto_cobro)}
                         </p>
                       ) : null}
                     </div>
                   ) : (
-                    <span className="text-xs text-blink-ink-mute">—</span>
+                    <span className="text-nota text-ink-secondary">—</span>
                   )}
                 </Td>
                 <Td>
-                  <select
+                  <Select
+                    compacto
                     value={p.estado}
                     disabled={guardando === p.id}
                     onChange={(e) => void cambiarEstado(p, e.target.value as EstadoPedido)}
-                    className="rounded-lg border border-blink-line px-2 py-1 text-xs font-medium text-blink-muted focus:border-blink-primary focus:outline-none"
                   >
                     {ESTADOS.map((e) => (
                       <option key={e} value={e}>
                         {ETIQUETA_ESTADO[e]}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <div className="mt-1">
                     <Badge value={p.estado} />
                   </div>
                 </Td>
                 <Td>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col items-start gap-1.5">
                     {esRenovacion(p) && p.estado === 'nuevo' ? (
-                      <Button onClick={() => abrirValidar(p)} title="Cierra el cobro y extiende el corte">
+                      <Button tam="compacto" onClick={() => abrirValidar(p)} title="Cierra el cobro y extiende el corte">
                         Validar y renovar
                       </Button>
                     ) : null}
@@ -311,12 +301,12 @@ export default function Pedidos() {
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex w-fit items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
+                        className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-[rgba(52,199,89,0.14)] px-3 text-nota font-semibold text-[#1c7c34] transition-opacity active:opacity-70"
                       >
                         WhatsApp
                       </a>
                     ) : (
-                      <span className="text-[11px] text-blink-ink-mute">sin contacto</span>
+                      <span className="text-legenda-2 text-ink-secondary">sin contacto</span>
                     )}
                   </div>
                 </Td>
@@ -335,14 +325,14 @@ export default function Pedidos() {
       >
         {validando ? (
           <div className="space-y-3">
-            <p className="text-sm text-blink-muted">
+            <p className="text-subheadline text-ink-secondary">
               {validando.plataforma} · {etiquetaDuracion(validando.duracion_dias ?? 0)} ·{' '}
               {precioUsd(validando.precio_usd ?? 0)}
             </p>
             {validando.monto_cobro != null ? (
-              <p className="text-xs text-blink-ink-mute">
+              <p className="text-nota text-ink-secondary">
                 El cliente declaró{' '}
-                <strong className="text-blink-dark">
+                <strong className="text-ink-label">
                   {fmtMonedaCobro(validando.moneda_cobro ?? 'USDT', validando.monto_cobro)}
                 </strong>{' '}
                 por{' '}
@@ -353,7 +343,7 @@ export default function Pedidos() {
               </p>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Monto recibido *">
                 <Input
                   type="number"
@@ -409,12 +399,12 @@ export default function Pedidos() {
               </Field>
             </div>
 
-            <div className="rounded-lg bg-blink-fill px-3 py-2 text-xs text-blink-muted">
+            <div className="rounded-[12px] bg-ink-fill-3 px-3 py-2 text-nota text-ink-secondary">
               Equivalente en USD: <strong>{equivalente.toFixed(2)}</strong>
               {form.moneda === 'BS' ? ` (${montoNum} Bs ÷ ${tasaNum || '—'})` : ''}
             </div>
 
-            <p className="text-xs leading-relaxed text-blink-ink-mute">
+            <p className="text-nota leading-relaxed text-ink-secondary">
               El nuevo corte arranca en la mayor de dos fechas: la que pone acá y el corte vigente.
               Si la suscripción ya había vencido, los días de atraso no se recuperan; si seguía
               activa, el período se suma completo. Ninguna validación frena una fecha mal puesta, y

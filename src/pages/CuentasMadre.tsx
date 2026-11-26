@@ -145,7 +145,7 @@ export default function CuentasMadre() {
         >
           {filtradas.map((c) => (
             <tr key={c.id}>
-              <Td className="font-mono text-xs font-medium">{c.correo_cuenta}</Td>
+              <Td className="font-mono text-nota font-medium">{c.correo_cuenta}</Td>
               <Td>{c.proveedores?.nombre ?? 'Directo'}</Td>
               <Td>{c.plataformas?.nombre ?? '—'}</Td>
               <Td>
@@ -156,7 +156,7 @@ export default function CuentasMadre() {
                 {c.fecha_corte_proveedor ? (
                   fmtDate(c.fecha_corte_proveedor)
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs text-blink-ink-mute">
+                  <span className="inline-flex items-center gap-1 text-nota text-ink-secondary">
                     <IconInfinity className="h-3.5 w-3.5" /> Sin cortes
                   </span>
                 )}
@@ -236,7 +236,7 @@ export default function CuentasMadre() {
               value={form.fecha_corte_proveedor}
               onChange={(e) => setForm({ ...form, fecha_corte_proveedor: e.target.value })}
             />
-            <p className="text-xs text-blink-ink-mute">
+            <p className="text-nota text-ink-secondary">
               Déjala vacía si la cuenta no tiene renovación (p. ej. Canva docente, dura para
               siempre).
             </p>

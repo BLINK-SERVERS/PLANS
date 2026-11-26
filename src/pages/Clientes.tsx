@@ -24,6 +24,7 @@ import {
   Select,
   Table,
   Td,
+  useConfirmar,
 } from '../components/ui'
 
 const vacio = { nombre: '', email: '', telefono: '', referido_por: '' }
@@ -99,13 +100,15 @@ export default function Clientes() {
     }
   }
 
+  const { confirmar } = useConfirmar()
+
   const borrar = async (c: Usuario) => {
-    if (
-      !window.confirm(
-        `¿Eliminar al cliente "${c.nombre}"?\n\nSe borrarán también sus suscripciones, pagos y comisiones asociadas.`,
-      )
-    )
-      return
+    const aceptado = await confirmar(`¿Eliminar a ${c.nombre}?`, {
+      detalle:
+        'Se borrarán también sus suscripciones, sus pagos y las comisiones asociadas. No se puede deshacer.',
+      boton: 'Eliminar',
+    })
+    if (!aceptado) return
     try {
       await eliminarCliente(c.id)
       await cargar()
@@ -129,7 +132,7 @@ export default function Clientes() {
         placeholder="Buscar por nombre, email o teléfono…"
       />
 
-      <p className="text-xs text-blink-ink-mute">
+      <p className="text-nota text-ink-secondary">
         Mostrando {filtrados.length} de {clientes.length} clientes.
       </p>
 
@@ -147,7 +150,7 @@ export default function Clientes() {
                 <Td>{agente?.nombre ?? '—'}</Td>
                 <Td>{fmtDateTime(c.created_at)}</Td>
                 <Td>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button variant="secondary" onClick={() => abrirEditar(c)}>
                       Editar
                     </Button>
@@ -204,7 +207,7 @@ export default function Clientes() {
               </Select>
             </Field>
           ) : (
-            <p className="text-xs text-blink-ink-mute">
+            <p className="text-nota text-ink-secondary">
               El referido no se modifica aquí (política de trazabilidad).
             </p>
           )}
@@ -217,7 +220,7 @@ export default function Clientes() {
         </div>
       </Modal>
 
-      <div className="text-xs text-blink-ink-mute">
+      <div className="text-nota text-ink-secondary">
         <Badge value="cliente" /> rol asignado automáticamente a los clientes
       </div>
     </div>

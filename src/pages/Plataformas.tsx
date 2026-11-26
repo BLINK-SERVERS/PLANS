@@ -21,6 +21,7 @@ import {
   PageHeader,
   Table,
   Td,
+  useConfirmar,
 } from '../components/ui'
 import { IconCheck, IconTrash, IconX } from '../components/icons'
 
@@ -80,13 +81,15 @@ export default function Plataformas() {
     }
   }
 
+  const { confirmar } = useConfirmar()
+
   const borrar = async (p: Plataforma) => {
-    if (
-      !window.confirm(
-        `¿Eliminar "${p.nombre}"?\n\nOJO: se borrarán también sus planes, cuentas madre y suscripciones asociadas.`,
-      )
-    )
-      return
+    const aceptado = await confirmar(`¿Eliminar ${p.nombre}?`, {
+      detalle:
+        'Se borran también sus planes, sus cuentas madre y las suscripciones asociadas. No se puede deshacer.',
+      boton: 'Eliminar',
+    })
+    if (!aceptado) return
     try {
       await eliminarPlataforma(p.id)
       await cargar()
@@ -119,18 +122,18 @@ export default function Plataformas() {
               </Td>
               <Td>
                 {p.aplica_comision ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                  <span className="inline-flex items-center gap-1 text-nota font-medium text-emerald-700">
                     <IconCheck className="h-3.5 w-3.5" /> Sí
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs text-blink-ink-mute">
+                  <span className="inline-flex items-center gap-1 text-nota text-ink-secondary">
                     <IconX className="h-3.5 w-3.5" /> No
                   </span>
                 )}
               </Td>
               <Td>{fmtDate(p.created_at)}</Td>
               <Td>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="secondary" onClick={() => abrirEditar(p)}>
                     Editar
                   </Button>
@@ -144,7 +147,7 @@ export default function Plataformas() {
         </Table>
       )}
 
-      <p className="text-xs text-blink-ink-mute">
+      <p className="text-nota text-ink-secondary">
         La comisión del 30% se genera automáticamente solo en las plataformas marcadas (p. ej.
         Google One).
       </p>
@@ -162,19 +165,19 @@ export default function Plataformas() {
               placeholder="Netflix, Spotify…"
             />
           </Field>
-          <label className="flex items-center gap-2 text-sm text-blink-muted">
+          <label className="flex items-center gap-2 text-subheadline text-ink-secondary">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-blink-action"
+              className="h-4 w-4 accent-[#007aff]"
               checked={form.activa}
               onChange={(e) => setForm({ ...form, activa: e.target.checked })}
             />
             Activa (disponible para venta)
           </label>
-          <label className="flex items-center gap-2 text-sm text-blink-muted">
+          <label className="flex items-center gap-2 text-subheadline text-ink-secondary">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-blink-action"
+              className="h-4 w-4 accent-[#007aff]"
               checked={form.aplica_comision}
               onChange={(e) => setForm({ ...form, aplica_comision: e.target.checked })}
             />

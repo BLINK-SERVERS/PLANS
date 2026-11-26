@@ -15,6 +15,7 @@ import {
   StatCard,
   Table,
   Td,
+  useConfirmar,
 } from '../components/ui'
 
 export default function Comisiones() {
@@ -43,8 +44,10 @@ export default function Comisiones() {
     [comisiones, filtro],
   )
 
+  const { confirmar } = useConfirmar()
+
   const liquidar = async (id: string) => {
-    if (!window.confirm('¿Marcar esta comisión como liquidada?')) return
+    if (!(await confirmar('¿Marcar esta comisión como liquidada?', { boton: 'Liquidar' }))) return
     try {
       await liquidarComision(id)
       await cargar()
@@ -84,7 +87,7 @@ export default function Comisiones() {
         ) : (
           <>
             <div className="mb-3 flex items-center gap-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-blink-ink-mute">
+              <span className="text-legenda font-semibold uppercase tracking-wide text-ink-secondary">
                 Filtrar
               </span>
               <Select
@@ -112,7 +115,7 @@ export default function Comisiones() {
                         Liquidar
                       </Button>
                     ) : (
-                      <span className="text-xs text-blink-ink-mute">—</span>
+                      <span className="text-nota text-ink-secondary">—</span>
                     )}
                   </Td>
                 </tr>
