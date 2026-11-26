@@ -416,3 +416,12 @@ export const IconDocumento = (p: PropsSimbolo) => (
     <path d="M7.6 13h8M7.6 16.4h5.4" />
   </Simbolo>
 )
+
+/** chart.bar — tres barras sobre la línea de base, la última al tope de la cap. */
+export const IconGanancias = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M6.2 20v-5.2" />
+    <path d="M12 20v-9.2" />
+    <path d="M17.8 20V6.2" />
+  </Simbolo>
+)

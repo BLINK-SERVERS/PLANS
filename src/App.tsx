@@ -22,6 +22,7 @@ const CuentasMadre = lazy(() => import('./pages/CuentasMadre'))
 const Proveedores = lazy(() => import('./pages/Proveedores'))
 const Pagos = lazy(() => import('./pages/Pagos'))
 const Comisiones = lazy(() => import('./pages/Comisiones'))
+const Ganancias = lazy(() => import('./pages/Ganancias'))
 const Planes = lazy(() => import('./pages/Planes'))
 const Pedidos = lazy(() => import('./pages/Pedidos'))
 
@@ -56,6 +57,7 @@ const RUTAS_PANEL = [
   'proveedores',
   'pagos',
   'comisiones',
+  'ganancias',
 ] as const
 
 export default function App() {
@@ -94,6 +96,7 @@ export default function App() {
                 <Route path="proveedores" element={<Proveedores />} />
                 <Route path="pagos" element={<Pagos />} />
                 <Route path="comisiones" element={<Comisiones />} />
+                <Route path="ganancias" element={<Ganancias />} />
                 <Route path="*" element={<Navigate to="/panel" replace />} />
               </Route>
 

@@ -8,6 +8,7 @@ import {
   IconCard,
   IconCasa,
   IconDashboard,
+  IconGanancias,
   IconInbox,
   IconList,
   IconLogout,
@@ -57,6 +58,7 @@ const SECCIONES: Array<{ titulo: string; items: Destino[] }> = [
   {
     titulo: 'Dinero',
     items: [
+      { to: '/panel/ganancias', label: 'Ganancias', icono: IconGanancias, tono: 'var(--color-sys-green)' },
       { to: '/panel/pagos', label: 'Pagos', icono: IconCard, tono: 'var(--color-sys-pink)' },
       { to: '/panel/comisiones', label: 'Comisiones', icono: IconPercent, tono: 'var(--color-sys-mint)' },
     ],

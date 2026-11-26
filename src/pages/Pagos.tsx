@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   actualizarPago,
   eliminarPago,
+  etiquetaOrigen,
   fetchAsignacionesDePago,
   fetchClientes,
   fetchPagos,
@@ -14,6 +15,7 @@ import type { Moneda, PagoRow, SuscripcionRow, Usuario } from '../lib/types'
 import { fmtDate, fmtNum, fmtUSDT, fmtUSD, fmtVES, hoy, round2 } from '../lib/format'
 import { errMsg } from '../lib/err'
 import { METODOS_LIBRO as METODOS_PAGO } from '../lib/pagos'
+import { CintaTasa } from '../components/CintaTasa'
 import {
   Aviso,
   Button,
@@ -189,9 +191,9 @@ export default function Pagos() {
       if (r.tasa != null) {
         setForm((f) => ({ ...f, tasa: String(r.tasa) }))
         setExito(
-          r.fuente === 'bcv-directo'
-            ? `Tasa BCV oficial reflejada: ${fmtNum(r.tasa, 4)} VES/USD (fuente: bcv.org.ve)`
-            : `Tasa reflejada: ${fmtNum(r.tasa, 4)} VES/USD (última del sistema, origen BCV)`,
+          `Tasa del día reflejada: ${fmtNum(r.tasa, 4)} Bs/USD · ${etiquetaOrigen(r.origen)}` +
+            (r.fecha ? ` · valor ${fmtDate(r.fecha)}` : '') +
+            (r.desvio != null && r.desvio > 0 ? ` (${fmtNum(r.desvio, 1)} % de diferencia entre fuentes)` : ''),
         )
       } else {
         setError(
@@ -363,6 +365,11 @@ export default function Pagos() {
         title="Pagos (calculadora BCV)"
         subtitle="Registra el cobro y distribúyelo entre las suscripciones activas del cliente"
       />
+
+      {/* La cinta va arriba de la calculadora: el número que se escribe en el
+          campo «Tasa BCV» tiene que coincidir con el de la fecha valor, y acá se
+          ve cuál es sin bajar al formulario. */}
+      <CintaTasa />
 
       {exito ? (
         <Aviso>{exito}</Aviso>

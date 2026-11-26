@@ -148,12 +148,45 @@ export interface Comision {
 
 export interface ComisionRow extends Comision {
   usuarios?: { nombre?: string } | null
+  // El cobro del que salió la comisión: sin él el 30 % es un número suelto y
+  // no se puede revisar contra los bolívares que entraron.
+  pagos_ingresos?: {
+    monto_pagado?: number | string
+    moneda?: Moneda
+    tasa_bcv_aplicada?: number | string | null
+    equivalente_usd?: number | string
+    fecha_pago?: string
+  } | null
 }
 
 export interface TasaCambio {
   id: string
   fecha: string
   tasa_bcv: number
+  /** `bcv-html` / `dolarapi` / `importada`; null = fila anterior a la migración 0007. */
+  fuente?: string | null
+}
+
+// Una fila = un cobro. sale de `v_ganancias` (migración 0007): el USD se
+// recalcula sobre los bolívares recibidos y la tasa oficial de ESE día, y
+// `usd_registrado` es lo que quedó guardado al cobrar, para ver el choque.
+export interface GananciaRow {
+  pago_id: string
+  fecha_pago: string
+  cliente_id: string | null
+  cliente: string | null
+  moneda: Moneda
+  metodo_pago: string | null
+  monto_recibido: number
+  bs_recibidos: number | null
+  tasa_del_dia: number | null
+  tasa_rescatada_de_tabla: boolean
+  usd_del_dia: number | null
+  usd_registrado: number
+  diferencia_usd: number | null
+  asignado_usd: number | null
+  comision_usd: number | null
+  comision_estado: string | null
 }
 
 export type Moneda = 'USD' | 'BS' | 'USDT'

@@ -20,6 +20,12 @@
 //      contra 924,35 reales). Ahora se intentan las dos cadenas y la respuesta
 //      dice cuál verificó. Medido contra la Function desplegada tras el arreglo:
 //      HTTP 200, USD 924,3534, fecha valor 2026-11-26.
+//    · desde el 2026-11-26 el raspado ya no es fuente única: si bcv.org.ve no
+//      verifica, el mismo promedio oficial se lee por JSON a ve.dolarapi.com y
+//      la fila guarda en `tasas_cambio.fuente` cuál de las dos lo dio. Cuando el
+//      raspado sí funciona, las dos se consultan igual y la respuesta trae
+//      `desvio_entre_fuentes` en porcentaje, para enterarse de un desacuerdo
+//      antes de cobrar con él.
 //    · Function Trigger con `--cron` despierta el compute (escala a cero) y
 //      entrega at-least-once; la cabecera x-neon-trigger-invocation-id la
 //      pone Neon y el borde la quita a los clientes, así que su presencia es
@@ -106,6 +112,13 @@ function obtener(url, headers = {}, ca = undefined) {
 // da un error útil: Node corta la verificación del leaf. Se prueban las dos
 // cadenas fijadas y se devuelve cuál pasó, para que el log y la respuesta digan
 // algo cuando la tasa se retrase.
+//
+// El raspado sigue siendo la autoridad (es el sitio del emisor), pero ya no es
+// el único camino: `fuenteAlternativa()` lee el mismo número oficial por JSON.
+// La cadena de certificados del BCV se rompió el 2026-11-25 y tardó un día
+// humano en arreglarse; mientras estuvo rota, la tabla conservaba 42,50 del
+// 2026-09-20. Un respaldo que no depende del HTML ni del TLS de bcv.org.ve corta
+// ese episodio de 66 días a unas horas.
 async function ragparBcv() {
   let ultimoError = 'ninguna cadena intentada'
   for (let i = 0; i < CADENAS_BCV.length; i++) {
@@ -122,6 +135,7 @@ async function ragparBcv() {
       const tasaUsd = extraerTasa(res.cuerpo, 'dolar')
       if (!tasaUsd) throw new Error('no se encontró el valor USD en el HTML del BCV')
       return {
+        fuente: 'bcv-html',
         tasaUsd,
         tasaEur: extraerTasa(res.cuerpo, 'euro'),
         fecha: extraerFechaValor(res.cuerpo),
@@ -137,16 +151,95 @@ async function ragparBcv() {
   throw new Error(`bcv.org.ve no verificó con ninguna cadena fijada — ${ultimoError}`)
 }
 
+// dolarapi (ve.dolarapi.com) publica el mismo promedio oficial del BCV en JSON,
+// con la fecha de actualización en la respuesta. No es un número distinto: es el
+// del BCV redistribuido, así que sirve de respaldo y de contraste.
+const DOLARAPI = {
+  usd: 'https://ve.dolarapi.com/v1/dolares/oficial',
+  eur: 'https://ve.dolarapi.com/v1/euros',
+}
+
+async function pedirJson(url) {
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json', 'User-Agent': UA },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!res.ok) throw new Error(`${new URL(url).pathname} respondió ${res.status}`)
+  return res.json()
+}
+
+function promedioDe(cuerpo, moneda) {
+  const filas = Array.isArray(cuerpo) ? cuerpo : [cuerpo]
+  const oficial = filas.find((f) => f?.fuente === 'oficial' && f?.moneda === moneda)
+  const n = Number(oficial?.promedio)
+  // "2026-11-26T00:00:00-04:00" → la parte fecha, sin zona: el Fecha Valor del
+  // BCV se guarda igual, y aquí lo que importa es el día.
+  const fecha = typeof oficial?.fechaActualizacion === 'string'
+    ? oficial.fechaActualizacion.slice(0, 10)
+    : null
+  return { valor: Number.isFinite(n) && n > 0 ? n : null, fecha }
+}
+
+async function fuenteAlternativa() {
+  const t0 = performance.now()
+  const [usd, eur] = await Promise.all([pedirJson(DOLARAPI.usd), pedirJson(DOLARAPI.eur)])
+  const d = promedioDe(usd, 'USD')
+  if (!d.valor) throw new Error('dolarapi no trajo un promedio oficial positivo')
+  const e = promedioDe(eur, 'EUR')
+  return {
+    fuente: 'dolarapi',
+    tasaUsd: d.valor,
+    // Si el JSON del euro viniera sin valor, no se inventa: `guardarTasa`
+    // conserva el último EUR de la fila con el `coalesce`.
+    tasaEur: e.valor,
+    fecha: d.fecha,
+    ms: Math.round(performance.now() - t0),
+  }
+}
+
+// Las dos fuentes se consultan siempre que el raspado alcance, para medir de
+// verdad si están de acuerdo; si el raspado cae, la alternativa pasa a ser la
+// fuente del número que se guarda.
+async function obtenerTasa() {
+  const intentos = []
+  let principal = null
+  try {
+    principal = await ragparBcv()
+    intentos.push({ fuente: 'bcv-html', ok: true, ms: principal.ms })
+  } catch (e) {
+    intentos.push({ fuente: 'bcv-html', ok: false, error: String(e?.message ?? e) })
+  }
+
+  let alternativa = null
+  try {
+    alternativa = await fuenteAlternativa()
+    intentos.push({ fuente: 'dolarapi', ok: true, ms: alternativa.ms })
+  } catch (e) {
+    intentos.push({ fuente: 'dolarapi', ok: false, error: String(e?.message ?? e) })
+  }
+
+  if (!principal && !alternativa)
+    throw new Error(`ninguna fuente de tasa respondió — ${intentos.map((i) => `${i.fuente}: ${i.error}`).join(' | ')}`)
+
+  const elegido = principal ?? alternativa
+  const desvio =
+    principal && alternativa && principal.tasaUsd > 0 && alternativa.tasaUsd > 0
+      ? Math.round(((alternativa.tasaUsd - principal.tasaUsd) / principal.tasaUsd) * 10000) / 100
+      : null
+  return { ...elegido, desvio, intentos }
+}
+
 // ── escritura ──────────────────────────────────────────────────────────
-async function guardarTasa(fecha, tasaUsd, tasaEur) {
+async function guardarTasa(fecha, tasaUsd, tasaEur, fuente) {
   const r = await pool.query(
-    `insert into public.tasas_cambio (fecha, tasa_bcv, tasa_eur_bs)
-     values ($1, $2, $3)
+    `insert into public.tasas_cambio (fecha, tasa_bcv, tasa_eur_bs, fuente)
+     values ($1, $2, $3, $4)
      on conflict (fecha) do update
         set tasa_bcv    = excluded.tasa_bcv,
-            tasa_eur_bs = coalesce(excluded.tasa_eur_bs, public.tasas_cambio.tasa_eur_bs)
+            tasa_eur_bs = coalesce(excluded.tasa_eur_bs, public.tasas_cambio.tasa_eur_bs),
+            fuente      = excluded.fuente
      returning (xmax = 0) as es_insert`,
-    [fecha, tasaUsd, tasaEur],
+    [fecha, tasaUsd, tasaEur, fuente],
   )
   return r.rows[0]?.es_insert === true ? 'insert' : 'update'
 }
@@ -173,10 +266,18 @@ const cabecerasCORS = (origin) => ({
   Vary: 'Origin',
 })
 
+// `no-store` no es adorno: una tasa del día guardada en la caché de un proxy o
+// de un CDN es un precio vencido servido como si fuera vigente. Medido acá
+// mismo: el proxy de salida de esta máquina devolvía el `/tasa` viejo después
+// de desplegar el nuevo, y solo una URL distinta mostró el cuerpo actualizado.
 const json = (obj, estado = 200, origin) =>
   new Response(JSON.stringify(obj), {
     status: estado,
-    headers: { 'Content-Type': 'application/json', ...cabecerasCORS(origin) },
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+      ...cabecerasCORS(origin),
+    },
   })
 
 // Quién puede pedir un refresco manual. El trigger de Neon entra por su
@@ -191,9 +292,14 @@ async function autorizacionSuficiente(request) {
 }
 
 async function trabajar(cabecera, request) {
-  const raspado = await ragparBcv()
-  if (!raspado.fecha) throw new Error('el HTML del BCV no trae el Fecha Valor')
-  const efecto = await guardarTasa(raspado.fecha, raspado.tasaUsd, raspado.tasaEur)
+  const raspado = await obtenerTasa()
+  if (!raspado.fecha) throw new Error(`${raspado.fuente} no devolvió la fecha del número`)
+  const efecto = await guardarTasa(
+    raspado.fecha,
+    raspado.tasaUsd,
+    raspado.tasaEur,
+    raspado.fuente,
+  )
   const vencidas = await marcarVencidas()
   return json(
     {
@@ -202,9 +308,17 @@ async function trabajar(cabecera, request) {
       fecha: raspado.fecha,
       tasa_bcv: raspado.tasaUsd,
       tasa_eur_bs: raspado.tasaEur,
+      fuente: raspado.fuente,
+      desvio_entre_fuentes: raspado.desvio,
+      intentos: raspado.intentos,
       efecto,
       suscripciones_marcaron_vencidas: vencidas,
-      bcv: { estado: raspado.estado, bytes: raspado.bytes, ms_egreso: raspado.ms, cadena: raspado.cadena },
+      bcv: {
+        estado: raspado.estado,
+        bytes: raspado.bytes,
+        ms_egreso: raspado.ms,
+        cadena: raspado.cadena,
+      },
     },
     200,
     request.headers.get('Origin') ?? '',
@@ -235,10 +349,12 @@ export default {
       // Lectura para verificar sin escribir: qué hay en la tabla ahora mismo.
       if (request.method === 'GET' && url.pathname === '/estado') {
         const r = await pool.query(
-          `select fecha, tasa_bcv, tasa_eur_bs from public.tasas_cambio
+          `select fecha, tasa_bcv, tasa_eur_bs, fuente, created_at,
+                  (current_date - fecha) as dias_vieja
+             from public.tasas_cambio
             order by fecha desc limit 5`,
         )
-        return json({ ok: true, tasas: r.rows }, 200, origin)
+        return json({ ok: true, tasas: r.rows, hoy: new Date().toISOString().slice(0, 10) }, 200, origin)
       }
 
       // Lectura pública de la última tasa: la usa el checkout, que también es
@@ -256,7 +372,9 @@ export default {
       // fila de negocio. Por eso puede vivir fuera del sistema de tokens.
       if (request.method === 'GET' && url.pathname === '/tasa') {
         const r = await pool.query(
-          `select fecha, tasa_bcv, tasa_eur_bs from public.tasas_cambio
+          `select fecha, tasa_bcv, tasa_eur_bs, fuente,
+                  (current_date - fecha) as dias_vieja
+             from public.tasas_cambio
             order by fecha desc limit 1`,
         )
         const fila = r.rows[0]
@@ -267,6 +385,15 @@ export default {
             fecha: fila.fecha,
             tasa_bcv: Number(fila.tasa_bcv),
             tasa_eur_bs: fila.tasa_eur_bs == null ? null : Number(fila.tasa_eur_bs),
+            // Una fila escrita antes de existir la columna no tiene prueba de
+            // quién la metió: decir «importada» sería inventar. Se reporta como
+            // desconocida y el panel lo muestra tal cual.
+            fuente: fila.fuente ?? 'desconocida',
+            // `vigente` es lo que le dice al cliente y al checkout que el número
+            // es el de hoy. Sin él, una fila vieja (como el 42,50 que quedó del
+            // proyecto viejo) se lee como si fuera el precio del día.
+            vigente: Number(fila.dias_vieja) <= 0,
+            dias_vieja: Number(fila.dias_vieja),
           },
           200,
           origin,

@@ -3,8 +3,9 @@ import {
   fetchResumen,
   fetchVencimientosProveedores,
 } from '../lib/api'
-import { fmtDate, fmtUSD } from '../lib/format'
+import { fmtDate, fmtUSD, fmtVES } from '../lib/format'
 import { errMsg } from '../lib/err'
+import { CintaTasa } from '../components/CintaTasa'
 import type { VencimientoProveedor } from '../lib/types'
 import {
   Badge,
@@ -47,8 +48,10 @@ export default function Dashboard() {
     <div className="space-y-6">
       <PageHeader title="Dashboard" subtitle="Resumen general del negocio" />
 
+      <CintaTasa onActualizada={() => void cargar()} />
+
       {resumen ? (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
           <StatCard label="Clientes" value={resumen.clientes} />
           <StatCard
             label="Suscripciones activas"
@@ -60,12 +63,23 @@ export default function Dashboard() {
             hint={resumen.suscripcionesVencidas > 0 ? 'Revisar cobros pendientes' : undefined}
           />
           <StatCard
-            label="Comisiones pendientes"
-            value={fmtUSD(resumen.comisionesPendientesUSD)}
-          />
-          <StatCard
             label="Ingresos del mes"
             value={fmtUSD(resumen.ingresosMesUSD)}
+            hint={resumen.bsMes > 0 ? `${fmtVES(resumen.bsMes)} cobrados` : 'Sin cobros en Bs'}
+          />
+          <StatCard
+            label="Ganancia del mes"
+            value={fmtUSD(resumen.gananciaMesUSD)}
+            hint={
+              resumen.egresosMesUSD > 0
+                ? `Egresos ${fmtUSD(resumen.egresosMesUSD)} registrados`
+                : 'Sin egresos registrados: aún no es un margen real'
+            }
+          />
+          <StatCard
+            label="Comisiones pendientes"
+            value={fmtUSD(resumen.comisionesPendientesUSD)}
+            hint="30% del USD de cada cobro referido"
           />
         </div>
       ) : (

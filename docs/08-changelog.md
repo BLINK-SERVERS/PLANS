@@ -4,6 +4,54 @@
 > cambios de código. Formato de líneas: `- [tipo] descripción`
 > (tipo: feat / fix / docs / chore / security / refactor).
 
+## 2026-11-26 — Dos fuentes para la tasa y el libro de ganancias en bolívares
+
+El número con el que se cobra en Bs dependía de un solo raspado a bcv.org.ve y de
+la buena memoria de quien escribía el `equivalente_usd`. Las dos cosas se cerraron
+acá: la Function tiene respaldo, y la ganancia se recalcula desde los bolívares que
+entraron.
+
+- **feat** `functions/tasa-bcv`: además del raspado al BCV se pide
+  `ve.dolarapi.com/v1/dolares/oficial` y `/euros` en paralelo. Si el BCV no
+  contesta (el corte de 66 días por el certificado fue exactamente esto), entra
+  el respaldo y la respuesta dice cuál de las dos usó, con la desviación entre
+  ambas en porcentaje. `pydolarve.org` y `monitordolarvenezuela` se probaron y
+  caen por timeout desde esta máquina, así que no se metieron como salto muerto.
+- **feat** Migración `db/0007_tasa_fuentes_y_ganancias.sql`: columna
+  `tasas_cambio.fuente` y la vista `v_ganancias`, que es la regla en un solo
+  lugar — `monto_pagado ÷ tasa_bcv_aplicada` del día del cobro, con el
+  `equivalente_usd` guardado al lado y la diferencia calculada.
+- **feat** Página **Ganancias** (`/panel/ganancias`) con la cinta de tasa, cuatro
+  losetas y la tabla cobro por cobro; entrada en la sección Dinero del panel.
+- **feat** `CintaTasa` en Dashboard, Pagos y Comisiones: fecha valor, quién
+  publicó el número y el botón de refresco. Comisiones suma Recibido · Tasa del
+  día · Comisión en Bs, que es con lo que se le paga al agente.
+- **fix** `fetchTasaDelDia` devolvía la fila más nueva sin mirar su fecha: con la
+  tabla en `2026-09-20 @ 42,50` un cobro en Bs salía 21 veces más alto. Ahora la
+  vigencia se gatea por fecha valor y, si está vencida, la pantalla lo dice en
+  vez de prellenar.
+- **fix** Las respuestas de la Function salen con `Cache-Control: no-store`. La
+  prueba de esto fue local: tras desplegar, `GET /tasa` seguía devolviendo el
+  cuerpo viejo por la caché del proxy de salida; solo una URL distinta mostró el
+  nuevo. Una tasa cacheada es un precio vencido servido como vigente.
+- **fix** La `fecha` que contesta la Function llega como instante UTC
+  (`2026-11-26T00:00:00.000Z`) y `fmtDate` la leía como el 25. Se recorta al día
+  en la capa de datos, que es donde nació el problema.
+- **docs** Esta entrada.
+
+Medido en producción (`main`, 2026-11-26): seis cobros, USD 53,57 contra
+VES 45.676,13 recibidos, diferencia 0,00 entre lo guardado y lo recalculado, o
+sea los libros están cuadrados hoy. La tasa en pantalla es 924,3534 Bs/USD con
+fecha valor 26 nov y fuente `bcv.org.ve`, escrita por el botón «Actualizar».
+Panel 12/12 y tienda 10/10 sin desbordes ni errores de consola.
+
+Lo que queda abierto, dicho antes de publicar: `tasas_cambio` sigue con la fila
+`2026-09-20 @ 42,50` (residuo importado; ahora es inalcanzable por el gate y se
+rotula «sin marca de fuente», borrarla le toca al dueño), no hay historia diaria
+porque el Trigger `tasas-y-vencimientos` no se crea sin su consentimiento, y
+ninguna plataforma a la venta tiene `aplica_comision` en true, así que el libro
+de comisiones está vacío por diseño y no por falla.
+
 ## 2026-11-25 — Fase 9, segunda pasada: la capa de datos estaba caída en producción
 
 Después de publicar se fue `docs/07-despliegue.md` §8 bloque por bloque, con
