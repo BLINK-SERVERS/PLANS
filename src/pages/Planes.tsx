@@ -11,7 +11,6 @@ import { errMsg } from '../lib/err'
 import { etiquetaDuracion, precioUsd } from '../lib/tienda'
 import {
   Button,
-  Card,
   EmptyState,
   ErrorMsg,
   Field,
@@ -20,12 +19,13 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Pagina,
   Select,
   Table,
   Td,
   useConfirmar,
 } from '../components/ui'
-import { IconPencil, IconPlus, IconTrash } from '../components/icons'
+import { IconPlus, IconTrash } from '../components/icons'
 
 interface FormPlan {
   plataforma_id: string
@@ -166,13 +166,14 @@ export default function Planes() {
   if (error && planes.length === 0) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-5">
+    <Pagina>
       <PageHeader
         title="Planes"
-        subtitle="Precios y duraciones del catálogo de venta (La tienda se actualiza al instante)"
+        subtitle="Precios y duraciones del catálogo; al guardar, la tienda pública cambia."
       >
         <Button onClick={abrirNuevo}>
-          <IconPlus className="h-4 w-4" /> Nuevo plan
+          <IconPlus tam={16} peso="semipesado" />
+          Nuevo plan
         </Button>
       </PageHeader>
 
@@ -182,35 +183,42 @@ export default function Planes() {
         <EmptyState message="Todavía no hay planes registrados." />
       ) : (
         grupos.map(([nombre, lista]) => (
-          <Card key={nombre} title={nombre}>
-            <Table headers={['Duración', 'Precio de venta', 'Ref.', 'Acciones']}>
-              {lista.map((pl) => (
-                <tr key={pl.id}>
-                  <Td className="font-medium">{etiquetaDuracion(pl.duracion_dias)}</Td>
-                  <Td>{precioUsd(pl.precio_venta_usd)}</Td>
-                  <Td>
-                    {pl.precio_referencia_usd != null ? (
-                      <span className="text-subheadline line-through text-ink-secondary">
-                        {precioUsd(pl.precio_referencia_usd)}
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </Td>
-                  <Td>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="secondary" onClick={() => abrirEditar(pl)}>
-                        <IconPencil className="h-4 w-4" /> Editar
-                      </Button>
-                      <Button variant="danger" onClick={() => void borrar(pl)}>
-                        <IconTrash className="h-4 w-4" /> Eliminar
-                      </Button>
-                    </div>
-                  </Td>
-                </tr>
-              ))}
-            </Table>
-          </Card>
+          <Table key={nombre} titulo={nombre} headers={['Duración', 'Precio', 'Ref.', 'Acciones']}>
+            {lista.map((pl) => (
+              <tr key={pl.id}>
+                <Td className="font-medium">{etiquetaDuracion(pl.duracion_dias)}</Td>
+                <Td num className="font-semibold">
+                  {precioUsd(pl.precio_venta_usd)}
+                </Td>
+                <Td num className="text-ink-secondary">
+                  {pl.precio_referencia_usd != null ? (
+                    <span className="line-through">
+                      {precioUsd(pl.precio_referencia_usd)}
+                    </span>
+                  ) : (
+                    '—'
+                  )}
+                </Td>
+                <Td>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="secondary" tam="compacto" onClick={() => abrirEditar(pl)}>
+                      Editar
+                    </Button>
+                    <Button
+                      variant="danger-suave"
+                      tam="compacto"
+                      soloIcono
+                      title="Eliminar"
+                      aria-label={`Eliminar el plan de ${etiquetaDuracion(pl.duracion_dias)}`}
+                      onClick={() => void borrar(pl)}
+                    >
+                      <IconTrash tam={15} />
+                    </Button>
+                  </div>
+                </Td>
+              </tr>
+            ))}
+          </Table>
         ))
       )}
 
@@ -271,6 +279,6 @@ export default function Planes() {
         />
         </div>
       </Modal>
-    </div>
+    </Pagina>
   )
 }

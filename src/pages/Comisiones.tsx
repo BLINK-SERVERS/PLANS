@@ -7,11 +7,11 @@ import { CintaTasa } from '../components/CintaTasa'
 import {
   Badge,
   Button,
-  Card,
   EmptyState,
   ErrorMsg,
   Loading,
   PageHeader,
+  Pagina,
   Select,
   StatCard,
   Table,
@@ -103,7 +103,7 @@ export default function Comisiones() {
   if (error) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-6">
+    <Pagina>
       <PageHeader
         title="Comisiones de referidos"
         subtitle="30% del dólar que entró, calculado sobre los Bs recibidos a la tasa del día"
@@ -111,90 +111,87 @@ export default function Comisiones() {
 
       <CintaTasa onActualizada={() => void cargar()} />
 
-      <div className="grid grid-cols-2 gap-4 xl:w-2/3">
+      <div className="grid grid-cols-2 gap-5">
         <StatCard
           label="Pendientes"
           value={fmtUSD(resumen.pendiente)}
+          tono="var(--color-sys-orange)"
           hint={resumen.pendienteBs > 0 ? `${fmtVES(resumen.pendienteBs)} a pagar` : undefined}
         />
-        <StatCard label="Liquidadas" value={fmtUSD(resumen.liquidada)} />
+        <StatCard
+          label="Liquidadas"
+          value={fmtUSD(resumen.liquidada)}
+          tono="var(--color-sys-green)"
+        />
       </div>
 
-      <Card title="Historial">
-        {comisiones.length === 0 ? (
-          <EmptyState
-            message={
-              'Todavía no hay comisiones generadas. El disparo que las crea solo actúa sobre las plataformas marcadas con «aplica comisión», y hoy esa marca la tienen Google One y Google One 5 TB, que están fuera de venta. Marcar Canva o Spotify en la pantalla de plataformas es lo que enciende este libro.'
-            }
-          />
-        ) : (
-          <>
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-legenda font-semibold uppercase tracking-wide text-ink-secondary">
-                Filtrar
-              </span>
-              <Select
-                className="w-48"
-                value={filtro}
-                onChange={(e) => setFiltro(e.target.value as typeof filtro)}
-              >
-                <option value="todas">Todas</option>
-                <option value="pendiente">Pendientes</option>
-                <option value="liquidada">Liquidadas</option>
-              </Select>
-            </div>
-            <Table
-              headers={[
-                'Agente',
-                'Cobro',
-                'Recibido',
-                'Tasa del día',
-                'Comisión USD',
-                'Comisión Bs',
-                'Estado',
-                'Acciones',
-              ]}
+      {comisiones.length === 0 ? (
+        <EmptyState
+          message={
+            'Sin comisiones todavía. El disparo solo cobra sobre las plataformas marcadas con «aplica comisión», y hoy esa marca la tienen únicamente Google One y Google One 5 TB, que no están en venta.'
+          }
+        />
+      ) : (
+        <Table
+          titulo={`Historial · ${filtradas.length} de ${filas.length} comisión${filtradas.length === 1 ? '' : 'es'}`}
+          acciones={
+            <Select
+              className="w-44"
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value as typeof filtro)}
             >
-              {filtradas.map((c) => (
-                <tr key={c.id}>
-                  <Td className="font-medium">{c.usuarios?.nombre ?? '—'}</Td>
-                  <Td className="text-ink-secondary">
-                    {fmtDate(String(c.pagos_ingresos?.fecha_pago ?? c.created_at))}
-                  </Td>
-                  <Td className="font-mono text-nota">
-                    {c.bsDelCobro != null ? fmtVES(c.bsDelCobro) : '—'}
-                  </Td>
-                  <Td className="font-mono text-nota">
-                    {c.tasa != null ? fmtNum(c.tasa, 4) : '—'}
-                  </Td>
-                  <Td className="font-semibold">{fmtUSD(c.monto_comision_usd)}</Td>
-                  <Td className="font-semibold">
-                    {c.bsDeLaComision != null ? fmtVES(c.bsDeLaComision) : '—'}
-                  </Td>
-                  <Td>
-                    <Badge value={c.estado} />
-                  </Td>
-                  <Td>
-                    {c.estado === 'pendiente' ? (
-                      <Button variant="secondary" onClick={() => void liquidar(c.id)}>
-                        Liquidar
-                      </Button>
-                    ) : (
-                      <span className="text-nota text-ink-secondary">—</span>
-                    )}
-                  </Td>
-                </tr>
-              ))}
-            </Table>
-            <p className="mt-3 text-nota leading-[18px] text-ink-secondary">
-              «Comisión Bs» es el dólar de la comisión multiplicado por la tasa BCV del día en que se
-              cobró: es con el número que se le paga al agente. El monto en USD lo produce el disparo
-              <span className="font-mono text-legenda"> registrar_comision_por_referido() </span>
-              sobre el dólar asignado a la suscripción.
-            </p>
-          </>
-        )}
-      </Card>
-    </div>
+              <option value="todas">Todas</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="liquidada">Liquidadas</option>
+            </Select>
+          }
+          headers={[
+            'Agente',
+            'Cobro',
+            'Recibido',
+            'Tasa del día',
+            'Comisión USD',
+            'Comisión Bs',
+            'Estado',
+            'Acciones',
+          ]}
+        >
+          {filtradas.map((c) => (
+            <tr key={c.id}>
+              <Td className="font-medium">{c.usuarios?.nombre ?? '—'}</Td>
+              <Td className="text-ink-secondary">
+                {fmtDate(String(c.pagos_ingresos?.fecha_pago ?? c.created_at))}
+              </Td>
+              <Td num>{c.bsDelCobro != null ? fmtVES(c.bsDelCobro) : '—'}</Td>
+              <Td num>{c.tasa != null ? fmtNum(c.tasa, 4) : '—'}</Td>
+              <Td num className="font-semibold">
+                {fmtUSD(c.monto_comision_usd)}
+              </Td>
+              <Td num className="font-semibold">
+                {c.bsDeLaComision != null ? fmtVES(c.bsDeLaComision) : '—'}
+              </Td>
+              <Td>
+                <Badge value={c.estado} />
+              </Td>
+              <Td>
+                {c.estado === 'pendiente' ? (
+                  <div className="flex justify-end">
+                    <Button
+                      variant="secondary"
+                      tam="compacto"
+                      onClick={() => void liquidar(c.id)}
+                    >
+                      Liquidar
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="block text-right text-nota text-ink-secondary">—</span>
+                )}
+              </Td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </Pagina>
   )
 }

@@ -12,10 +12,12 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Pagina,
   Table,
   Td,
   useConfirmar,
 } from '../components/ui'
+import { IconPlus, IconTrash } from '../components/icons'
 
 const vacio = { nombre: '', contacto: '', metodo_pago_preferido: '' }
 
@@ -77,9 +79,12 @@ export default function Proveedores() {
   if (error) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-5">
+    <Pagina>
       <PageHeader title="Proveedores" subtitle="Quiénes te venden las cuentas madre">
-        <Button onClick={() => setModal(true)}>+ Nuevo proveedor</Button>
+        <Button onClick={() => setModal(true)}>
+          <IconPlus tam={16} peso="semipesado" />
+          Nuevo proveedor
+        </Button>
       </PageHeader>
 
       {proveedores.length === 0 ? (
@@ -92,9 +97,18 @@ export default function Proveedores() {
               <Td>{p.contacto ?? '—'}</Td>
               <Td>{p.metodo_pago_preferido ?? '—'}</Td>
               <Td>
-                <Button variant="danger" onClick={() => void borrar(p)}>
-                  Eliminar
-                </Button>
+                <div className="flex justify-end">
+                  <Button
+                    variant="danger-suave"
+                    tam="compacto"
+                    soloIcono
+                    title="Eliminar"
+                    aria-label={`Eliminar a ${p.nombre}`}
+                    onClick={() => void borrar(p)}
+                  >
+                    <IconTrash tam={15} />
+                  </Button>
+                </div>
               </Td>
             </tr>
           ))}
@@ -134,6 +148,6 @@ export default function Proveedores() {
           />
         </div>
       </Modal>
-    </div>
+    </Pagina>
   )
 }

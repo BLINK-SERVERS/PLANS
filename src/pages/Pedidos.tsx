@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { actualizarEstadoPedido, fetchPedidos, validarRenovacion } from '../lib/api'
 import type { EstadoPedido, Moneda, Pedido } from '../lib/types'
-import { fmtDateTime, hoy, round2 } from '../lib/format'
+import { fmtDateTime, fmtUSD, hoy, round2 } from '../lib/format'
 import { errMsg } from '../lib/err'
 import { disenoPorId, dolar, euro } from '../lib/giftcards'
 import { etiquetaDuracion, precioUsd } from '../lib/tienda'
@@ -9,7 +9,6 @@ import { linkWhatsApp, msjContactoPedido } from '../lib/pedidos'
 import { METODOS_LIBRO, METODOS_PAGO, METODO_LIBRO, fmtMonedaCobro, type MetodoPago } from '../lib/pagos'
 import {
   Aviso,
-  Badge,
   Button,
   EmptyState,
   ErrorMsg,
@@ -19,6 +18,7 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Pagina,
   Select,
   Segmento,
   Table,
@@ -82,7 +82,7 @@ function detalle(p: Pedido): ReactNode {
       <p className="flex flex-wrap items-center gap-1.5 text-headline font-medium text-ink-label">
         {p.plataforma}
         {esRenovacion(p) ? (
-          <span className="inline-block rounded-full bg-[rgba(0,122,255,0.12)] px-2 py-0.5 text-legenda-2 font-semibold uppercase tracking-[0.03em] text-[#0062cc]">
+          <span className="inline-block rounded-full bg-velo-blue px-2 py-0.5 text-legenda-2 font-semibold uppercase tracking-[0.03em] text-blink-action-text">
             renovación
           </span>
         ) : null}
@@ -218,7 +218,7 @@ export default function Pedidos() {
   if (cargando) return <Loading />
 
   return (
-    <div className="space-y-5">
+    <Pagina>
       <PageHeader
         title="Pedidos"
         subtitle="Pedidos de la tienda y renovaciones declaradas desde la landing"
@@ -227,7 +227,6 @@ export default function Pedidos() {
       {error ? <ErrorMsg message={error} /> : null}
       {aviso ? <Aviso>{aviso}</Aviso> : null}
 
-      {/* Filtros por estado */}
       <Segmento
         opciones={FILTROS.map((f) => ({ id: f.id, label: f.label }))}
         valor={filtro}
@@ -237,7 +236,10 @@ export default function Pedidos() {
       {visibles.length === 0 ? (
         <EmptyState message="No hay pedidos en esta vista todavía." />
       ) : (
-        <Table headers={['Fecha', 'Cliente', 'Pedido', 'Cobro', 'Estado', 'Acciones']}>
+        <Table
+          titulo={`${visibles.length} pedido${visibles.length === 1 ? '' : 's'}`}
+          headers={['Fecha', 'Cliente', 'Pedido', 'Cobro', 'Estado', 'Acciones']}
+        >
           {visibles.map((p) => {
             const telefono = (p.cliente_contacto ?? '').replace(/\D/g, '')
             return (
@@ -261,7 +263,7 @@ export default function Pedidos() {
                         {METODOS_PAGO.find((x) => x.id === p.metodo_pago)?.nombre ?? p.metodo_pago}
                       </p>
                       {p.monto_cobro != null ? (
-                        <p className="mt-0.5 text-nota text-ink-secondary">
+                        <p className="mt-0.5 text-nota tabular-nums text-ink-secondary">
                           {fmtMonedaCobro(p.moneda_cobro ?? 'USDT', p.monto_cobro)}
                         </p>
                       ) : null}
@@ -283,14 +285,11 @@ export default function Pedidos() {
                       </option>
                     ))}
                   </Select>
-                  <div className="mt-1">
-                    <Badge value={p.estado} />
-                  </div>
                 </Td>
                 <Td>
-                  <div className="flex flex-col items-start gap-1.5">
+                  <div className="flex flex-col items-end gap-2">
                     {esRenovacion(p) && p.estado === 'nuevo' ? (
-                      <Button tam="compacto" onClick={() => abrirValidar(p)} title="Cierra el cobro y extiende el corte">
+                      <Button tam="compacto" onClick={() => abrirValidar(p)}>
                         Validar y renovar
                       </Button>
                     ) : null}
@@ -301,7 +300,7 @@ export default function Pedidos() {
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-[rgba(52,199,89,0.14)] px-3 text-nota font-semibold text-[#1c7c34] transition-opacity active:opacity-70"
+                        className="inline-flex h-[var(--control-compacto)] items-center gap-1.5 rounded-[10px] bg-velo-ok px-3 text-nota font-semibold text-tinta-ok transition-opacity active:opacity-70"
                       >
                         WhatsApp
                       </a>
@@ -399,16 +398,15 @@ export default function Pedidos() {
               </Field>
             </div>
 
-            <div className="rounded-[12px] bg-ink-fill-3 px-3 py-2 text-nota text-ink-secondary">
-              Equivalente en USD: <strong>{equivalente.toFixed(2)}</strong>
+            <div className="rounded-[12px] bg-ink-fill-4 px-3.5 py-2.5 text-nota text-ink-secondary">
+              Equivalente en USD:{' '}
+              <strong className="tabular-nums text-ink-label">{fmtUSD(equivalente)}</strong>
               {form.moneda === 'BS' ? ` (${montoNum} Bs ÷ ${tasaNum || '—'})` : ''}
             </div>
 
-            <p className="text-nota leading-relaxed text-ink-secondary">
-              El nuevo corte arranca en la mayor de dos fechas: la que pone acá y el corte vigente.
-              Si la suscripción ya había vencido, los días de atraso no se recuperan; si seguía
-              activa, el período se suma completo. Ninguna validación frena una fecha mal puesta, y
-              editar el pago después no devuelve los días: revísala acá.
+            <p className="text-nota leading-[18px] text-ink-secondary">
+              El corte nuevo arranca en la mayor de dos fechas: la de acá y el corte vigente. Los días
+              de atraso no se recuperan.
             </p>
 
             <ModalFooter
@@ -421,7 +419,7 @@ export default function Pedidos() {
           </div>
         ) : null}
       </Modal>
-    </div>
+    </Pagina>
   )
 }
 

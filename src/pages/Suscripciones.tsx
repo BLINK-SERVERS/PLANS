@@ -22,11 +22,13 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Pagina,
   Select,
   Table,
   Td,
 } from '../components/ui'
 import { NuevoCliente, NuevaCuenta, NuevoPlan } from '../components/inline'
+import { IconPlus } from '../components/icons'
 
 const vacio = {
   cliente_id: '',
@@ -151,10 +153,10 @@ export default function Suscripciones() {
   if (error) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-5">
+    <Pagina>
       <PageHeader
         title="Suscripciones"
-        subtitle="Contratos por cliente · también sirve para registrar suscripciones vendidas antes del sistema"
+        subtitle="Contratos por cliente · para los vendidos antes del sistema, pon la fecha real de inicio y el estado actual"
       >
         <Button
           onClick={() => {
@@ -162,56 +164,64 @@ export default function Suscripciones() {
             setModal(true)
           }}
         >
-          + Nueva suscripción
+          <IconPlus tam={16} peso="semipesado" />
+          Nueva suscripción
         </Button>
       </PageHeader>
-
-      <Buscador
-        value={busqueda}
-        onChange={setBusqueda}
-        placeholder="Buscar por cliente, plataforma o cuenta…"
-      />
-
-      <p className="text-nota text-ink-secondary">
-        Mostrando {filtradas.length} de {susc.length} suscripciones.
-      </p>
 
       {susc.length === 0 ? (
         <EmptyState message="Todavía no hay suscripciones registradas." />
       ) : (
-        <Table
-          headers={['Cliente', 'Plan', 'Cuenta madre', 'Inicio', 'Corte', 'Estado', 'Acciones']}
-        >
-          {filtradas.map((s) => (
-            <tr key={s.id}>
-              <Td className="font-medium">{s.usuarios?.nombre ?? '—'}</Td>
-              <Td>
-                {s.planes?.plataformas?.nombre ?? '—'} · {s.planes?.duracion_dias ?? '—'}d ·{' '}
-                {fmtUSD(s.planes?.precio_venta_usd ?? 0)}
-              </Td>
-              <Td className="font-mono text-nota">{s.cuentas_madre?.correo_cuenta ?? '—'}</Td>
-              <Td>{fmtDate(s.fecha_inicio)}</Td>
-              <Td>{fmtDate(s.fecha_corte_cliente)}</Td>
-              <Td>
-                <Badge value={s.estado} />
-              </Td>
-              <Td>
-                <div className="flex flex-wrap gap-2">
-                  {s.estado === 'activa' ? (
-                    <Button variant="secondary" onClick={() => void cambiarEstado(s, 'cancelada')}>
-                      Cancelar
-                    </Button>
-                  ) : null}
-                  {s.estado === 'vencida' ? (
-                    <Button variant="secondary" onClick={() => void cambiarEstado(s, 'activa')}>
-                      Reactivar
-                    </Button>
-                  ) : null}
-                </div>
-              </Td>
-            </tr>
-          ))}
-        </Table>
+        <>
+          <Buscador
+            value={busqueda}
+            onChange={setBusqueda}
+            placeholder="Buscar por cliente, plataforma o cuenta…"
+          />
+
+          <Table
+            titulo={`${filtradas.length} de ${susc.length} suscripciones`}
+            headers={['Cliente', 'Plan', 'Cuenta madre', 'Inicio', 'Corte', 'Estado', 'Acciones']}
+          >
+            {filtradas.map((s) => (
+              <tr key={s.id}>
+                <Td className="font-medium">{s.usuarios?.nombre ?? '—'}</Td>
+                <Td>
+                  {s.planes?.plataformas?.nombre ?? '—'} · {s.planes?.duracion_dias ?? '—'}d ·{' '}
+                  {fmtUSD(s.planes?.precio_venta_usd ?? 0)}
+                </Td>
+                <Td className="font-mono text-nota">{s.cuentas_madre?.correo_cuenta ?? '—'}</Td>
+                <Td>{fmtDate(s.fecha_inicio)}</Td>
+                <Td>{fmtDate(s.fecha_corte_cliente)}</Td>
+                <Td>
+                  <Badge value={s.estado} />
+                </Td>
+                <Td>
+                  <div className="flex justify-end gap-2">
+                    {s.estado === 'activa' ? (
+                      <Button
+                        variant="secondary"
+                        tam="compacto"
+                        onClick={() => void cambiarEstado(s, 'cancelada')}
+                      >
+                        Cancelar
+                      </Button>
+                    ) : null}
+                    {s.estado === 'vencida' ? (
+                      <Button
+                        variant="secondary"
+                        tam="compacto"
+                        onClick={() => void cambiarEstado(s, 'activa')}
+                      >
+                        Reactivar
+                      </Button>
+                    ) : null}
+                  </div>
+                </Td>
+              </tr>
+            ))}
+          </Table>
+        </>
       )}
 
       <Modal open={modal} title="Nueva suscripción" onClose={() => setModal(false)}>
@@ -262,7 +272,7 @@ export default function Suscripciones() {
               ))}
             </Select>
             {planElegido && cuentasDisponibles.length === 0 ? (
-              <p className="text-nota text-amber-600">
+              <p className="text-nota text-tinta-aviso">
                 No hay cuentas activas con cupos libres de{' '}
                 {planElegido.plataformas?.nombre ?? 'esta plataforma'}. Crea una o revisa la
                 plataforma del plan.
@@ -297,7 +307,7 @@ export default function Suscripciones() {
                   </Button>
                 </div>
               ) : (
-                <div className="flex min-h-11 items-center justify-between gap-3 rounded-[10px] bg-ink-fill-3 px-3.5 py-2">
+                <div className="flex min-h-[var(--control-normal)] items-center justify-between gap-3 rounded-[10px] bg-ink-fill-4 px-3.5 py-2">
                   <div className="min-w-0">
                     <p className="text-cuerpo text-ink-label">
                       {corteAutomatico ? fmtDate(corteAutomatico) : 'Depende del plan'}
@@ -334,10 +344,6 @@ export default function Suscripciones() {
               <option value="cancelada">Cancelada</option>
             </Select>
           </Field>
-          <p className="text-nota text-ink-secondary">
-            Para suscripciones vendidas antes del sistema: escribe la fecha real de inicio y el
-            estado actual.
-          </p>
           <ModalFooter
             onCancel={() => setModal(false)}
             onSave={() => void guardar()}
@@ -352,6 +358,6 @@ export default function Suscripciones() {
           />
         </div>
       </Modal>
-    </div>
+    </Pagina>
   )
 }

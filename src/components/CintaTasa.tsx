@@ -43,7 +43,7 @@ export function CintaTasa({ onActualizada }: { onActualizada?: () => void }) {
         onActualizada?.()
       }
     } catch {
-      setAviso('La Function de tasa no contestó. Reintentá más tarde o cargala a mano.')
+      setAviso('La Function de tasa no contestó. Reintenta más tarde o cárgala a mano.')
     } finally {
       setOcupado(false)
     }
@@ -53,14 +53,14 @@ export function CintaTasa({ onActualizada }: { onActualizada?: () => void }) {
   const vieja = estado?.diasVieja ?? null
 
   return (
-    <div className="rounded-tarjeta border border-ink-quaternary bg-white p-3.5 shadow-tarjeta">
+    <div className="vidrio rounded-tarjeta p-3.5">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Loseta tono={vigente ? 'var(--color-sys-teal)' : 'var(--color-sys-orange)'}>
           {vigente ? <IconCheckcirculo /> : <IconAlerta peso="medio" />}
         </Loseta>
         <div className="min-w-0 flex-1">
           <p className="text-nota font-medium text-ink-secondary">Tasa BCV</p>
-          <p className="text-headline font-semibold text-ink-label [font-variant-numeric:tabular-nums]">
+          <p className="text-headline font-semibold tabular-nums text-ink-label">
             {estado?.tasa != null ? `${fmtNum(estado.tasa, 4)} Bs/USD` : 'Sin tasa disponible'}
             {estado?.eur != null ? (
               <span className="ml-2 text-nota font-normal text-ink-secondary">
@@ -77,7 +77,12 @@ export function CintaTasa({ onActualizada }: { onActualizada?: () => void }) {
             </Chip>
           ) : null}
           {estado ? <Chip>{etiquetaOrigen(estado.origen)}</Chip> : null}
-          <Button variant="secondary" onClick={() => void refrescar()} disabled={ocupado}>
+          <Button
+            variant="secondary"
+            tam="compacto"
+            onClick={() => void refrescar()}
+            disabled={ocupado}
+          >
             <IconRefresh tam={15} />
             {ocupado ? 'Buscando…' : 'Actualizar'}
           </Button>
@@ -85,18 +90,18 @@ export function CintaTasa({ onActualizada }: { onActualizada?: () => void }) {
       </div>
 
       {!vigente && estado?.tasa != null ? (
-        <p className="mt-2.5 flex items-start gap-2 rounded-[12px] bg-[rgba(255,149,0,0.16)] px-3 py-2 text-nota leading-[18px] text-[#9a5b00]">
+        <p className="mt-2.5 flex items-start gap-2 rounded-[12px] bg-velo-aviso px-3 py-2 text-nota leading-[18px] text-tinta-aviso">
           <IconAlerta tam={17} peso="medio" className="mt-px shrink-0" />
           <span>
             La última fila guardada es del {estado.fecha ? fmtDate(estado.fecha) : 'día desconocido'}
             {vieja != null && vieja > 0 ? ` (${vieja} ${vieja === 1 ? 'día' : 'días'} atrás)` : ''}. No
-            cobres en Bs con ese número: actualizá la tasa o escribí la del día a mano.
+            cobres en Bs con ese número: actualiza la tasa o escribe la del día a mano.
           </span>
         </p>
       ) : null}
 
       {aviso ? (
-        <p className="mt-2.5 text-nota leading-[18px] text-[#9a5b00]">{aviso}</p>
+        <p className="mt-2.5 text-nota leading-[18px] text-tinta-aviso">{aviso}</p>
       ) : null}
     </div>
   )

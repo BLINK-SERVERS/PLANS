@@ -19,11 +19,12 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Pagina,
   Table,
   Td,
   useConfirmar,
 } from '../components/ui'
-import { IconCheck, IconTrash, IconX } from '../components/icons'
+import { IconCheck, IconPlus, IconTrash, IconX } from '../components/icons'
 
 const vacio = { nombre: '', activa: true, aplica_comision: false }
 
@@ -102,12 +103,15 @@ export default function Plataformas() {
   if (error) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-5">
+    <Pagina>
       <PageHeader
         title="Plataformas"
         subtitle="Catálogo de servicios y si generan comisión de referido (30%)"
       >
-        <Button onClick={abrirNuevo}>+ Nueva plataforma</Button>
+        <Button onClick={abrirNuevo}>
+          <IconPlus tam={16} peso="semipesado" />
+          Nueva plataforma
+        </Button>
       </PageHeader>
 
       {plataformas.length === 0 ? (
@@ -122,23 +126,30 @@ export default function Plataformas() {
               </Td>
               <Td>
                 {p.aplica_comision ? (
-                  <span className="inline-flex items-center gap-1 text-nota font-medium text-emerald-700">
-                    <IconCheck className="h-3.5 w-3.5" /> Sí
+                  <span className="inline-flex items-center gap-1.5 text-nota font-medium text-tinta-ok">
+                    <IconCheck tam={15} peso="semipesado" /> Sí
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-nota text-ink-secondary">
-                    <IconX className="h-3.5 w-3.5" /> No
+                  <span className="inline-flex items-center gap-1.5 text-nota text-ink-secondary">
+                    <IconX tam={15} peso="medio" /> No
                   </span>
                 )}
               </Td>
               <Td>{fmtDate(p.created_at)}</Td>
               <Td>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => abrirEditar(p)}>
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" tam="compacto" onClick={() => abrirEditar(p)}>
                     Editar
                   </Button>
-                  <Button variant="danger" onClick={() => void borrar(p)}>
-                    <IconTrash className="h-4 w-4" /> Eliminar
+                  <Button
+                    variant="danger-suave"
+                    tam="compacto"
+                    soloIcono
+                    title="Eliminar"
+                    aria-label={`Eliminar ${p.nombre}`}
+                    onClick={() => void borrar(p)}
+                  >
+                    <IconTrash tam={15} />
                   </Button>
                 </div>
               </Td>
@@ -146,11 +157,6 @@ export default function Plataformas() {
           ))}
         </Table>
       )}
-
-      <p className="text-nota text-ink-secondary">
-        La comisión del 30% se genera automáticamente solo en las plataformas marcadas (p. ej.
-        Google One).
-      </p>
 
       <Modal
         open={modal}
@@ -165,19 +171,19 @@ export default function Plataformas() {
               placeholder="Netflix, Spotify…"
             />
           </Field>
-          <label className="flex items-center gap-2 text-subheadline text-ink-secondary">
+          <label className="flex items-center gap-2.5 text-subheadline text-ink-label">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-[#007aff]"
+              className="h-[18px] w-[18px] accent-sys-blue"
               checked={form.activa}
               onChange={(e) => setForm({ ...form, activa: e.target.checked })}
             />
             Activa (disponible para venta)
           </label>
-          <label className="flex items-center gap-2 text-subheadline text-ink-secondary">
+          <label className="flex items-center gap-2.5 text-subheadline text-ink-label">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-[#007aff]"
+              className="h-[18px] w-[18px] accent-sys-blue"
               checked={form.aplica_comision}
               onChange={(e) => setForm({ ...form, aplica_comision: e.target.checked })}
             />
@@ -191,6 +197,6 @@ export default function Plataformas() {
           />
         </div>
       </Modal>
-    </div>
+    </Pagina>
   )
 }

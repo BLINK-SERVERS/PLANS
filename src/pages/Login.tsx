@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { errMsg } from '../lib/err'
-import { Button, Field, Input } from '../components/ui'
+import { Button, ErrorMsg, Field, Input, Loseta } from '../components/ui'
 import { MarcaBlink } from '../components/marca-blink'
 
 export default function Login() {
@@ -32,31 +32,32 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-blink-fill px-4">
+    <div className="panel flex min-h-screen items-center justify-center px-4 py-10">
+      {/* La hoja de entrada usa el mismo vidrio que las modales del panel: sin
+          nada que se desplace detrás, el `backdrop-filter` sería GPU tirada a
+          la basura, así que `vidrio` aporta el velo y la sombra, no el blur. */}
       <form
         onSubmit={enviar}
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-blink-line bg-white p-6 shadow-sm"
+        className="vidrio w-full max-w-[400px] space-y-4 rounded-hoja p-6"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--blink-primary)] text-white">
-            <MarcaBlink className="h-5 w-auto" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-blink-dark">Blink Plans</h1>
-            <p className="text-sm text-blink-ink-mute">Gestión de suscripciones</p>
+          <Loseta tam={38} className="text-white">
+            <MarcaBlink className="h-[17px] w-[21px]" />
+          </Loseta>
+          <div className="leading-tight">
+            <h1 className="text-title-3 font-bold text-ink-label">Blink Plans</h1>
+            <p className="text-legenda text-ink-secondary">Gestión de suscripciones</p>
           </div>
         </div>
 
-        {error ? (
-          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
-        ) : null}
+        {error ? <ErrorMsg message={error} /> : null}
 
         <Field label="Correo">
           <Input
             type="email"
             autoComplete="email"
             required
-            placeholder="admin@tuempresa.app"
+            placeholder="nombre@blink.com.ve"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -72,14 +73,9 @@ export default function Login() {
           />
         </Field>
 
-        <Button type="submit" disabled={cargando} className="w-full justify-center">
+        <Button type="submit" tam="grande" bloque disabled={cargando}>
           {cargando ? 'Entrando…' : 'Entrar'}
         </Button>
-        {cargando ? null : (
-          <p className="text-center text-xs text-blink-ink-mute">
-            Acceso restringido al personal autorizado.
-          </p>
-        )}
       </form>
     </div>
   )

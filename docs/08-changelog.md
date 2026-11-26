@@ -4,6 +4,62 @@
 > cambios de código. Formato de líneas: `- [tipo] descripción`
 > (tipo: feat / fix / docs / chore / security / refactor).
 
+## 2026-11-26 — El panel rediseñado sobre HIG: vidrio, escala de controles y texto cortado
+
+El rediseño pidió fundamentos de Human Interface Guidelines sobre lo que ya estaba
+publicado, y lo que salió no fue una capa de pintura: tres cosas se estaban
+rompiendo de verdad (el ritmo vertical, las etiquetas de los segmentos y el rojo de
+las filas) y se arreglaron con números, no con gusto.
+
+- **refactor** `Pagina` pasa de `space-y-5` a `flex flex-col gap-5`. Con
+  `space-y-*` un hijo que sea fragmento o condicional se come el margen y dos
+  bloques quedan pegados o a 40 px. Ahora la separación es de 20 px por hijo y se
+  midió en las once rutas: `gap=20px` en todas.
+- **feat** Escala de controles declarada en tokens: `--control-compacto` 36,
+  `--control-normal` 44 (el piso táctil de HIG), `--control-grande` 50. Botones,
+  campos, rieles segmentados y hoja usan esas tres alturas y ninguna otra. Medido:
+  en las once rutas y las seis hojas solo aparecen 36, 44, 50 y 52.
+- **feat** Material liquid glass con política de desenfoque: `backdrop-filter`
+  solo donde hay contenido que se desliza debajo (barra superior, tab bar, hoja,
+  `thead` pegajoso, pie del modal). El resto es superficie translúcida sin blur.
+  Balance medido por pantalla: 11 capas de vidrio contra 3 con desenfoque en el
+  Dashboard. `prefers-reduced-transparency: reduce` deja las superficies opacas.
+- **fix** Variante `danger-suave` para el borrado de fila: velo rojo con la tinta
+  medida (`#a11f18`), igual que el deslizamiento destructivo de iOS. El rojo
+  saturado queda solo para el botón de confirmar. En Clientes había 34 cuadros
+  rojos macizos en una pantalla; eso no existe en ninguna vista de Apple.
+- **fix** `Segmento`: el dedo era `flex-1` con base cero más `min-w-[84px]` y
+  `whitespace-nowrap`, así que una etiqueta más ancha que el mínimo desbordaba su
+  pastilla y se montaba sobre la siguiente (pasó con «RenovacionesContactados» a
+  390 px). Ahora es `shrink-0 grow basis-auto` y el riel estira lo que tiene
+  espacio. Los 8 px del scrollbar se comían la altura fija del riel; la fila de
+  filtros sale con `.sin-barra` y muestra el corte del último chip, que es lo que
+  hace iOS.
+- **fix** Barra de pestañas: cinco destinos, no seis, y la etiqueta a 10 px (el
+  caption de la tab bar real). A 11 px «Suscripciones» medía 71 px en un hueco de
+  78 y salía con puntos suspensivos. Pagos se va a «Más» con el resto del dinero;
+  el ícono sigue marcando la ruta activa.
+- **fix** El pie de la barra lateral dejaba el correo como botón rojo: `sys-red`
+  sobre blanco da 3,03:1 y no pasa AA a 13 px. El correo queda en tinta secundaria
+  y lo rojo solo en «Cerrar la sesión», con la tinta del peligro ya medida.
+- **fix** `EmptyState` sin el marco punteado. Un cuadro discontinuo es un wireframe
+  pidiendo que lo llenen, no un estado vacío.
+- **refactor** Texto cortado en las cabeceras y los avisos: «Alta, baja y
+  modificación de clientes», «Resumen general del negocio» y «Registra el cobro y
+  distribúyelo entre las suscripciones activas del cliente» salieron o se
+  reescribieron para que digan lo que se hace, no lo que la página es. También
+  «USD al tasa del día», que estaba mal escrito. Los siete botones de alta decían
+  `+ Nueva cosa` con el signo escrito a mano; ahora llevan `IconPlus` del set.
+
+Medido con Playwright sobre el dev server: once rutas en 390×844, 834×1112 y
+1440×900, más las seis hojas de formulario y una hoja anidada sobre otra. Todo
+verde, sin desbordes de documento, las hojas caben en la ventana y la anidada
+pinta arriba de la primera. `npm run typecheck` y `npm run build` limpios, y en el
+CSS compilado están `bg-velo-danger`, `text-tinta-danger` y `sin-barra`.
+
+No se tocó la tienda (Carrito, Checkout, Inicio, Renovar, TiendaPlataforma): esas
+páginas no consumen el kit y su look ya estaba aceptado.
+
 ## 2026-11-26 — Dos fuentes para la tasa y el libro de ganancias en bolívares
 
 El número con el que se cobra en Bs dependía de un solo raspado a bcv.org.ve y de

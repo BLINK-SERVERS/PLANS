@@ -5,11 +5,11 @@ import { fmtDate, fmtNum, fmtUSD, fmtVES, hoy, round2 } from '../lib/format'
 import { errMsg } from '../lib/err'
 import { CintaTasa } from '../components/CintaTasa'
 import {
-  Card,
   EmptyState,
   ErrorMsg,
   Loading,
   PageHeader,
+  Pagina,
   Segmento,
   StatCard,
   Table,
@@ -95,7 +95,7 @@ export default function Ganancias() {
   const margen = ganancia.ingreso > 0 ? Math.round((ganancia.ganancia / ganancia.ingreso) * 100) : null
 
   return (
-    <div className="space-y-6">
+    <Pagina>
       <PageHeader
         title="Ganancias"
         subtitle="Cobros en Bs convertidos a la tasa BCV oficial del día de cada pago"
@@ -103,15 +103,17 @@ export default function Ganancias() {
 
       <CintaTasa onActualizada={() => void cargar()} />
 
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-5 xl:grid-cols-4">
         <StatCard
           label={rango === 'mes' ? 'Ingresos del mes' : 'Ingresos (todo)'}
           value={fmtUSD(total.usdDelDia)}
+          tono="var(--color-sys-blue)"
           hint={total.bs > 0 ? `${fmtVES(total.bs)} recibidos` : 'Sin cobros en Bs'}
         />
         <StatCard
           label={rango === 'mes' ? 'Ganancia del mes' : 'Ganancia (todo)'}
           value={fmtUSD(ganancia.ganancia)}
+          tono="var(--color-sys-green)"
           hint={
             margen == null
               ? 'Sin ingresos en el rango'
@@ -121,11 +123,13 @@ export default function Ganancias() {
         <StatCard
           label="Comisiones pendientes"
           value={fmtUSD(resumen?.comisionesPendientesUSD ?? 0)}
+          tono="var(--color-sys-purple)"
           hint="30% del USD de cada cobro referido"
         />
         <StatCard
           label="Diferencia vs lo guardado"
           value={fmtUSD(total.diferencia)}
+          tono="var(--color-sys-orange)"
           hint={
             total.diferencia === 0
               ? 'El dólar registrado coincide con el Bs recalculado'
@@ -134,81 +138,79 @@ export default function Ganancias() {
         />
       </div>
 
-      <Card title="Cobros">
-        <div className="mb-3">
-          <Segmento
-            valor={rango}
-            onChange={setRango}
-            opciones={[
-              { id: 'mes', label: 'Este mes' },
-              { id: 'todo', label: 'Todo el historial' },
-            ]}
-          />
-        </div>
-        {visibles.length === 0 ? (
-          <EmptyState
-            message={
-              rango === 'mes'
-                ? 'Todavía no hay cobros registrados este mes.'
-                : 'No hay cobros registrados.'
-            }
-          />
-        ) : (
-          <>
-            <Table
-              headers={[
-                'Fecha',
-                'Cliente',
-                'Recibido',
-                'Tasa del día',
-                'USD al tasa del día',
-                'USD guardado',
-                'Diferencia',
-              ]}
-            >
-              {visibles.map((f) => (
-                <tr key={f.pago_id}>
-                  <Td>{fmtDate(f.fecha_pago)}</Td>
-                  <Td className="font-medium">{f.cliente ?? '—'}</Td>
-                  <Td className="font-mono text-nota">
-                    {f.bs_recibidos != null
-                      ? fmtVES(f.bs_recibidos)
-                      : `${fmtNum(f.monto_recibido)} ${f.moneda}`}
-                  </Td>
-                  <Td className="font-mono text-nota">
-                    {f.tasa_del_dia != null ? fmtNum(f.tasa_del_dia, 4) : '—'}
-                    {f.tasa_del_dia != null && f.tasa_rescatada_de_tabla ? (
-                      <span className="ml-1 text-legenda-2 text-ink-tertiary">tabla</span>
-                    ) : null}
-                  </Td>
-                  <Td className="font-semibold">
-                    {f.usd_del_dia != null ? fmtUSD(f.usd_del_dia) : 'sin tasa'}
-                  </Td>
-                  <Td className="text-ink-secondary">{fmtUSD(f.usd_registrado)}</Td>
-                  <Td
-                    className={
-                      f.diferencia_usd != null && Math.abs(f.diferencia_usd) >= 0.01
-                        ? 'font-semibold text-[#9a5b00]'
-                        : 'text-ink-tertiary'
-                    }
-                  >
-                    {f.diferencia_usd != null && Math.abs(f.diferencia_usd) >= 0.01
-                      ? `${f.diferencia_usd > 0 ? '+' : ''}${fmtUSD(f.diferencia_usd)}`
-                      : '—'}
-                  </Td>
-                </tr>
-              ))}
-            </Table>
-            <p className="mt-3 text-nota leading-[18px] text-ink-secondary">
-              La tasa usada es la que se guardó con el cobro; solo si el pago se registró sin ella se
-              busca en <span className="font-mono text-legenda">tasas_cambio</span> la fila de esa
-              fecha. Un cobro en USDT o en USD entra 1:1 y no depende del BCV. La ganancia del mes
-              resta los egresos registrados; si la tabla de egresos está vacía, la ganancia sale igual
-              al ingreso y ese número no es un margen real.
-            </p>
-          </>
-        )}
-      </Card>
-    </div>
+      {visibles.length === 0 ? (
+        <EmptyState
+          message={
+            rango === 'mes'
+              ? 'Todavía no hay cobros registrados este mes.'
+              : 'No hay cobros registrados.'
+          }
+        />
+      ) : (
+        <Table
+          titulo="Cobros"
+          acciones={
+            <div className="w-[280px]">
+              <Segmento
+                tam="compacto"
+                valor={rango}
+                onChange={setRango}
+                opciones={[
+                  { id: 'mes', label: 'Este mes' },
+                  { id: 'todo', label: 'Todo el historial' },
+                ]}
+              />
+            </div>
+          }
+          headers={[
+            'Fecha',
+            'Cliente',
+            'Recibido',
+            'Tasa del día',
+            'USD a tasa del día',
+            'USD guardado',
+            'Diferencia',
+          ]}
+        >
+          {visibles.map((f) => (
+            <tr key={f.pago_id}>
+              <Td>{fmtDate(f.fecha_pago)}</Td>
+              <Td className="font-medium">{f.cliente ?? '—'}</Td>
+              <Td num>
+                {f.bs_recibidos != null
+                  ? fmtVES(f.bs_recibidos)
+                  : `${fmtNum(f.monto_recibido)} ${f.moneda}`}
+              </Td>
+              <Td num>
+                {f.tasa_del_dia != null ? fmtNum(f.tasa_del_dia, 4) : '—'}
+                {f.tasa_del_dia != null && f.tasa_rescatada_de_tabla ? (
+                  <span className="ml-1.5 text-legenda-2 font-normal text-ink-secondary">
+                    tabla
+                  </span>
+                ) : null}
+              </Td>
+              <Td num className="font-semibold">
+                {f.usd_del_dia != null ? fmtUSD(f.usd_del_dia) : 'sin tasa'}
+              </Td>
+              <Td num className="text-ink-secondary">
+                {fmtUSD(f.usd_registrado)}
+              </Td>
+              <Td
+                num
+                className={
+                  f.diferencia_usd != null && Math.abs(f.diferencia_usd) >= 0.01
+                    ? 'font-semibold text-tinta-aviso'
+                    : 'text-ink-secondary'
+                }
+              >
+                {f.diferencia_usd != null && Math.abs(f.diferencia_usd) >= 0.01
+                  ? `${f.diferencia_usd > 0 ? '+' : ''}${fmtUSD(f.diferencia_usd)}`
+                  : '—'}
+              </Td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </Pagina>
   )
 }

@@ -201,6 +201,25 @@
   --color-blink-soft-strong: #d3e4fb;
   --color-blink-soft-border: #b8d4f5;
 
+  /* ── Tintas y velos de estado ──
+     Los `sys-*` son colores de relleno e icono: #FF9500 sobre blanco da
+     2,15:1 y #34C759 da 2,87:1, ninguno aguanta 13 px de prosa. Cada estado
+     necesita entonces dos piezas: el velo translúcido que pinta la pastilla y
+     la tinta oscura del texto que va encima. Las tres parejas son las únicas
+     que se usan en el panel (aviso ámbar, cobro verde, referencias azul
+     verdoso); lo que no tiene pareja medida se queda en `ink-secondary`. */
+  --color-velo-aviso: rgba(255, 149, 0, 0.16);
+  --color-tinta-aviso: #9a5b00;
+  --color-velo-ok: rgba(52, 199, 89, 0.14);
+  --color-tinta-ok: #1c7c34;
+  --color-velo-info: rgba(48, 176, 199, 0.16);
+  --color-tinta-info: #1f7186;
+  --color-velo-danger: rgba(255, 59, 48, 0.12);
+  --color-tinta-danger: #a11f18;
+  --color-velo-blue: rgba(0, 122, 255, 0.12);
+  --color-velo-purple: rgba(175, 82, 222, 0.14);
+  --color-tinta-purple: #7d2fa3;
+
   /* ── La escala de grises de la casa, en vez del `slate` de Tailwind ──
      Tailwind trae slate con subtono AZUL (#94a3b8, #e2e8f0); los grises
      de Apple —y los de este panel— son neutros con un dedo de azul
@@ -324,6 +343,27 @@
 
   --shadow-tarjeta: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -14px rgba(0, 0, 0, 0.12);
   --shadow-hoja: 0 -1px 0 rgba(60, 60, 67, 0.29), 0 -18px 48px -18px rgba(0, 0, 0, 0.28);
+
+  /* ── Escala de controles: tres alturas y ninguna otra cifra ──
+     Hasta ahora cada página resolvía la altura de un botón a su manera
+     (`min-h-8`, `py-2`, `h-12`), y por eso dos botones del mismo tipo salían de
+     tamaños distintos en la misma pantalla. Apple publica tres medidas: la
+     regular de 44 (el piso táctil de HIG), la compacta de 36 para filas y
+     barras, y la de llamado para la acción principal. Con `height` fija en
+     lugar de `min-height` la caja no crece con el contenido: si un texto no
+     cabe, se ve y se arregla acortando el texto. */
+  --control-compacto: 36px;
+  --control-normal: 44px;
+  --control-grande: 50px;
+
+  /* ── Relleno de las superficies de vidrio ──
+     El blanco opaco (`bg-white`) pintaba cada tarjeta como hoja pegada encima
+     del fondo: sin profundidad, el panel se leía como tabla de backoffice. El
+     vidrio necesita algo detrás, así que el `.panel` de abajo pone el fondo
+     ambiental y estas tintas lo dejan traslucir. */
+  --color-superficie: rgba(255, 255, 255, 0.66);
+  --color-superficie-densa: rgba(252, 252, 254, 0.82);
+  --color-superficie-suave: rgba(255, 255, 255, 0.42);
 }
 
 :root {
@@ -380,9 +420,11 @@ body {
    Antes la tabla rayaba filas alternadas (blanco / gris) porque venía del
    look de un backoffice genérico. Apple no raya: separa a hairline y deja el
    fondo parejo, que es como el ojo lee una columna de datos. El hover sigue
-   siendo el acento al 8 %. */
+   siendo el acento al 8 %. La fila va traslúcida (no `bg-white`) para que el
+   vidrio de la caja siga existiendo: opaca taparía el fondo ambiental y el
+   blur de la cabecera pegajosa no tendría nada que difuminar. */
 tbody tr {
-  background-color: var(--blink-surface);
+  background-color: rgba(255, 255, 255, 0.5);
 }
 tbody tr + tr > td {
   border-top: 1px solid var(--color-ink-separator);
@@ -393,7 +435,74 @@ tbody tr:hover {
 
 /* ─── Utilidades de la capa Apple ─── */
 
-/* Material translúcido de barra: blur + saturación, con el pelo inferior de
+/* ── El fondo del panel, con luz ambiental ──
+   Un vidrio sin nada detrás no es vidrio: sobre un gris parejo, el blur y la
+   translucidez no cambian un píxel y el material queda decorativo. Apple pone
+   el wallpaper debajo. Acá la contrapartida es un degradado fijo con tres
+   manchas de color de sistema muy bajadas, ancladas al viewport para que el
+   contenido desplace sobre ellas y el blur de las barras tenga algo que
+   difuminar de verdad. α ≤ 0,11: los importes se siguen leyendo AA sobre
+   cualquiera de las superficies. */
+.panel {
+  background-color: #f2f2f7;
+  background-image:
+    radial-gradient(58% 42% at 6% -4%, rgba(0, 122, 255, 0.11), transparent 62%),
+    radial-gradient(46% 38% at 98% 4%, rgba(48, 176, 199, 0.1), transparent 60%),
+    radial-gradient(52% 44% at 72% 108%, rgba(255, 45, 85, 0.07), transparent 62%);
+  background-attachment: fixed;
+}
+
+/* ── Vidrio líquido ──
+   Cuatro capas en un solo `box-shadow`, ninguna imagen:
+     1. filo especular adentro del borde superior (la luz del ambiente),
+     2. aro de luz en el perímetro, que es lo que separa el vidrio del fondo,
+     3. sombra de contacto de 2 px,
+     4. elevación suave y amplia.
+   `blur` solo lo llevan las superficies sobre las que pasa contenido (`barra`,
+   `hoja`, la cabecera de tabla): difuminar una tarjeta quieta cuesta GPU en una
+   máquina de dos núcleos y no agrega información. Por eso `.vidrio` no filtra,
+   `.vidrio-barra` sí. */
+.vidrio {
+  background-color: var(--color-superficie);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 14px 34px -22px rgba(0, 0, 0, 0.24);
+}
+
+.vidrio-suave {
+  background-color: var(--color-superficie-suave);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.45),
+    0 8px 22px -18px rgba(0, 0, 0, 0.2);
+}
+
+.vidrio-barra {
+  background-color: var(--color-superficie-densa);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 10px 30px -20px rgba(0, 0, 0, 0.3);
+}
+
+/* Hoja que sube desde el borde inferior: la elevación va hacia arriba porque
+   lo que cubre es el contenido de la página, y en escritorio se centra. */
+.vidrio-hoja {
+  background-color: rgba(250, 250, 252, 0.88);
+  backdrop-filter: saturate(180%) blur(26px);
+  -webkit-backdrop-filter: saturate(180%) blur(26px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.65),
+    0 -1px 0 rgba(60, 60, 67, 0.12),
+    0 -18px 48px -18px rgba(0, 0, 0, 0.3);
+}
+
+/* El material translúcido de barra: blur + saturación, con el pelo inferior de
    separación. Es lo que sostiene la barra superior y el sidebar. */
 .material {
   background-color: rgba(249, 249, 249, 0.82);
@@ -408,6 +517,29 @@ tbody tr:hover {
   height: 1px;
   background: var(--color-ink-separator);
   pointer-events: none;
+}
+
+/* Accesibilidad: iOS deja de traslucir cuando el usuario pide reducir la
+   transparencia, porque el blur rompe la legibilidad del texto fino. Las
+   superficies vuelven a blanco sólido y el panel a su gris parejo; el resto
+   del diseño (radios, tintas, alturas) no cambia. */
+@media (prefers-reduced-transparency: reduce) {
+  .panel {
+    background-image: none;
+  }
+  .vidrio,
+  .vidrio-suave,
+  .vidrio-barra,
+  .vidrio-hoja,
+  .material {
+    background-color: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 0 0 1px var(--color-ink-separator);
+  }
+  tbody tr {
+    background-color: #fff;
+  }
 }
 
 /* Objetivo táctil: 44x44 es el mínimo que HIG declara legible con el dedo. */
@@ -515,4 +647,15 @@ input[type='number']::-webkit-inner-spin-button {
 }
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Barra invisible para lo que se desliza a propósito (la fila de filtros). Los
+   8 px del scrollbar se comen la altura del riel y la pastilla queda aplastada;
+   en iOS el chip desplazable no enseña barra, enseña el corte del último item. */
+.sin-barra {
+  scrollbar-width: none;
+}
+.sin-barra::-webkit-scrollbar {
+  height: 0;
+  width: 0;
 }

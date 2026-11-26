@@ -15,8 +15,11 @@ import { errMsg } from '../lib/err'
 import { ErrorMsg, Field, Input, Modal, ModalFooter, Select } from './ui'
 import { IconPlus } from './icons'
 
+// Es un enlace, no un botón: en HIG el texto azul suelto se toca en toda la
+// fila, por eso mantiene el mínimo de 44 px de Apple y no baja a los 36 px del
+// botón compacto. El `-my-1.5` lo pega al campo de arriba, que es donde vive.
 const enlace =
-  '-my-1.5 inline-flex min-h-11 items-center gap-1.5 rounded-[10px] px-1 text-subheadline font-medium text-[#0062cc] transition-opacity hover:text-[#0057ad] active:opacity-60'
+  '-my-1.5 inline-flex min-h-[var(--control-normal)] items-center gap-1.5 rounded-[10px] px-1 text-subheadline font-medium text-blink-action-text transition-opacity hover:text-blink-action-hover active:opacity-60'
 
 // ------------------------------------------------------------- Nuevo cliente
 export function NuevoCliente({ onCreated }: { onCreated: (id: string) => void }) {
@@ -416,10 +419,10 @@ export function NuevaPlataforma({ onCreated }: { onCreated: (id: string) => void
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             />
           </Field>
-          <label className="flex items-center gap-2 text-subheadline text-ink-secondary">
+          <label className="flex min-h-[var(--control-compacto)] items-center gap-2.5 text-subheadline text-ink-label">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-[#007aff]"
+              className="h-[18px] w-[18px] accent-sys-blue"
               checked={form.aplica_comision}
               onChange={(e) => setForm({ ...form, aplica_comision: e.target.checked })}
             />

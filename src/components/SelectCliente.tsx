@@ -45,15 +45,18 @@ export function SelectCliente({
 
   return (
     <div ref={ref} className="relative">
+      {/* Mismo campo que `Input` del kit: 44 px, radio 10, gris traslúcido sin
+          borde y el anillo azul al foco. Antes medía 38 px con hairline, así
+          que la lista de clientes se veía más baja que los campos de al lado. */}
       <div className="relative">
         <IconSearch
-          width={15}
-          height={15}
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-blink-ink-mute"
+          tam={16}
+          peso="medio"
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-secondary"
         />
         <input
           type="text"
-          className="w-full rounded-lg border border-blink-line-strong bg-white py-2 pl-8 pr-8 text-sm text-blink-dark outline-none focus:border-blink-primary focus:ring-2 focus:ring-blink-soft"
+          className="h-[var(--control-normal)] w-full rounded-[10px] border border-transparent bg-ink-fill-4 pl-9 pr-10 text-cuerpo text-ink-label placeholder:text-ink-secondary transition-[background-color,border-color,box-shadow] duration-150 focus:border-sys-blue focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(0,122,255,0.16)] focus:outline-none"
           placeholder={seleccionado ? seleccionado.nombre : 'Busca por nombre, correo o teléfono…'}
           value={q}
           onChange={(e) => {
@@ -66,40 +69,50 @@ export function SelectCliente({
         {seleccionado && !q ? (
           <button
             type="button"
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-blink-ink-mute hover:text-rose-600"
+            className="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-ink-secondary transition-colors hover:bg-ink-fill-3 hover:text-sys-red"
             title="Quitar selección"
+            aria-label="Quitar la selección"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               onChange('')
               setQ('')
             }}
           >
-            <IconX width={14} height={14} />
+            <IconX tam={15} peso="semipesado" />
           </button>
         ) : null}
       </div>
-      {abierto && (
-        <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-blink-line bg-white shadow-lg">
+      {abierto ? (
+        <div
+          role="listbox"
+          className="vidrio-hoja absolute z-20 mt-1.5 max-h-64 w-full overflow-y-auto rounded-tarjeta p-1"
+        >
           {filtrados.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-blink-ink-mute">Sin resultados</p>
+            <p className="px-3 py-2.5 text-nota text-ink-secondary">Sin resultados</p>
           ) : (
             filtrados.map((c) => (
               <button
                 key={c.id}
                 type="button"
+                role="option"
+                aria-selected={c.id === value}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => elegir(c.id)}
-                className={`block w-full px-3 py-2 text-left text-sm hover:bg-blink-soft ${
-                  c.id === value ? 'bg-blink-soft font-medium text-blink-action-hover' : 'text-blink-muted'
+                className={`flex w-full flex-col gap-0.5 rounded-[10px] px-3 py-2 text-left transition-colors ${
+                  c.id === value
+                    ? 'bg-velo-blue text-blink-action-text'
+                    : 'text-ink-label hover:bg-ink-fill-4'
                 }`}
               >
-                <span className="block">{c.nombre}</span>
-                {c.email ? <span className="block text-xs text-blink-ink-mute">{c.email}</span> : null}
+                <span className="text-headline font-medium">{c.nombre}</span>
+                {c.email ? (
+                  <span className="text-legenda text-ink-secondary">{c.email}</span>
+                ) : null}
               </button>
             ))
           )}
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

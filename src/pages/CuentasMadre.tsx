@@ -21,12 +21,13 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Pagina,
   Select,
   Table,
   Td,
 } from '../components/ui'
 import { NuevaPlataforma, NuevoProveedor } from '../components/inline'
-import { IconInfinity } from '../components/icons'
+import { IconInfinity, IconPlus } from '../components/icons'
 
 const vacio = {
   proveedor_id: '',
@@ -123,61 +124,73 @@ export default function CuentasMadre() {
   if (error) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-5">
+    <Pagina>
       <PageHeader
         title="Cuentas madre"
-        subtitle="Inventario comprado a proveedores o compradas directo (sin proveedor)"
+        subtitle="Inventario de cuentas, comprado a un proveedor o directo"
       >
-        <Button onClick={() => setModal(true)}>+ Nueva cuenta madre</Button>
+        <Button onClick={() => setModal(true)}>
+          <IconPlus tam={16} peso="semipesado" />
+          Nueva cuenta madre
+        </Button>
       </PageHeader>
-
-      <Buscador
-        value={busqueda}
-        onChange={setBusqueda}
-        placeholder="Buscar por correo, plataforma o proveedor…"
-      />
 
       {cuentas.length === 0 ? (
         <EmptyState message="Todavía no hay cuentas madre registradas." />
       ) : (
-        <Table
-          headers={['Correo', 'Proveedor', 'Plataforma', 'Cupos', 'Costo', 'Fecha corte', 'Estado', '']}
-        >
-          {filtradas.map((c) => (
-            <tr key={c.id}>
-              {/* El span con `overflow-wrap: anywhere` es lo que cabe: `Td` ya trae
-                  `break-words`, que según la especificación no reduce el ancho
-                  mínimo de la celda, y hay correos que son un solo token de 28
-                  caracteres sin un espacio donde romper. */}
-              <Td className="font-mono text-nota font-medium">
-                <span className="[overflow-wrap:anywhere]">{c.correo_cuenta}</span>
-              </Td>
-              <Td>{c.proveedores?.nombre ?? 'Directo'}</Td>
-              <Td>{c.plataformas?.nombre ?? '—'}</Td>
-              <Td>
-                {c.cupos_ocupados}/{c.cupos_totales}
-              </Td>
-              <Td>{fmtUSD(c.costo_renovacion_usd)}</Td>
-              <Td>
-                {c.fecha_corte_proveedor ? (
-                  fmtDate(c.fecha_corte_proveedor)
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-nota text-ink-secondary">
-                    <IconInfinity className="h-3.5 w-3.5" /> Sin cortes
-                  </span>
-                )}
-              </Td>
-              <Td>
-                <Badge value={c.estado} />
-              </Td>
-              <Td>
-                <Button variant="secondary" onClick={() => void cambiarEstado(c)}>
-                  {c.estado === 'activa' ? 'Suspender' : 'Activar'}
-                </Button>
-              </Td>
-            </tr>
-          ))}
-        </Table>
+        <>
+          <Buscador
+            value={busqueda}
+            onChange={setBusqueda}
+            placeholder="Buscar por correo, plataforma o proveedor…"
+          />
+
+          <Table
+            titulo={`${filtradas.length} de ${cuentas.length} cuentas`}
+            headers={['Correo', 'Proveedor', 'Plataforma', 'Cupos', 'Costo', 'Fecha corte', 'Estado', 'Acciones']}
+          >
+            {filtradas.map((c) => (
+              <tr key={c.id}>
+                {/* El span con `overflow-wrap: anywhere` es lo que cabe: `Td` ya trae
+                    `break-words`, que según la especificación no reduce el ancho
+                    mínimo de la celda, y hay correos que son un solo token de 28
+                    caracteres sin un espacio donde romper. */}
+                <Td className="font-mono text-nota font-medium">
+                  <span className="[overflow-wrap:anywhere]">{c.correo_cuenta}</span>
+                </Td>
+                <Td>{c.proveedores?.nombre ?? 'Directo'}</Td>
+                <Td>{c.plataformas?.nombre ?? '—'}</Td>
+                <Td num>
+                  {c.cupos_ocupados}/{c.cupos_totales}
+                </Td>
+                <Td num>{fmtUSD(c.costo_renovacion_usd)}</Td>
+                <Td>
+                  {c.fecha_corte_proveedor ? (
+                    fmtDate(c.fecha_corte_proveedor)
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-nota text-ink-secondary">
+                      <IconInfinity tam={15} peso="medio" /> Sin cortes
+                    </span>
+                  )}
+                </Td>
+                <Td>
+                  <Badge value={c.estado} />
+                </Td>
+                <Td>
+                  <div className="flex justify-end">
+                    <Button
+                      variant="secondary"
+                      tam="compacto"
+                      onClick={() => void cambiarEstado(c)}
+                    >
+                      {c.estado === 'activa' ? 'Suspender' : 'Activar'}
+                    </Button>
+                  </div>
+                </Td>
+              </tr>
+            ))}
+          </Table>
+        </>
       )}
 
       <Modal open={modal} title="Nueva cuenta madre" onClose={() => setModal(false)}>
@@ -243,8 +256,7 @@ export default function CuentasMadre() {
               onChange={(e) => setForm({ ...form, fecha_corte_proveedor: e.target.value })}
             />
             <p className="text-nota text-ink-secondary">
-              Déjala vacía si la cuenta no tiene renovación (p. ej. Canva docente, dura para
-              siempre).
+              Déjala vacía si la cuenta no tiene renovación, como Canva docente.
             </p>
           </Field>
           <ModalFooter
@@ -255,6 +267,6 @@ export default function CuentasMadre() {
           />
         </div>
       </Modal>
-    </div>
+    </Pagina>
   )
 }

@@ -20,12 +20,14 @@ import {
   Aviso,
   Button,
   Card,
+  Chip,
   EmptyState,
   ErrorMsg,
   Field,
   Input,
   Loading,
   PageHeader,
+  Pagina,
   Select,
   Table,
   Td,
@@ -197,7 +199,7 @@ export default function Pagos() {
         )
       } else {
         setError(
-          'No se pudo obtener la tasa del BCV. Se necesita una sesión iniciada para pedir el refresco; si no, la Function tasabcv lo hace sola cada tarde.',
+          'Ninguna fuente de tasa respondió. Escribe la del día a mano o refresca más tarde.',
         )
       }
     } catch (e) {
@@ -269,14 +271,10 @@ export default function Pagos() {
       }
       if (editandoId) {
         await actualizarPago(editandoId, datos)
-        setExito(
-          'Pago actualizado correctamente. La comisión del agente (si aplica) se recalculó.',
-        )
+        setExito('Pago actualizado. La comisión del agente se recalculó si la plataforma genera.')
       } else {
         await registrarPago(datos)
-        setExito(
-          'Pago registrado correctamente. Si la plataforma genera comisión (30%), ya quedó pendiente para el agente referido.',
-        )
+        setExito('Pago registrado.')
       }
       setEditandoId(null)
       setForm(estadoInicial)
@@ -360,29 +358,21 @@ export default function Pagos() {
   if (cargando) return <Loading />
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Pagos (calculadora BCV)"
-        subtitle="Registra el cobro y distribúyelo entre las suscripciones activas del cliente"
-      />
+    <Pagina>
+      <PageHeader title="Pagos" subtitle="Registra el cobro y repártelo entre las suscripciones del cliente" />
 
       {/* La cinta va arriba de la calculadora: el número que se escribe en el
           campo «Tasa BCV» tiene que coincidir con el de la fecha valor, y acá se
           ve cuál es sin bajar al formulario. */}
       <CintaTasa />
 
-      {exito ? (
-        <Aviso>{exito}</Aviso>
-      ) : null}
+      {exito ? <Aviso>{exito}</Aviso> : null}
       {error ? <ErrorMsg message={error} /> : null}
 
       {editandoId ? (
         <Aviso tono="ojo">
           <span className="flex flex-wrap items-center justify-between gap-2">
-            <span>
-              Editando un pago existente. Cambia lo que necesites y pulsa{' '}
-              <strong>Guardar cambios</strong>.
-            </span>
+            <span>Editando un pago guardado.</span>
             <Button variant="secondary" tam="compacto" onClick={() => void cancelarEdicion()}>
               Cancelar edición
             </Button>
@@ -390,7 +380,7 @@ export default function Pagos() {
         </Aviso>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <Card title="1 · Datos del pago">
           <div className="space-y-3">
             <Field label="Cliente *">
@@ -407,8 +397,7 @@ export default function Pagos() {
                 onChange={(e) => setForm({ ...form, fecha_pago: e.target.value })}
               />
               <p className="mt-1 text-nota text-ink-secondary">
-                Por defecto hoy. Elige una fecha pasada para registrar cobros hechos antes de la
-                web (la renovación se calcula desde esa fecha).
+                Hoy por defecto; cámbiala para un cobro anterior.
               </p>
             </Field>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -460,19 +449,19 @@ export default function Pagos() {
 
             {form.moneda === 'BS' ? (
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="secondary" onClick={() => void reflejarTasa()} disabled={reflejando}>
-                  <IconRefresh className={`h-4 w-4 ${reflejando ? 'animate-spin' : ''}`} />
-                  {reflejando ? 'Reflejando…' : 'Reflejar tasa'}
+                <Button
+                  variant="secondary"
+                  tam="compacto"
+                  onClick={() => void reflejarTasa()}
+                  disabled={reflejando}
+                >
+                  <IconRefresh tam={15} className={reflejando ? 'animate-spin' : ''} />
+                  {reflejando ? 'Reflejando…' : 'Reflejar tasa del día'}
                 </Button>
-                <span className="text-nota text-ink-secondary">
-                  Trae la tasa oficial del día desde el sitio del BCV (bcv.org.ve) vía
-                  la Edge Function `fetch-bcv`; si no está desplegada, usa la última guardada.
-                </span>
               </div>
             ) : form.moneda === 'USDT' ? (
               <p className="text-nota text-ink-secondary">
-                La tasa de Binance se guarda como referencia con el cobro en USDT (el
-                equivalente en USD es 1:1).
+                La tasa de Binance se guarda como referencia; el USDT entra 1:1.
               </p>
             ) : null}
 
@@ -485,21 +474,19 @@ export default function Pagos() {
                   </option>
                 ))}
               </Select>
-              <p className="mt-1 text-nota text-ink-secondary">
-                La moneda se ajusta sola según el método (Pago Movil → BS, Zelle → USD,
-                Binance/Transferencia → USDT). Siempre puedes cambiarla.
-              </p>
             </Field>
           </div>
         </Card>
 
         <Card title="2 · Equivalente USD (calculadora)">
-          <div className="rounded-tarjeta bg-blink-soft p-4 text-center">
-            <p className="text-nota font-medium uppercase tracking-wide text-[#0062cc]">
+          <div className="vidrio-suave rounded-tarjeta p-4 text-center">
+            <p className="text-nota font-medium uppercase tracking-wide text-blink-action-text">
               Equivalente en USD
             </p>
-            <p className="text-4xl font-bold text-[#0057ad]">{fmtUSD(equivalente)}</p>
-            <p className="mt-1 text-nota text-[#0062cc]">
+            <p className="text-title-1 font-bold tabular-nums text-blink-action-hover">
+              {fmtUSD(equivalente)}
+            </p>
+            <p className="mt-1 text-nota tabular-nums text-blink-action-text">
               {form.moneda === 'BS'
                 ? `${fmtVES(montoNum)} ÷ tasa ${tasaNum}`
                 : form.moneda === 'USDT'
@@ -515,33 +502,29 @@ export default function Pagos() {
             <p className="text-nota text-ink-secondary">Este cliente no tiene suscripciones activas.</p>
           ) : (
             <>
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <Button variant="secondary" onClick={repartirAutomatico}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Button variant="secondary" tam="compacto" onClick={repartirAutomatico}>
                   Repartir automáticamente
                 </Button>
                 <span className="text-subheadline text-ink-secondary">
-                  Asignado: <strong>{fmtUSD(totalAsignado)}</strong>
+                  Asignado <strong className="tabular-nums">{fmtUSD(totalAsignado)}</strong>
                   <span className={diferencia < 0 ? ' text-sys-red' : ' text-ink-secondary'}>
                     {' '}
-                    (dif. {fmtUSD(Math.abs(diferencia))})
+                    · falta {fmtUSD(Math.abs(diferencia))}
                   </span>
                 </span>
               </div>
-              <p className="mb-2 text-nota text-ink-secondary">
-                Repartir automáticamente divide el equivalente en partes iguales entre las
-                suscripciones marcadas; la última recibe el resto para que cuadre exacto.
-              </p>
-              <div className="space-y-2">
+              <div className="mt-3 space-y-2">
                 {activasDelCliente.map((s) => {
                   const a = asign[s.id] ?? { checked: true, monto: '0' }
                   return (
                     <div
                       key={s.id}
-                      className="flex items-center gap-3 rounded-[12px] border border-sys-gray5 bg-white px-3 py-2"
+                      className="vidrio-suave flex items-center gap-3 rounded-[12px] px-3 py-2"
                     >
                       <input
                         type="checkbox"
-                        className="h-4 w-4 accent-[#007aff]"
+                        className="h-[18px] w-[18px] shrink-0 accent-sys-blue"
                         checked={a.checked}
                         onChange={(e) =>
                           setAsign((prev) => ({
@@ -592,107 +575,121 @@ export default function Pagos() {
             </Button>
           </div>
           {!puedeGuardar && form.cliente_id ? (
-            <p className="mt-2 text-right text-nota text-[#9a5b00]">
-              Total asignado ({fmtUSD(totalAsignado)}) debe igualar el equivalente (
+            <p className="mt-2 text-right text-nota text-tinta-aviso">
+              Lo asignado ({fmtUSD(totalAsignado)}) tiene que cuadrar con el equivalente (
               {fmtUSD(equivalente)}).
             </p>
           ) : null}
         </Card>
       </div>
 
-      <Card title="Historial de pagos">
-        <div className="mb-3 grid gap-2 md:grid-cols-2 lg:grid-cols-6">
-          <Input
-            placeholder="Buscar cliente…"
-            value={fQ}
-            onChange={(e) => setFQ(e.target.value)}
-            className="lg:col-span-2"
-          />
-          <Select value={fMetodo} onChange={(e) => setFMetodo(e.target.value)}>
-            <option value="">Método: todos</option>
-            {METODOS_PAGO.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </Select>
-          <Select value={fMoneda} onChange={(e) => setFMoneda(e.target.value)}>
-            <option value="">Moneda: todas</option>
-            <option value="USD">USD</option>
-            <option value="BS">BS</option>
-            <option value="USDT">USDT</option>
-          </Select>
-          <Input type="date" value={fDesde} onChange={(e) => setFDesde(e.target.value)} />
-          <Input type="date" value={fHasta} onChange={(e) => setFHasta(e.target.value)} />
-        </div>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-subheadline text-ink-secondary">
-            {filtrados.length} pago{filtrados.length === 1 ? '' : 's'} · Total filtrado:{' '}
-            <strong>{fmtUSD(totalFiltrado)}</strong>
-          </p>
-          <Button variant="secondary" onClick={limpiarFiltros}>
-            Limpiar filtros
-          </Button>
-        </div>
-        {filtrados.length === 0 ? (
-          <EmptyState message="No hay pagos que coincidan con los filtros." />
-        ) : (
-          <Table
-            headers={[
-              'Cliente',
-              'Fecha',
-              'Monto',
-              'Moneda',
-              'Tasa',
-              'Equivalent USD',
-              'Método',
-              '',
-            ]}
-          >
-            {filtrados.map((p) => (
-              <tr key={p.id}>
-                <Td className="font-medium">{p.usuarios?.nombre ?? '—'}</Td>
-                <Td>{fmtDate(p.fecha_pago)}</Td>
-                <Td>{fmtMontopago(p)}</Td>
-                <Td>
-                  <span
-                    className={`inline-block rounded-full px-2.5 py-0.5 text-nota font-medium ${
-                      p.moneda === 'BS'
-                        ? 'bg-[rgba(255,149,0,0.16)] text-[#9a5b00]'
-                        : p.moneda === 'USDT'
-                          ? 'bg-teal-100 text-teal-700'
-                          : 'bg-[rgba(52,199,89,0.14)] text-[#1c7c34]'
-                    }`}
+      {/* Filtros como barra, no dentro de otra caja: la tabla ya es superficie
+          de vidrio y un marco encima de otro es lo que descuadraba la página. */}
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-6">
+        <Input
+          placeholder="Buscar cliente…"
+          value={fQ}
+          onChange={(e) => setFQ(e.target.value)}
+          className="lg:col-span-2"
+        />
+        <Select value={fMetodo} onChange={(e) => setFMetodo(e.target.value)}>
+          <option value="">Método: todos</option>
+          {METODOS_PAGO.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </Select>
+        <Select value={fMoneda} onChange={(e) => setFMoneda(e.target.value)}>
+          <option value="">Moneda: todas</option>
+          <option value="USD">USD</option>
+          <option value="BS">BS</option>
+          <option value="USDT">USDT</option>
+        </Select>
+        <Input type="date" value={fDesde} onChange={(e) => setFDesde(e.target.value)} />
+        <Input type="date" value={fHasta} onChange={(e) => setFHasta(e.target.value)} />
+      </div>
+
+      {filtrados.length === 0 ? (
+        <EmptyState message="No hay pagos que coincidan con los filtros." />
+      ) : (
+        <Table
+          titulo={`Historial · ${filtrados.length} pago${filtrados.length === 1 ? '' : 's'} · ${fmtUSD(totalFiltrado)}`}
+          acciones={
+            <Button variant="secondary" tam="compacto" onClick={limpiarFiltros}>
+              Limpiar filtros
+            </Button>
+          }
+          headers={[
+            'Cliente',
+            'Fecha',
+            'Monto',
+            'Moneda',
+            'Tasa',
+            'USD equivalente',
+            'Método',
+            'Acciones',
+          ]}
+        >
+          {filtrados.map((p) => (
+            <tr key={p.id}>
+              <Td className="font-medium">{p.usuarios?.nombre ?? '—'}</Td>
+              <Td>{fmtDate(p.fecha_pago)}</Td>
+              <Td num>{fmtMontopago(p)}</Td>
+              <Td>
+                <Chip
+                  className={
+                    p.moneda === 'BS'
+                      ? 'bg-velo-aviso text-tinta-aviso'
+                      : p.moneda === 'USDT'
+                        ? 'bg-velo-info text-tinta-info'
+                        : 'bg-velo-ok text-tinta-ok'
+                  }
+                >
+                  {p.moneda}
+                </Chip>
+              </Td>
+              <Td num>
+                {p.moneda === 'USDT'
+                  ? p.tasa_cambio_binance != null
+                    ? fmtNum(p.tasa_cambio_binance, 4)
+                    : '—'
+                  : p.tasa_bcv_aplicada != null
+                    ? fmtNum(p.tasa_bcv_aplicada, 4)
+                    : '—'}
+              </Td>
+              <Td num className="font-semibold">
+                {fmtUSD(p.equivalente_usd)}
+              </Td>
+              <Td>{p.metodo_pago ?? '—'}</Td>
+              <Td>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="secondary"
+                    tam="compacto"
+                    soloIcono
+                    title="Editar"
+                    aria-label="Editar el pago"
+                    onClick={() => void abrirEditar(p)}
                   >
-                    {p.moneda}
-                  </span>
-                </Td>
-                <Td>
-                  {p.moneda === 'USDT'
-                    ? p.tasa_cambio_binance != null
-                      ? fmtNum(p.tasa_cambio_binance, 4)
-                      : '—'
-                    : p.tasa_bcv_aplicada != null
-                      ? fmtNum(p.tasa_bcv_aplicada, 4)
-                      : '—'}
-                </Td>
-                <Td className="font-semibold">{fmtUSD(p.equivalente_usd)}</Td>
-                <Td>{p.metodo_pago ?? '—'}</Td>
-                <Td>
-                  <div className="flex flex-wrap justify-end gap-2">
-                    <Button variant="secondary" onClick={() => void abrirEditar(p)} title="Editar">
-                      <IconPencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="danger" onClick={() => void borrar(p)} title="Borrar">
-                      <IconTrash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </Td>
-              </tr>
-            ))}
-          </Table>
-        )}
-      </Card>
-    </div>
+                    <IconPencil tam={15} />
+                  </Button>
+                  <Button
+                    variant="danger-suave"
+                    tam="compacto"
+                    soloIcono
+                    title="Borrar"
+                    aria-label="Borrar el pago"
+                    onClick={() => void borrar(p)}
+                  >
+                    <IconTrash tam={15} />
+                  </Button>
+                </div>
+              </Td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </Pagina>
   )
 }

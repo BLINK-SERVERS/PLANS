@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useMemo, useState, type ComponentType } from 'react'
 import { useAuth } from '../lib/auth'
 import { MarcaBlink } from './marca-blink'
-import { Modal, ProveedorConfirmar } from './ui'
+import { Button, Loseta, Modal, ProveedorConfirmar } from './ui'
 import {
   IconBuilding,
   IconCard,
@@ -15,7 +15,6 @@ import {
   IconMas,
   IconPackage,
   IconPercent,
-  IconPersona,
   IconServer,
   IconStore,
   IconUsers,
@@ -68,15 +67,12 @@ const SECCIONES: Array<{ titulo: string; items: Destino[] }> = [
 const TODOS = SECCIONES.flatMap((s) => s.items)
 const ACTIVIDAD = (to: string) => to === '/panel'
 
-function Marca({ tam = 26 }: { tam?: number }) {
+function Marca() {
   return (
     <div className="flex items-center gap-2.5">
-      <span
-        className="grid place-items-center rounded-loseta bg-sys-blue text-white"
-        style={{ width: tam + 8, height: tam + 8 }}
-      >
+      <Loseta tam={34} className="text-white">
         <MarcaBlink className="h-[15px] w-[19px]" />
-      </span>
+      </Loseta>
       <div className="leading-tight">
         <p className="text-headline font-semibold text-ink-label">Blink Plans</p>
         <p className="text-legenda-2 text-ink-secondary">Gestión de suscripciones</p>
@@ -93,19 +89,16 @@ function FilaNav({ item, onClick }: { item: Destino; onClick?: () => void }) {
       end={item.end}
       onClick={onClick}
       className={({ isActive }) =>
-        `flex min-h-11 items-center gap-2.5 rounded-[10px] px-2.5 text-subheadline font-medium transition-colors ${
+        `flex h-[var(--control-normal)] items-center gap-2.5 rounded-[10px] px-2.5 text-subheadline font-medium transition-colors ${
           isActive
-            ? 'bg-[rgba(0,122,255,0.12)] text-[#0062cc]'
+            ? 'bg-velo-blue text-blink-action-text'
             : 'text-ink-label hover:bg-ink-fill-4'
         }`
       }
     >
-      <span
-        className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-[6px] text-white"
-        style={{ background: item.tono }}
-      >
+      <Loseta tam={22} tono={item.tono}>
         <Icono tam={14} peso="semipesado" />
-      </span>
+      </Loseta>
       <span className="truncate">{item.label}</span>
     </NavLink>
   )
@@ -125,11 +118,12 @@ export default function Layout() {
     return largo?.label ?? 'Panel'
   }, [location.pathname])
 
-  // Los cinco destinos que viven en la barra inferior; el resto va a la hoja.
+  // Los destinos que viven en la barra inferior; el resto va a la hoja. Son
+  // cinco porque a 390 px seis etiquetas de una palabra se montan entre sí
+  // ("Suscripciones" mide ~77 px y el hueco de seis deja 65). Pagos se va a
+  // «Más» con el resto del dinero: la tinta del ícono sigue marcando la ruta.
   const pestanas = TODOS.filter((d) =>
-    ['/panel', '/panel/clientes', '/panel/pedidos', '/panel/pagos', '/panel/suscripciones'].includes(
-      d.to,
-    ),
+    ['/panel', '/panel/clientes', '/panel/pedidos', '/panel/suscripciones'].includes(d.to),
   ).sort((a, b) => TODOS.indexOf(a) - TODOS.indexOf(b))
   const resto = TODOS.filter((d) => !pestanas.includes(d))
   const enPestana = pestanas.some((d) => (ACTIVIDAD(d.to) ? d.to === location.pathname : location.pathname.startsWith(d.to)))
@@ -145,9 +139,9 @@ export default function Layout() {
         1280 quedan menos de 960 px de contenido y las tablas desbordaban su caja.
         Abajo de ese ancho mandan la barra superior y las pestañas, y cada tabla se
         apila como lista (`.tabla-ficha` en index.css usa el mismo corte). */}
-    <div className="min-h-screen xl:flex">
+    <div className="panel min-h-screen xl:flex">
       {/* Sidebar — escritorio */}
-      <aside className="material material-border sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-ink-separator/60 xl:flex">
+      <aside className="vidrio-barra material-border sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-ink-separator/60 xl:flex">
         <div className="px-4 pb-3 pt-5">
           <Marca />
         </div>
@@ -166,37 +160,40 @@ export default function Layout() {
           ))}
         </nav>
         <div className="border-t border-ink-separator/60 p-2.5">
+          {/* La cuenta no es una acción destructiva: el correo va en tinta
+              secundaria y lo rojo queda solo para «Cerrar la sesión». Además
+              `sys-red` (#FF3B30) sobre blanco da 3,03:1 y no pasa AA a 13 px;
+              la tinta medida del peligro es `tinta-danger`. */}
+          <p className="truncate px-2.5 pb-1.5 pt-1 text-legenda text-ink-secondary">
+            {session?.user?.email ?? ''}
+          </p>
           <button
             onClick={() => void salir()}
-            className="flex min-h-11 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-subheadline font-medium text-sys-red transition-colors hover:bg-[rgba(255,59,48,0.1)]"
+            className="flex h-[var(--control-compacto)] w-full items-center gap-2.5 rounded-[10px] px-2.5 text-nota font-semibold text-tinta-danger transition-colors hover:bg-velo-danger"
           >
             <IconLogout tam={15} peso="medio" />
-            <span className="truncate">{session?.user?.email ?? 'Cerrar sesión'}</span>
+            Cerrar la sesión
           </button>
         </div>
       </aside>
 
       {/* Barra superior — teléfono y tablet */}
-      <header className="material material-border sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-ink-separator/60 px-3 py-1 xl:hidden pt-safe">
+      <header className="vidrio-barra material-border sticky top-0 z-30 flex h-[var(--control-normal)] items-center justify-between gap-3 border-b border-ink-separator/60 px-3 xl:hidden pt-safe">
         <NavLink
           to="/"
-          className="flex min-h-11 items-center gap-2 text-ink-secondary transition-opacity active:opacity-60"
+          className="flex h-[var(--control-normal)] items-center gap-2 text-ink-secondary transition-opacity active:opacity-60"
         >
-          <span className="grid h-7 w-7 place-items-center rounded-loseta bg-sys-blue text-white">
+          <Loseta tam={24} className="text-white">
             <MarcaBlink className="h-3 w-[15px]" />
-          </span>
+          </Loseta>
           <span className="text-subheadline font-medium">Plans</span>
         </NavLink>
         <p className="min-w-0 flex-1 truncate text-center text-headline font-semibold text-ink-label">
           {titulo}
         </p>
-        <button
-          onClick={() => setMas(true)}
-          aria-label="Más secciones"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-fill-3 text-ink-label transition-opacity active:opacity-70"
-        >
+        <Button variant="secondary" soloIcono aria-label="Más secciones" onClick={() => setMas(true)}>
           <IconMas tam={18} peso="pesado" />
-        </button>
+        </Button>
       </header>
 
       {/* Contenido */}
@@ -204,8 +201,10 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      {/* Barra de pestañas — teléfono y tablet */}
-      <nav className="material fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-separator/60 pb-safe xl:hidden">
+      {/* Barra de pestañas — teléfono y tablet. La etiqueta va a 10 px porque
+          ese es el caption de la tab bar de iOS: a 11 px «Suscripciones» no
+          cabía en los 78 px del quinto y se cortaba con puntos suspensivos. */}
+      <nav className="vidrio-barra fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-separator/60 pb-safe xl:hidden">
         {[...pestanas, { to: '', label: 'Más', icono: IconMas, tono: 'var(--color-sys-gray)' } as Destino].map(
           (destino) => {
             const esMas = destino.to === ''
@@ -216,7 +215,7 @@ export default function Layout() {
                 key="mas"
                 onClick={() => setMas(true)}
                 aria-current={activo ? 'page' : undefined}
-                className="flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+                className="flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] leading-[12px] font-medium"
                 style={{ color: activo ? '#007aff' : 'rgba(60,60,67,0.6)' }}
               >
                 <Icono tam={21} peso={activo ? 'semipesado' : 'regular'} />
@@ -227,12 +226,16 @@ export default function Layout() {
                 key={destino.to}
                 to={destino.to}
                 end={destino.end}
-                className="flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+                className="flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] leading-[12px] font-medium"
               >
                 {({ isActive }) => (
                   <>
                     <Icono tam={21} peso={isActive ? 'semipesado' : 'regular'} />
-                    <span className={isActive ? 'text-sys-blue' : 'text-ink-secondary'}>{destino.label}</span>
+                    <span
+                      className={`max-w-full truncate px-0.5 ${isActive ? 'text-sys-blue' : 'text-ink-secondary'}`}
+                    >
+                      {destino.label}
+                    </span>
                   </>
                 )}
               </NavLink>
@@ -254,19 +257,16 @@ export default function Layout() {
             <NavLink
               to="/"
               onClick={() => setMas(false)}
-              className="flex min-h-11 items-center gap-2.5 rounded-[10px] px-2.5 text-subheadline font-medium text-ink-label hover:bg-ink-fill-4"
+              className="flex h-[var(--control-normal)] items-center gap-2.5 rounded-[10px] px-2.5 text-subheadline font-medium text-ink-label hover:bg-ink-fill-4"
             >
-              <span
-                className="grid h-[22px] w-[22px] place-items-center rounded-[6px] text-white"
-                style={{ background: 'var(--color-sys-teal)' }}
-              >
+              <Loseta tam={22} tono="var(--color-sys-teal)">
                 <IconCasa tam={14} peso="semipesado" />
-              </span>
+              </Loseta>
               Ver la tienda pública
             </NavLink>
             <button
               onClick={salirTodo}
-              className="flex min-h-11 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-subheadline font-medium text-sys-red hover:bg-[rgba(255,59,48,0.1)]"
+              className="flex h-[var(--control-normal)] w-full items-center gap-2.5 rounded-[10px] px-2.5 text-subheadline font-medium text-tinta-danger hover:bg-velo-danger"
             >
               <IconLogout tam={15} peso="medio" />
               Cerrar la sesión
@@ -274,9 +274,6 @@ export default function Layout() {
           </div>
         </div>
       </Modal>
-
-      {/* Persona con sesión abierta pero sin destino de panel */}
-      <IconPersona tam={0} className="hidden" />
     </div>
     </ProveedorConfirmar>
   )

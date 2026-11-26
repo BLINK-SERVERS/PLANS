@@ -8,11 +8,12 @@ import { errMsg } from '../lib/err'
 import { CintaTasa } from '../components/CintaTasa'
 import type { VencimientoProveedor } from '../lib/types'
 import {
-  Badge,
-  Card,
+  Chip,
+  EmptyState,
   ErrorMsg,
   Loading,
   PageHeader,
+  Pagina,
   StatCard,
   Table,
   Td,
@@ -45,13 +46,13 @@ export default function Dashboard() {
   if (error) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Dashboard" subtitle="Resumen general del negocio" />
+    <Pagina>
+      <PageHeader title="Dashboard" />
 
       <CintaTasa onActualizada={() => void cargar()} />
 
       {resumen ? (
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-5 xl:grid-cols-3">
           <StatCard label="Clientes" value={resumen.clientes} />
           <StatCard
             label="Suscripciones activas"
@@ -60,16 +61,19 @@ export default function Dashboard() {
           <StatCard
             label="Suscripciones vencidas"
             value={resumen.suscripcionesVencidas}
-            hint={resumen.suscripcionesVencidas > 0 ? 'Revisar cobros pendientes' : undefined}
+            tono="var(--color-sys-orange)"
+            hint={resumen.suscripcionesVencidas > 0 ? 'Cobros pendientes por revisar' : undefined}
           />
           <StatCard
             label="Ingresos del mes"
             value={fmtUSD(resumen.ingresosMesUSD)}
+            tono="var(--color-sys-green)"
             hint={resumen.bsMes > 0 ? `${fmtVES(resumen.bsMes)} cobrados` : 'Sin cobros en Bs'}
           />
           <StatCard
             label="Ganancia del mes"
             value={fmtUSD(resumen.gananciaMesUSD)}
+            tono="var(--color-sys-teal)"
             hint={
               resumen.egresosMesUSD > 0
                 ? `Egresos ${fmtUSD(resumen.egresosMesUSD)} registrados`
@@ -79,6 +83,7 @@ export default function Dashboard() {
           <StatCard
             label="Comisiones pendientes"
             value={fmtUSD(resumen.comisionesPendientesUSD)}
+            tono="var(--color-sys-purple)"
             hint="30% del USD de cada cobro referido"
           />
         </div>
@@ -86,35 +91,44 @@ export default function Dashboard() {
         <Loading />
       )}
 
-      <Card title="Vencimientos de proveedores (próximos 3 días)">
-        {vencimientos.length === 0 ? (
-          <p className="text-nota text-ink-secondary">
-            No hay cuentas madre por vencer en los próximos 3 días.
-          </p>
-        ) : (
-          <Table
-            headers={['Proveedor', 'Plataforma', 'Cuenta', 'Cupos', 'Costo', 'Fecha corte', '']}
-          >
-            {vencimientos.map((v) => (
-              <tr key={v.id}>
-                <Td>{v.proveedor}</Td>
-                <Td>{v.plataforma}</Td>
-                <Td className="font-mono text-nota">{v.correo_cuenta}</Td>
-                <Td>
-                  {v.cupos_ocupados}/{v.cupos_totales}
-                </Td>
-                <Td>{fmtUSD(v.costo_renovacion_usd)}</Td>
-                <Td>{fmtDate(v.fecha_corte_proveedor)}</Td>
-                <Td>
-                  <Badge
-                    value={v.dias_restantes < 0 ? 'vencida' : String(v.dias_restantes)}
-                  />
-                </Td>
-              </tr>
-            ))}
-          </Table>
-        )}
-      </Card>
-    </div>
+      {vencimientos.length === 0 ? (
+        <EmptyState message="Ninguna cuenta madre vence en los próximos 3 días." />
+      ) : (
+        <Table
+          titulo="Vencimientos de proveedores · próximos 3 días"
+          headers={['Proveedor', 'Plataforma', 'Cuenta', 'Cupos', 'Costo', 'Fecha corte', 'Estado']}
+        >
+          {vencimientos.map((v) => (
+            <tr key={v.id}>
+              <Td className="font-medium">{v.proveedor}</Td>
+              <Td>{v.plataforma}</Td>
+              <Td className="font-mono text-nota">{v.correo_cuenta}</Td>
+              <Td num>
+                {v.cupos_ocupados}/{v.cupos_totales}
+              </Td>
+              <Td num>{fmtUSD(v.costo_renovacion_usd)}</Td>
+              <Td>{fmtDate(v.fecha_corte_proveedor)}</Td>
+              <Td>
+                <Chip
+                  className={
+                    v.dias_restantes < 0
+                      ? 'bg-velo-danger text-tinta-danger'
+                      : v.dias_restantes <= 1
+                        ? 'bg-velo-aviso text-tinta-aviso'
+                        : 'bg-velo-info text-tinta-info'
+                  }
+                >
+                  {v.dias_restantes < 0
+                    ? `vencida ${Math.abs(v.dias_restantes)} d`
+                    : v.dias_restantes === 0
+                      ? 'vence hoy'
+                      : `en ${v.dias_restantes} d`}
+                </Chip>
+              </Td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </Pagina>
   )
 }

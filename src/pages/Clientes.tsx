@@ -10,7 +10,6 @@ import type { Usuario } from '../lib/types'
 import { fmtDateTime } from '../lib/format'
 import { errMsg } from '../lib/err'
 import {
-  Badge,
   Button,
   Buscador,
   EmptyState,
@@ -21,11 +20,13 @@ import {
   Modal,
   ModalFooter,
   PageHeader,
+  Pagina,
   Select,
   Table,
   Td,
   useConfirmar,
 } from '../components/ui'
+import { IconPlus, IconTrash } from '../components/icons'
 
 const vacio = { nombre: '', email: '', telefono: '', referido_por: '' }
 
@@ -121,48 +122,59 @@ export default function Clientes() {
   if (error) return <ErrorMsg message={error} />
 
   return (
-    <div className="space-y-5">
-      <PageHeader title="Clientes" subtitle="Alta, baja y modificación de clientes">
-        <Button onClick={abrirNuevo}>+ Nuevo cliente</Button>
+    <Pagina>
+      <PageHeader title="Clientes">
+        <Button onClick={abrirNuevo}>
+          <IconPlus tam={16} peso="semipesado" />
+          Nuevo cliente
+        </Button>
       </PageHeader>
-
-      <Buscador
-        value={busqueda}
-        onChange={setBusqueda}
-        placeholder="Buscar por nombre, email o teléfono…"
-      />
-
-      <p className="text-nota text-ink-secondary">
-        Mostrando {filtrados.length} de {clientes.length} clientes.
-      </p>
 
       {clientes.length === 0 ? (
         <EmptyState message="Todavía no hay clientes registrados." />
       ) : (
-        <Table headers={['Nombre', 'Email', 'Teléfono', 'Referido por', 'Registro', 'Acciones']}>
-          {filtrados.map((c) => {
-            const agente = agentes.find((a) => a.id === c.referido_por)
-            return (
-              <tr key={c.id}>
-                <Td className="font-medium">{c.nombre}</Td>
-                <Td>{c.email ?? '—'}</Td>
-                <Td>{c.telefono ?? '—'}</Td>
-                <Td>{agente?.nombre ?? '—'}</Td>
-                <Td>{fmtDateTime(c.created_at)}</Td>
-                <Td>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" onClick={() => abrirEditar(c)}>
-                      Editar
-                    </Button>
-                    <Button variant="danger" onClick={() => void borrar(c)}>
-                      Eliminar
-                    </Button>
-                  </div>
-                </Td>
-              </tr>
-            )
-          })}
-        </Table>
+        <>
+          <Buscador
+            value={busqueda}
+            onChange={setBusqueda}
+            placeholder="Buscar por nombre, email o teléfono…"
+          />
+
+          <Table
+            titulo={`${filtrados.length} de ${clientes.length} clientes`}
+            headers={['Nombre', 'Email', 'Teléfono', 'Referido por', 'Registro', 'Acciones']}
+          >
+            {filtrados.map((c) => {
+              const agente = agentes.find((a) => a.id === c.referido_por)
+              return (
+                <tr key={c.id}>
+                  <Td className="font-medium">{c.nombre}</Td>
+                  <Td>{c.email ?? '—'}</Td>
+                  <Td>{c.telefono ?? '—'}</Td>
+                  <Td>{agente?.nombre ?? '—'}</Td>
+                  <Td>{fmtDateTime(c.created_at)}</Td>
+                  <Td>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="secondary" tam="compacto" onClick={() => abrirEditar(c)}>
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger-suave"
+                        tam="compacto"
+                        soloIcono
+                        title="Eliminar"
+                        aria-label={`Eliminar a ${c.nombre}`}
+                        onClick={() => void borrar(c)}
+                      >
+                        <IconTrash tam={15} />
+                      </Button>
+                    </div>
+                  </Td>
+                </tr>
+              )
+            })}
+          </Table>
+        </>
       )}
 
       <Modal
@@ -208,7 +220,7 @@ export default function Clientes() {
             </Field>
           ) : (
             <p className="text-nota text-ink-secondary">
-              El referido no se modifica aquí (política de trazabilidad).
+              El referido no se edita: queda el que se registró al alta.
             </p>
           )}
           <ModalFooter
@@ -219,10 +231,6 @@ export default function Clientes() {
           />
         </div>
       </Modal>
-
-      <div className="text-nota text-ink-secondary">
-        <Badge value="cliente" /> rol asignado automáticamente a los clientes
-      </div>
-    </div>
+    </Pagina>
   )
 }
