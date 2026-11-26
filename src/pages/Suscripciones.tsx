@@ -8,7 +8,7 @@ import {
   fetchSuscripciones,
 } from '../lib/api'
 import type { CuentaMadreRow, PlanRow, SuscripcionRow, Usuario } from '../lib/types'
-import { fmtDate, fmtUSD, hoy } from '../lib/format'
+import { fmtDate, fmtUSD, hoy, sumarDias } from '../lib/format'
 import { errMsg } from '../lib/err'
 import {
   Badge,
@@ -33,7 +33,9 @@ const vacio = {
   plan_id: '',
   cuenta_madre_id: '',
   fecha_inicio: hoy(),
-  fecha_corte_cliente: hoy(),
+  // Vacío = "la calcula el plan". Se escribe acá solo cuando el dueño la cambia
+  // a mano (una suscripción vendida antes del sistema, un corte regalado).
+  fecha_corte_cliente: '',
   estado: 'activa' as 'activa' | 'vencida' | 'cancelada',
 }
 
@@ -83,6 +85,15 @@ export default function Suscripciones() {
 
   const planElegido = planes.find((p) => p.id === form.plan_id)
 
+  // El corte se calcula solo: inicio + duración del plan. La regla vive acá, no
+  // en la base, porque el reloj de Neon está en GMT y Caracas en UTC-4; medido
+  // el 2026-11-25, `current_date` en la Function ya marcaba un día distinto.
+  const corteAutomatico =
+    planElegido && form.fecha_inicio
+      ? sumarDias(form.fecha_inicio, Number(planElegido.duracion_dias))
+      : ''
+  const corteEfectivo = form.fecha_corte_cliente || corteAutomatico
+
   // Solo cuentas activas con cupo libre Y de la MISMA plataforma del plan
   const cuentasDisponibles = cuentas.filter(
     (cm) =>
@@ -114,7 +125,7 @@ export default function Suscripciones() {
         plan_id: form.plan_id,
         cuenta_madre_id: form.cuenta_madre_id,
         fecha_inicio: form.fecha_inicio,
-        fecha_corte_cliente: form.fecha_corte_cliente,
+        fecha_corte_cliente: corteEfectivo,
         estado: form.estado,
       })
       setModal(false)
@@ -161,7 +172,7 @@ export default function Suscripciones() {
         placeholder="Buscar por cliente, plataforma o cuenta…"
       />
 
-      <p className="text-xs text-blink-ink-mute">
+      <p className="text-nota text-ink-secondary">
         Mostrando {filtradas.length} de {susc.length} suscripciones.
       </p>
 
@@ -178,7 +189,7 @@ export default function Suscripciones() {
                 {s.planes?.plataformas?.nombre ?? '—'} · {s.planes?.duracion_dias ?? '—'}d ·{' '}
                 {fmtUSD(s.planes?.precio_venta_usd ?? 0)}
               </Td>
-              <Td className="font-mono text-xs">{s.cuentas_madre?.correo_cuenta ?? '—'}</Td>
+              <Td className="font-mono text-nota">{s.cuentas_madre?.correo_cuenta ?? '—'}</Td>
               <Td>{fmtDate(s.fecha_inicio)}</Td>
               <Td>{fmtDate(s.fecha_corte_cliente)}</Td>
               <Td>
@@ -251,7 +262,7 @@ export default function Suscripciones() {
               ))}
             </Select>
             {planElegido && cuentasDisponibles.length === 0 ? (
-              <p className="text-xs text-amber-600">
+              <p className="text-nota text-amber-600">
                 No hay cuentas activas con cupos libres de{' '}
                 {planElegido.plataformas?.nombre ?? 'esta plataforma'}. Crea una o revisa la
                 plataforma del plan.
@@ -267,12 +278,48 @@ export default function Suscripciones() {
                 onChange={(e) => setForm({ ...form, fecha_inicio: e.target.value })}
               />
             </Field>
-            <Field label="Fecha de corte (cliente) *">
-              <Input
-                type="date"
-                value={form.fecha_corte_cliente}
-                onChange={(e) => setForm({ ...form, fecha_corte_cliente: e.target.value })}
-              />
+            <Field label="Fecha de corte del cliente">
+              {form.fecha_corte_cliente ? (
+                <div className="space-y-1.5">
+                  <Input
+                    type="date"
+                    value={form.fecha_corte_cliente}
+                    onChange={(e) => setForm({ ...form, fecha_corte_cliente: e.target.value })}
+                  />
+                  <Button
+                    variant="link"
+                    tam="compacto"
+                    className="-ml-3"
+                    onClick={() => setForm({ ...form, fecha_corte_cliente: '' })}
+                  >
+                    Usar la del plan
+                    {corteAutomatico ? ` (${fmtDate(corteAutomatico)})` : ''}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex min-h-11 items-center justify-between gap-3 rounded-[10px] bg-ink-fill-3 px-3.5 py-2">
+                  <div className="min-w-0">
+                    <p className="text-cuerpo text-ink-label">
+                      {corteAutomatico ? fmtDate(corteAutomatico) : 'Depende del plan'}
+                    </p>
+                    <p className="truncate text-legenda text-ink-secondary">
+                      {planElegido
+                        ? `Automática · ${planElegido.duracion_dias} días desde el inicio`
+                        : 'Selecciona un plan y se pone sola'}
+                    </p>
+                  </div>
+                  {corteAutomatico ? (
+                    <Button
+                      variant="link"
+                      tam="compacto"
+                      className="shrink-0"
+                      onClick={() => setForm({ ...form, fecha_corte_cliente: corteAutomatico })}
+                    >
+                      Cambiar
+                    </Button>
+                  ) : null}
+                </div>
+              )}
             </Field>
           </div>
           <Field label="Estado *">
@@ -287,7 +334,7 @@ export default function Suscripciones() {
               <option value="cancelada">Cancelada</option>
             </Select>
           </Field>
-          <p className="text-xs text-blink-ink-mute">
+          <p className="text-nota text-ink-secondary">
             Para suscripciones vendidas antes del sistema: escribe la fecha real de inicio y el
             estado actual.
           </p>
@@ -299,7 +346,7 @@ export default function Suscripciones() {
               !form.plan_id ||
               !form.cuenta_madre_id ||
               !form.fecha_inicio ||
-              !form.fecha_corte_cliente
+              !corteEfectivo
             }
             guardando={guardando}
           />

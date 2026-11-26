@@ -67,4 +67,15 @@ export const hoy = (): string => {
   return `${d.getFullYear()}-${mes}-${dia}`
 }
 
+// Corte = inicio + duración del plan. Se hace con `Date` local y mediodía, como
+// `dateLocal` arriba: si se parsea 'YYYY-MM-DD' con `new Date(iso)` cae en UTC y
+// en Venezuela (UTC-4) el resultado sale un día antes.
+export const sumarDias = (iso: string, dias: number): string => {
+  const d = dateLocal(iso)
+  d.setDate(d.getDate() + Number(dias))
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mes}-${dia}`
+}
+
 export const round2 = (n: number): number => Math.round(n * 100) / 100
