@@ -145,7 +145,13 @@ export default function CuentasMadre() {
         >
           {filtradas.map((c) => (
             <tr key={c.id}>
-              <Td className="font-mono text-nota font-medium">{c.correo_cuenta}</Td>
+              {/* El span con `overflow-wrap: anywhere` es lo que cabe: `Td` ya trae
+                  `break-words`, que según la especificación no reduce el ancho
+                  mínimo de la celda, y hay correos que son un solo token de 28
+                  caracteres sin un espacio donde romper. */}
+              <Td className="font-mono text-nota font-medium">
+                <span className="[overflow-wrap:anywhere]">{c.correo_cuenta}</span>
+              </Td>
               <Td>{c.proveedores?.nombre ?? 'Directo'}</Td>
               <Td>{c.plataformas?.nombre ?? '—'}</Td>
               <Td>
