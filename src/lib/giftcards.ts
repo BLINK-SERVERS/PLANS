@@ -25,7 +25,7 @@ export const WHATSAPP_PEDIDOS = '584246603660'
 
 // Tarifas fijas: 💵 valor de la tarjeta (USD) → 💶 precio de venta (EUR)
 export const TARJETAS_APPLE: TarjetaRegalo[] = [
-  { valor_usd: 2, precio_eur: 3.1 },
+  { valor_usd: 2, precio_eur: 3.29 },
   { valor_usd: 3, precio_eur: 4.3 },
   { valor_usd: 4, precio_eur: 5.5 },
   { valor_usd: 5, precio_eur: 6.75 },
@@ -86,7 +86,7 @@ export const euro = (n: number): string =>
 export const dolar = (n: number): string =>
   `$${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n)}`
 
-// "Desde 3.10 €" para la tarjeta del catálogo (la tarifa más barata)
+// "Desde 3.29 €" para la tarjeta del catálogo (la tarifa más barata)
 export const desdeGiftCardsEur = (): string => {
   const min = Math.min(...TARJETAS_APPLE.map((t) => t.precio_eur))
   return euro(min)

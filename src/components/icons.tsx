@@ -417,6 +417,14 @@ export const IconDocumento = (p: PropsSimbolo) => (
   </Simbolo>
 )
 
+/** doc.on.doc — la hoja de adelante toca la caja por abajo y por la derecha. */
+export const IconCopiar = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="8.6" y="8.6" width="11.4" height="11.4" rx="2.2" />
+    <path d="M4 15.4V6.2A2.2 2.2 0 0 1 6.2 4h9.2" />
+  </Simbolo>
+)
+
 /** chart.bar — tres barras sobre la línea de base, la última al tope de la cap. */
 export const IconGanancias = (p: PropsSimbolo) => (
   <Simbolo {...p}>

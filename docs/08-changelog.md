@@ -4,6 +4,37 @@
 > cambios de código. Formato de líneas: `- [tipo] descripción`
 > (tipo: feat / fix / docs / chore / security / refactor).
 
+## 2026-11-26 — Los datos de cobro se copian dato por dato y la tarjeta de $2 queda en 3.29 €
+
+El dueño dio las tres piezas en el mismo mensaje: el precio que faltaba, los datos reales de
+Pago Móvil y la forma de pasarlos al teléfono del cliente sin transcribirlos a mano.
+
+- **fix** `$2 → 3.29 €` en `TARJETAS_APPLE`, el renglón que quedaba pendiente de la lista de
+  tarifas. Como `desdeGiftCardsEur()` toma el mínimo del catálogo, la landing cambió sola:
+  medido «Desde 3.29 €» en la tarjeta de Apple y ningún «3.10 €» en la tienda.
+- **feat** `DATOS_COBRO` pasa de un texto suelto a filas estructuradas
+  (`{ etiqueta, valor }`): Teléfono `04246603660`, Cédula `34201580`, Banco `BNC`. `textoCobro()`
+  arma el bloque para WhatsApp y para el portapapeles en cadena. USDT, USDC, Zinli y Binance
+  siguen en `null` hasta que el dueño dé sus datos, y las dos pantallas mantienen el aviso.
+- **feat** Componente `DatosCobro`, montado en `#/checkout` y en `#/renovar`: una fila por dato
+  con el label a la izquierda y el valor alineado a derecha en `tabular-nums`, y el renglón
+  completo como blanco táctil (medido: 44 px de alto en las tres filas). El icono `doc.on.doc`
+  se convierte en check durante 1,8 s y el valor se pinta del azul de acción, para que el
+  feedback no dependa solo del color. Abajo, «Copiar todos los datos» en botón pastilla entero.
+  Se copia con `navigator.clipboard.writeText` y, si el navegador lo niega, con un `textarea`
+  oculto y `execCommand('copy')`.
+- **fix** El mensaje de WhatsApp pegaba los tres datos detrás de «Instrucciones:», así que el
+  primero salía en la misma línea que la etiqueta. Ahora encabeza «Datos para el pago:» y cada
+  dato va en su renglón.
+
+Verificado en Chromium a 390 px con permisos de portapapeles concedidos, leyendo el portapapeles
+de vuelta y no fiándose del estado interno: 13 pasos verdes en `#/checkout` (las tres filas con
+los valores del dueño, copia individual `34201580`, copiar todo igual a las tres líneas, el
+método USDT sin filas y con su aviso, Pago Móvil reanimando las filas al volver) y 6 verdes en
+`#/renovar` con un cliente de prueba real y una suscripción a tres días del corte. La cuenta de
+prueba y su suscripción se borraron al terminar: el cupo de la cuenta madre de Spotify volvió de
+1 a 0 y quedaron 2 usuarios en la base, los dos reales. Consola limpia en las dos pasadas.
+
 ## 2026-11-26 — El carrito estrena pie de compra y el que se va a registrar vuelve al pago
 
 El dueño lo dijo con su cliente en la cabeza: «cuando se añade un producto al carrito es

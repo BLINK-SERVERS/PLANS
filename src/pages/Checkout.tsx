@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BarraTienda from '../components/tienda/BarraTienda'
+import DatosCobro from '../components/tienda/DatosCobro'
 import { useCarrito } from '../components/tienda/CarritoProvider'
 import { useAuth } from '../lib/auth'
 import { crearPedido, fetchTasaBcv, fetchTasaEurDelDia, tasaVigente } from '../lib/api'
 import {
-  DATOS_COBRO,
   METODOS_PAGO,
   etiquetaMetodo,
   fmtMonedaCobro,
   monedaCobro,
   montoCobro,
+  textoCobro,
   type MetodoPago,
   type TasasCobro,
 } from '../lib/pagos'
@@ -99,7 +100,7 @@ export default function Checkout() {
       lineas: lineasMsj,
       total: fmtMonedaCobro(monedaMetodo, totalMetodo),
       metodo: etiquetaMetodo(metodo),
-      instrucciones: DATOS_COBRO[metodo],
+      instrucciones: textoCobro(metodo),
     })
 
     let falloGuardado = false
@@ -305,11 +306,14 @@ export default function Checkout() {
 
           {/* Instrucciones del método + nota de Pago Móvil anclado al € */}
           <div className="mt-4 rounded-xl bg-blink-fill p-4 text-xs leading-relaxed text-blink-muted">
-            {DATOS_COBRO[metodo] ? (
-              <p>
-                <strong className="text-blink-dark">Cómo pagar · {etiquetaMetodo(metodo)}:</strong>{' '}
-                {DATOS_COBRO[metodo]}
-              </p>
+            {textoCobro(metodo) ? (
+              <>
+                <p className="font-semibold text-blink-dark">Cómo pagar · {etiquetaMetodo(metodo)}</p>
+                <p className="mt-0.5 text-[11px] text-blink-ink-mute">
+                  Toca cada dato para copiarlo, o cópialos todos juntos.
+                </p>
+                <DatosCobro metodo={metodo} />
+              </>
             ) : (
               <p className="text-amber-700">
                 ⚠️ Aún estamos cargando los datos de cobro de <strong>{etiquetaMetodo(metodo)}</strong>.
@@ -317,7 +321,7 @@ export default function Checkout() {
               </p>
             )}
             {metodo === 'pagomovil' ? (
-              <p className="mt-1 text-[11px] text-blink-ink-mute">
+              <p className="mt-2 text-[11px] text-blink-ink-mute">
                 Pago Móvil: las Apple Gift Cards van ancladas al euro (€ → Bs); los planes usan la
                 tasa BCV (USD → Bs).
               </p>

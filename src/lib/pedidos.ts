@@ -36,7 +36,7 @@ export function msjPedidoCheckout(o: {
     `Total a pagar: ${o.total}`,
     `Método de pago: ${o.metodo}`,
   ]
-  if (o.instrucciones) partes.push(`Instrucciones: ${o.instrucciones}`)
+  if (o.instrucciones) partes.push('Datos para el pago:', o.instrucciones)
   else partes.push('Instrucciones de pago: te las confirmo por este chat')
   partes.push('', 'Confirmo el pedido ✅ ¿Cómo sigo con el pago?')
   return partes.join('\n')
@@ -68,7 +68,7 @@ export function msjRenovacion(o: {
     `Monto a pagar: ${o.cobro}`,
     `Método de pago: ${o.metodo}`,
   ]
-  if (o.instrucciones) partes.push(`Instrucciones: ${o.instrucciones}`)
+  if (o.instrucciones) partes.push('Datos para el pago:', o.instrucciones)
   else partes.push('Me pasas los datos de cobro por acá')
   partes.push('', 'Ya declaré la renovación en la web, ¿la validan?')
   return partes.join('\n')

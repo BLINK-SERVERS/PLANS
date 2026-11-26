@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BarraTienda from '../components/tienda/BarraTienda'
+import DatosCobro from '../components/tienda/DatosCobro'
 import { useAuth } from '../lib/auth'
 import { crearRenovacion, fetchMisSuscripciones, fetchTasaBcv, tasaVigente } from '../lib/api'
 import type { MiSuscripcion } from '../lib/types'
@@ -9,12 +10,12 @@ import { hoy } from '../lib/format'
 import { etiquetaDuracion, precioUsd } from '../lib/tienda'
 import {
   AVISO_DATOS_POR_CONFIRMAR,
-  DATOS_COBRO,
   METODOS_PAGO,
   etiquetaMetodo,
   fmtMonedaCobro,
   monedaCobro,
   montoCobro,
+  textoCobro,
   type MetodoPago,
 } from '../lib/pagos'
 import { linkWhatsApp, msjRenovacion } from '../lib/pedidos'
@@ -188,7 +189,7 @@ function FilaRenovacion({
             corteQuedara: corteQuedara(s),
             cobro: fmtMonedaCobro(monedaCobro(metodo), monto),
             metodo: etiquetaMetodo(metodo),
-            instrucciones: DATOS_COBRO[metodo],
+            instrucciones: textoCobro(metodo),
           }),
         ),
       )
@@ -308,15 +309,18 @@ function FilaRenovacion({
           </div>
 
           <div className="mt-3 rounded-xl bg-blink-fill px-4 py-3 text-xs leading-relaxed text-blink-muted">
-            {DATOS_COBRO[metodo] ? (
-              <p>
-                <strong className="text-blink-dark">Cómo pagar · {etiquetaMetodo(metodo)}:</strong>{' '}
-                {DATOS_COBRO[metodo]}
-              </p>
+            {textoCobro(metodo) ? (
+              <>
+                <p className="font-semibold text-blink-dark">Cómo pagar · {etiquetaMetodo(metodo)}</p>
+                <p className="mt-0.5 text-[11px] text-blink-ink-mute">
+                  Toca cada dato para copiarlo, o cópialos todos juntos.
+                </p>
+                <DatosCobro metodo={metodo} />
+              </>
             ) : (
               <p className="text-amber-700">⚠️ {AVISO_DATOS_POR_CONFIRMAR}</p>
             )}
-            <p className="mt-1 text-[11px] text-blink-ink-mute">
+            <p className="mt-2 text-[11px] text-blink-ink-mute">
               Declárala con lo que realmente vas a pagar. Nosotros revisamos el ingreso y recién ahí
               movemos tu fecha de corte.
             </p>

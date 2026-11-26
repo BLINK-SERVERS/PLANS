@@ -2,7 +2,7 @@
 //  · Pago Móvil → bolívares. Las Apple Gift Cards van ANCLADAS AL EURO
 //    (precio EUR × tasa_eur_bs); los planes usan la tasa BCV (USD → Bs).
 //  · USDT / USDC / Zinli / Binance → mismo número que el precio de
-//    referencia: gift cards en EUR (3.10 USDT por una de 3.10 €),
+//    referencia: gift cards en EUR (3.29 USDT por una de 3.29 €),
 //    planes en USD (2.99 USDT por el plan de 2.99 $).
 
 export type MetodoPago = 'pagomovil' | 'usdt' | 'usdc' | 'zinli' | 'binance'
@@ -55,17 +55,32 @@ export const METODOS_PAGO: MetodoInfo[] = [
 ]
 
 /**
- * Datos de cobro del negocio (lo que el cliente ve como instrucciones).
- * ⚠️ PENDIENTE: el dueño debe proveer estos datos (ver sección final del
- * resumen de la sesión). Hasta entonces el checkout avisa "datos por
- * confirmar" pero el pedido se registra igual.
+ * Datos de cobro del negocio, partido por campo para que el cliente pueda copiar
+ * el teléfono, la cédula o el banco por separado desde #/checkout y #/renovar.
+ * Un método sin datos cargados queda en `null` y las dos pantallas avisan por
+ * WhatsApp en lugar de inventar un número.
  */
-export const DATOS_COBRO: Record<MetodoPago, string | null> = {
-  pagomovil: null, // 'PENDIENTE — teléfono + cédula + banco'
+export interface DatoCobro {
+  etiqueta: string
+  valor: string
+}
+
+export const DATOS_COBRO: Record<MetodoPago, DatoCobro[] | null> = {
+  pagomovil: [
+    { etiqueta: 'Teléfono', valor: '04246603660' },
+    { etiqueta: 'Cédula', valor: '34201580' },
+    { etiqueta: 'Banco', valor: 'BNC' },
+  ],
   usdt: null, // 'PENDIENTE — dirección TRC20'
   usdc: null, // 'PENDIENTE — dirección de red'
   zinli: null, // 'PENDIENTE — número de tarjeta / teléfono'
   binance: null, // 'PENDIENTE — correo o ID de pago'
+}
+
+// El texto que va al WhatsApp y al portapapeles en bloque.
+export const textoCobro = (m: MetodoPago): string | null => {
+  const d = DATOS_COBRO[m]
+  return d ? d.map((x) => `${x.etiqueta}: ${x.valor}`).join('\n') : null
 }
 
 export const etiquetaMetodo = (m: MetodoPago): string =>
