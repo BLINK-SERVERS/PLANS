@@ -232,6 +232,98 @@
   --color-blink-fill: #f7f7fa;
   --color-blink-fill-strong: #ececf0;
   --color-blink-scrim: rgba(0, 0, 0, 0.45);
+
+  /* ── Paleta de sistema de HIG, en su variante clara ──
+     Los quince colores dinámicos tal como los publica Apple (Human Interface
+     Guidelines, System Specifications): `sys-*` es el color de acento, y las
+     tintas semánticas (`label`, `separator`, `fill`) son las que usan las
+     listas agrupadas y los campos. No se inventó ninguno: si un tono no está
+     en la tabla de HIG, no entra.
+
+     Se declaran en claro solamente. El panel todavía pinta superficies con
+     `bg-white` en doce páginas: activar `light-dark()` sin tokenizar esas
+     filas daría un modo oscuro a medias, que es peor que no tenerlo. Cuando
+     las superficies consuman la variable, el modo oscuro es cambiar este
+     bloque y `color-scheme`. */
+  --color-sys-blue: #007aff;
+  --color-sys-indigo: #5856d6;
+  --color-sys-purple: #af52de;
+  --color-sys-pink: #ff2d55;
+  --color-sys-red: #ff3b30;
+  --color-sys-orange: #ff9500;
+  --color-sys-yellow: #ffcc00;
+  --color-sys-green: #34c759;
+  --color-sys-mint: #00c7be;
+  --color-sys-teal: #30b0c7;
+  --color-sys-cyan: #32ade6;
+  --color-sys-brown: #a2845e;
+  --color-sys-gray: #8e8e93;
+  --color-sys-gray2: #aeaeb2;
+  --color-sys-gray3: #c7c7cc;
+  --color-sys-gray4: #d1d1d6;
+  --color-sys-gray5: #e5e5ea;
+  --color-sys-gray6: #f2f2f7;
+
+  --color-ink-label: rgba(0, 0, 0, 0.85);
+  --color-ink-secondary: rgba(60, 60, 67, 0.6);
+  --color-ink-tertiary: rgba(60, 60, 67, 0.3);
+  --color-ink-quaternary: rgba(60, 60, 67, 0.18);
+  --color-ink-separator: rgba(60, 60, 67, 0.29);
+  --color-ink-fill: rgba(120, 120, 128, 0.2);
+  --color-ink-fill-2: rgba(120, 120, 128, 0.16);
+  --color-ink-fill-3: rgba(118, 118, 128, 0.12);
+  --color-ink-fill-4: rgba(116, 116, 128, 0.08);
+
+  /* ── Escala tipográfica de iOS ──
+     Apple define cada estilo con su interlineado y su tracking; los números
+     van de la tabla de HIG, no redondeados. El cuerpo del panel era `text-sm`
+     (14 px) en todas partes: en la pantalla de un teléfono eso es texto
+     secundario, no texto de lectura, y por eso la escala entra como token y no
+     como parche página por página. */
+  --text-title-grande: 34px;
+  --text-title-grande--line-height: 41px;
+  --text-title-grande--letter-spacing: -0.4px;
+  --text-title-1: 28px;
+  --text-title-1--line-height: 34px;
+  --text-title-1--letter-spacing: -0.3px;
+  --text-title-2: 22px;
+  --text-title-2--line-height: 28px;
+  --text-title-2--letter-spacing: -0.3px;
+  --text-title-3: 20px;
+  --text-title-3--line-height: 25px;
+  --text-title-3--letter-spacing: -0.2px;
+  --text-headline: 17px;
+  --text-headline--line-height: 22px;
+  --text-headline--letter-spacing: -0.4px;
+  --text-cuerpo: 17px;
+  --text-cuerpo--line-height: 22px;
+  --text-cuerpo--letter-spacing: -0.4px;
+  --text-llamado: 16px;
+  --text-llamado--line-height: 21px;
+  --text-llamado--letter-spacing: -0.3px;
+  --text-subheadline: 15px;
+  --text-subheadline--line-height: 20px;
+  --text-subheadline--letter-spacing: -0.2px;
+  --text-nota: 13px;
+  --text-nota--line-height: 18px;
+  --text-nota--letter-spacing: -0.1px;
+  --text-legenda: 12px;
+  --text-legenda--line-height: 16px;
+  --text-legenda--letter-spacing: 0px;
+  --text-legenda-2: 11px;
+  --text-legenda-2--line-height: 13px;
+  --text-legenda-2--letter-spacing: 0.07px;
+
+  /* Radios. La esquina continua de iOS no se puede expresar en CSS, así que se
+     aproxima con radios un poco más grandes que los de la retícula: 10 para lo
+     pequeño, 14 para las tarjetas agrupadas, 22 para las hojas. */
+  --radius-fila: 10px;
+  --radius-tarjeta: 14px;
+  --radius-loseta: 9px;
+  --radius-hoja: 22px;
+
+  --shadow-tarjeta: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -14px rgba(0, 0, 0, 0.12);
+  --shadow-hoja: 0 -1px 0 rgba(60, 60, 67, 0.29), 0 -18px 48px -18px rgba(0, 0, 0, 0.28);
 }
 
 :root {
@@ -277,23 +369,139 @@
 body {
   @apply bg-[var(--blink-bg-main)] text-[var(--blink-dark)] antialiased;
   font-family: var(--font-store);
+  -webkit-tap-highlight-color: transparent;
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Filas alternadas y hover en tablas: superficies de la marca, no
-   el gris slate de Tailwind en crudo. El hover es el acento al 8 %,
-   que es el mismo criterio de BWS. */
-tbody tr:nth-child(odd) {
+/* ─── Las listas del panel, como las de Ajustes de iOS ───
+   Antes la tabla rayaba filas alternadas (blanco / gris) porque venía del
+   look de un backoffice genérico. Apple no raya: separa a hairline y deja el
+   fondo parejo, que es como el ojo lee una columna de datos. El hover sigue
+   siendo el acento al 8 %. */
+tbody tr {
   background-color: var(--blink-surface);
 }
-tbody tr:nth-child(even) {
-  background-color: var(--blink-surface-alt);
+tbody tr + tr > td {
+  border-top: 1px solid var(--color-ink-separator);
 }
 tbody tr:hover {
   background-color: var(--blink-hover);
+}
+
+/* ─── Utilidades de la capa Apple ─── */
+
+/* Material translúcido de barra: blur + saturación, con el pelo inferior de
+   separación. Es lo que sostiene la barra superior y el sidebar. */
+.material {
+  background-color: rgba(249, 249, 249, 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.material-border::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-ink-separator);
+  pointer-events: none;
+}
+
+/* Objetivo táctil: 44x44 es el mínimo que HIG declara legible con el dedo. */
+.tap {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Áreas seguras del iPhone (notch y barra de home). */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Foco de teclado en azul de sistema, solo con teclado: el tap en móvil no
+   debe dejar anillo. */
+:focus-visible {
+  outline: 2px solid var(--color-sys-blue);
+  outline-offset: 2px;
+}
+
+/* Los campos nativos de fecha venían con el control de Chromium (borde duro,
+   icono gris, texto en negrita) desentonando con el resto del formulario. */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'] {
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+}
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ─── Tabla que se convierte en lista agrupada abajo de 1280 px ───
+   `Td` recibe `data-col` con el título de su columna (se clona en Table), así
+   que en móvil cada fila pasa a tarjeta con etiqueta a la izquierda y valor a
+   la derecha: sin scroll horizontal y sin duplicar el DOM. El corte sigue al del
+   sidebar (`xl`): entre 768 y 1279 las tablas de cinco columnas no caben ni con
+   la página entera para ellas. */
+@media (max-width: 1279px) {
+  .tabla-ficha table {
+    display: block;
+    min-width: 0;
+  }
+  .tabla-ficha thead {
+    display: none;
+  }
+  .tabla-ficha tbody {
+    display: block;
+  }
+  .tabla-ficha tr {
+    display: block;
+    padding: 12px 14px;
+  }
+  .tabla-ficha tr + tr {
+    border-top: 6px solid var(--color-sys-gray6);
+  }
+  .tabla-ficha tr + tr > td {
+    border-top: 0;
+  }
+  .tabla-ficha td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 3px 0;
+    text-align: right;
+  }
+  .tabla-ficha td::before {
+    content: attr(data-col);
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: -0.1px;
+    color: var(--color-ink-secondary);
+    text-align: left;
+  }
+  /* Una celda sin etiqueta de columna es contenido, no dato: va a sangre. */
+  .tabla-ficha td:not([data-col])::before {
+    content: none;
+  }
+  .tabla-ficha td:only-child {
+    display: block;
+    text-align: left;
+  }
 }
 
 /* Scrollbar discreto para las tablas */

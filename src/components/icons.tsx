@@ -1,17 +1,52 @@
-// Iconos vectoriales (estilo Lucide) — reemplazan los emojis
+// Iconos vectoriales calados a la retícula de SF Symbols.
+//
+// Apple no permite embutir la fuente de SF Symbols fuera de sus plataformas (la
+// licencia de las Symbol Apps amarra los glifos a apps de Apple), así que acá no
+// hay ninguna fuente: cada glifo es un `<path>` propio dibujado sobre las
+// medidas públicas del sistema, que es lo que hace que se lea igual:
+//
+//   lienzo 24 × 24 · caja del glifo 16 × 16 centrada (de 4 a 20) ·
+//   altura de la cap ≈ 14 · grosor del trazo ≈ 13 % de la cap ·
+//   empalmes y remates redondos, radios entre 1,8 y 2,2 ·
+//   el glifo toca la caja por un solo lado (arriba o abajo), nunca por los dos.
+//
+// El grosor se expresa como peso, igual que en la fuente: un símbolo de 20 pt en
+// peso `regular` lleva 1,9 de trazo, y en `semipesado` 2,4. Se hereda el color
+// por `currentColor`, como hace SF Symbols con la tinta de la fila.
 import type { PropsWithChildren, SVGProps } from 'react'
 
-type P = SVGProps<SVGSVGElement>
+export type PesoSimbolo = 'fino' | 'regular' | 'medio' | 'semipesado' | 'pesado'
 
-function Svg({ children, width = 18, height = 18, ...rest }: PropsWithChildren<P>) {
+const TRAZO: Record<PesoSimbolo, number> = {
+  fino: 1.4,
+  regular: 1.9,
+  medio: 2.1,
+  semipesado: 2.4,
+  pesado: 2.8,
+}
+
+export type PropsSimbolo = SVGProps<SVGSVGElement> & {
+  tam?: number
+  peso?: PesoSimbolo
+  /** Los símbolos `.fill` de Apple: superficie llena, sin trazo. */
+  lleno?: boolean
+}
+
+export function Simbolo({
+  children,
+  tam = 20,
+  peso = 'regular',
+  lleno = false,
+  ...rest
+}: PropsWithChildren<PropsSimbolo>) {
   return (
     <svg
-      width={width}
-      height={height}
+      width={tam}
+      height={tam}
       viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
+      fill={lleno ? 'currentColor' : 'none'}
+      stroke={lleno ? 'none' : 'currentColor'}
+      strokeWidth={lleno ? undefined : TRAZO[peso]}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -22,178 +57,362 @@ function Svg({ children, width = 18, height = 18, ...rest }: PropsWithChildren<P
   )
 }
 
-export const IconDashboard = (p: P) => (
-  <Svg {...p}>
-    <rect x="3" y="3" width="7" height="7" rx="1" />
-    <rect x="14" y="3" width="7" height="7" rx="1" />
-    <rect x="14" y="14" width="7" height="7" rx="1" />
-    <rect x="3" y="14" width="7" height="7" rx="1" />
-  </Svg>
+// ---------- Navegación del panel ----------
+
+/** square.grid.2x2 */
+export const IconDashboard = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="3.6" y="3.6" width="7.4" height="7.4" rx="1.9" />
+    <rect x="13" y="3.6" width="7.4" height="7.4" rx="1.9" />
+    <rect x="13" y="13" width="7.4" height="7.4" rx="1.9" />
+    <rect x="3.6" y="13" width="7.4" height="7.4" rx="1.9" />
+  </Simbolo>
 )
 
-export const IconUsers = (p: P) => (
-  <Svg {...p}>
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </Svg>
+/** person.2 */
+export const IconUsers = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="9.2" cy="8.2" r="3.5" />
+    <path d="M3.5 19.5c0-3.1 2.6-5.1 5.7-5.1s5.7 2 5.7 5.1" />
+    <path d="M16.3 5.1a3.4 3.4 0 0 1 0 6.5" />
+    <path d="M18 14.9c1.7.7 2.8 2.3 2.8 4.6" />
+  </Simbolo>
 )
 
-export const IconPackage = (p: P) => (
-  <Svg {...p}>
-    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-    <path d="m7.5 4.27 9 5.15" />
-    <path d="M3.29 7 12 12l8.71-5" />
-    <line x1="12" x2="12" y1="22" y2="12" />
-  </Svg>
+/** person */
+export const IconPersona = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="12" cy="8" r="3.8" />
+    <path d="M4.8 20c0-3.6 3.2-6 7.2-6s7.2 2.4 7.2 6" />
+  </Simbolo>
 )
 
-export const IconServer = (p: P) => (
-  <Svg {...p}>
-    <rect x="2" y="3" width="20" height="8" rx="2" />
-    <rect x="2" y="13" width="20" height="8" rx="2" />
-    <path d="M6 7h.01" />
-    <path d="M6 17h.01" />
-  </Svg>
+/** repeat — la renovación de un período */
+export const IconPackage = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M4.4 9.4A7.6 7.6 0 0 1 17.9 6.6L20 8.6" />
+    <path d="M20 4.2v4.4h-4.4" />
+    <path d="M19.6 14.6A7.6 7.6 0 0 1 6.1 17.4L4 15.4" />
+    <path d="M4 19.8v-4.4h4.4" />
+  </Simbolo>
 )
 
-export const IconStore = (p: P) => (
-  <Svg {...p}>
-    <path d="m3 9 1.5-5h15L21 9" />
-    <path d="M3 9v11h18V9" />
-    <path d="M9 20v-6h6v6" />
-  </Svg>
+/** tray.full — la bandeja de pedidos */
+export const IconInbox = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M3.4 13.2 6 5.4a1.9 1.9 0 0 1 1.8-1.3h8.4A1.9 1.9 0 0 1 18 5.4l2.6 7.8" />
+    <path d="M3.4 13.2h4.3l1.4 2.5h5.8l1.4-2.5h4.3v4.9a1.9 1.9 0 0 1-1.9 1.9H5.3a1.9 1.9 0 0 1-1.9-1.9z" />
+  </Simbolo>
 )
 
-export const IconCard = (p: P) => (
-  <Svg {...p}>
-    <rect x="2" y="5" width="20" height="14" rx="2" />
-    <path d="M2 10h20" />
-  </Svg>
+/** square.stack.3d.up — plataformas apiladas */
+export const IconStore = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="6.6" y="3.6" width="13.8" height="8.2" rx="2.1" />
+    <path d="M18.6 15.4a2.1 2.1 0 0 1-2.1 2.1H6.7a2.1 2.1 0 0 1-2.1-2.1V7.9" />
+    <path d="M3.6 19.2a2.1 2.1 0 0 1 2.1 1.2h9.7" />
+  </Simbolo>
 )
 
-export const IconPercent = (p: P) => (
-  <Svg {...p}>
-    <path d="M19 5 5 19" />
-    <circle cx="6.5" cy="6.5" r="2.5" />
-    <circle cx="17.5" cy="17.5" r="2.5" />
-  </Svg>
+/** list.bullet */
+export const IconList = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M9.4 6.2h11" />
+    <path d="M9.4 12h11" />
+    <path d="M9.4 17.8h11" />
+    <circle cx="4.6" cy="6.2" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="4.6" cy="12" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="4.6" cy="17.8" r="1.3" fill="currentColor" stroke="none" />
+  </Simbolo>
 )
 
-export const IconMenu = (p: P) => (
-  <Svg {...p}>
-    <line x1="4" y1="6" x2="20" y2="6" />
-    <line x1="4" y1="12" x2="20" y2="12" />
-    <line x1="4" y1="18" x2="20" y2="18" />
-  </Svg>
+/** server.rack — las cuentas madre */
+export const IconServer = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="3.2" y="3.8" width="17.6" height="6.4" rx="1.9" />
+    <rect x="3.2" y="13.8" width="17.6" height="6.4" rx="1.9" />
+    <path d="M6.9 7h.01" />
+    <path d="M6.9 17h.01" />
+    <path d="M10.4 7h6.2" />
+    <path d="M10.4 17h6.2" />
+  </Simbolo>
 )
 
-export const IconPlus = (p: P) => (
-  <Svg {...p}>
-    <path d="M12 5v14" />
-    <path d="M5 12h14" />
-  </Svg>
+/** building.2 — proveedores */
+export const IconBuilding = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M3.6 20.4V6.2a1.8 1.8 0 0 1 1.8-1.8h5.4a1.8 1.8 0 0 1 1.8 1.8v14.2" />
+    <path d="M12.6 10.4h5.2a1.8 1.8 0 0 1 1.8 1.8v8.2" />
+    <path d="M2.4 20.4h19.2" />
+    <path d="M6.9 8h3.4M6.9 12h3.4M6.9 16h3.4M15.6 14.4h1.6M15.6 17.6h1.6" />
+  </Simbolo>
 )
 
-export const IconPencil = (p: P) => (
-  <Svg {...p}>
-    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-  </Svg>
+/** creditcard */
+export const IconCard = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="2.4" y="5.4" width="19.2" height="13.2" rx="2.4" />
+    <path d="M2.4 10.2h19.2" />
+    <path d="M6 14.8h3.4" />
+  </Simbolo>
 )
 
-export const IconTrash = (p: P) => (
-  <Svg {...p}>
-    <path d="M3 6h18" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    <path d="M10 11v6" />
-    <path d="M14 11v6" />
-  </Svg>
+/** percent */
+export const IconPercent = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M18.4 5.6 5.6 18.4" />
+    <circle cx="7.6" cy="7.6" r="2.6" />
+    <circle cx="16.4" cy="16.4" r="2.6" />
+  </Simbolo>
 )
 
-export const IconX = (p: P) => (
-  <Svg {...p}>
+/** house */
+export const IconCasa = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M3.6 10.8 12 3.8l8.4 7" />
+    <path d="M5.6 12.8v6.4a1.6 1.6 0 0 0 1.6 1.6h9.6a1.6 1.6 0 0 0 1.6-1.6v-6.4" />
+    <path d="M10 20.4v-5h4v5" />
+  </Simbolo>
+)
+
+/** cart */
+export const IconCart = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M2.8 4.4h2.1l2.5 10.6a1.9 1.9 0 0 0 1.9 1.5h7.9a1.9 1.9 0 0 0 1.8-1.4l1.7-6.7H6.4" />
+    <circle cx="9.6" cy="20" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="17.2" cy="20" r="1.3" fill="currentColor" stroke="none" />
+  </Simbolo>
+)
+
+/** giftcard */
+export const IconRegalo = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="3.4" y="8.6" width="17.2" height="11.8" rx="1.9" />
+    <path d="M2.4 5.4h19.2v3.2H2.4z" />
+    <path d="M12 5.4v15" />
+    <path d="M12 5.4c-1.4-2.6-5.2-2.4-5.2 0 2.6 0 4-.6 5.2 0z" />
+    <path d="M12 5.4c1.4-2.6 5.2-2.4 5.2 0-2.6 0-4-.6-5.2 0z" />
+  </Simbolo>
+)
+
+// ---------- Controles ----------
+
+/** line.3.horizontal */
+export const IconMenu = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M3.6 7.2h16.8" />
+    <path d="M3.6 12h16.8" />
+    <path d="M3.6 16.8h16.8" />
+  </Simbolo>
+)
+
+/** xmark */
+export const IconX = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M6 6l12 12" />
     <path d="M18 6 6 18" />
-    <path d="m6 6 12 12" />
-  </Svg>
+  </Simbolo>
 )
 
-export const IconRefresh = (p: P) => (
-  <Svg {...p}>
-    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-    <path d="M21 3v5h-5" />
-    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
-    <path d="M3 21v-5h5" />
-  </Svg>
+/** xmark.circle.fill — limpiar un campo de búsqueda */
+export const IconXcirculo = (p: PropsSimbolo) => (
+  <Simbolo {...p} lleno>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm3.5 7.3a.9.9 0 0 0-1.3-1.3L12 10.7 9.8 8.4a.9.9 0 1 0-1.3 1.3L10.7 12l-2.2 2.3a.9.9 0 1 0 1.3 1.3L12 13.3l2.2 2.3a.9.9 0 1 0 1.3-1.3L13.3 12z"
+    />
+  </Simbolo>
 )
 
-export const IconCheck = (p: P) => (
-  <Svg {...p}>
-    <path d="M20 6 9 17l-5-5" />
-  </Svg>
+/** plus */
+export const IconPlus = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M12 5.2v13.6" />
+    <path d="M5.2 12h13.6" />
+  </Simbolo>
 )
 
-export const IconSearch = (p: P) => (
-  <Svg {...p}>
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.3-4.3" />
-  </Svg>
+/** plus.circle */
+export const IconPluscirculo = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="12" cy="12" r="8.6" />
+    <path d="M12 8.2v7.6" />
+    <path d="M8.2 12h7.6" />
+  </Simbolo>
 )
 
-export const IconLock = (p: P) => (
-  <Svg {...p}>
-    <rect x="3" y="11" width="18" height="11" rx="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </Svg>
+/** pencil */
+export const IconPencil = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M4.4 19.6l.9-3.4L16.6 5.8a2 2 0 0 1 2.8 0l.9.9a2 2 0 0 1 0 2.8L9.9 19.8l-3.4.9z" />
+    <path d="M14.9 7.5l3.7 3.7" />
+  </Simbolo>
 )
 
-export const IconLogout = (p: P) => (
-  <Svg {...p}>
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <path d="m16 17 5-5-5-5" />
-    <path d="M21 12H9" />
-  </Svg>
+/** trash */
+export const IconTrash = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M3.6 6.6h16.8" />
+    <path d="M5.8 6.6v12.2a1.9 1.9 0 0 0 1.9 1.9h8.6a1.9 1.9 0 0 0 1.9-1.9V6.6" />
+    <path d="M9.4 6.6V4.9a1.5 1.5 0 0 1 1.5-1.5h2.2a1.5 1.5 0 0 1 1.5 1.5v1.7" />
+    <path d="M10.3 10.6v6M13.7 10.6v6" />
+  </Simbolo>
 )
 
-export const IconCalendar = (p: P) => (
-  <Svg {...p}>
-    <rect x="3" y="4" width="18" height="18" rx="2" />
-    <path d="M16 2v4" />
-    <path d="M8 2v4" />
-    <path d="M3 10h18" />
-  </Svg>
+/** checkmark */
+export const IconCheck = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M4.8 12.6l4.6 4.6L19.4 7.2" />
+  </Simbolo>
 )
 
-export const IconInfinity = (p: P) => (
-  <Svg {...p}>
-    <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Z" />
-    <path d="M12 12c2 2.67 4 4 6 4a4 4 0 1 0 0-8c-2 0-4 1.33-6 4Z" />
-  </Svg>
+/** checkmark.circle.fill */
+export const IconCheckcirculo = (p: PropsSimbolo) => (
+  <Simbolo {...p} lleno>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm4.9 7.1a.9.9 0 0 0-1.3-1.3l-4.3 4.3-1.9-1.9a.9.9 0 1 0-1.3 1.3l2.5 2.6a.9.9 0 0 0 1.3 0z"
+    />
+  </Simbolo>
 )
 
-export const IconList = (p: P) => (
-  <Svg {...p}>
-    <line x1="8" x2="21" y1="6" y2="6" />
-    <line x1="8" x2="21" y1="12" y2="12" />
-    <line x1="8" x2="21" y1="18" y2="18" />
-    <line x1="3" x2="3.01" y1="6" y2="6" />
-    <line x1="3" x2="3.01" y1="12" y2="12" />
-    <line x1="3" x2="3.01" y1="18" y2="18" />
-  </Svg>
+/** magnifyingglass */
+export const IconSearch = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="10.6" cy="10.6" r="6.6" />
+    <path d="M15.4 15.4l4.6 4.6" />
+  </Simbolo>
 )
 
-export const IconInbox = (p: P) => (
-  <Svg {...p}>
-    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-  </Svg>
+/** chevron.forward */
+export const IconChevron = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M9.4 5.6l6.4 6.4-6.4 6.4" />
+  </Simbolo>
 )
 
-export const IconCart = (p: P) => (
-  <Svg {...p}>
-    <circle cx="8" cy="21" r="1" />
-    <circle cx="19" cy="21" r="1" />
-    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-  </Svg>
+/** chevron.down */
+export const IconAbajo = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M5.6 9.4l6.4 6.4 6.4-6.4" />
+  </Simbolo>
+)
+
+/** arrow.clockwise */
+export const IconRefresh = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.3" />
+    <path d="M19.6 3.6v4.4h-4.4" />
+  </Simbolo>
+)
+
+/** rectangle.portrait.and.arrow.right — salir de la sesión */
+export const IconLogout = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M11.4 3.6H6a1.9 1.9 0 0 0-1.9 1.9v13a1.9 1.9 0 0 0 1.9 1.9h5.4" />
+    <path d="M15.4 8.2 19.2 12l-3.8 3.8" />
+    <path d="M9.6 12h9.6" />
+  </Simbolo>
+)
+
+/** calendar */
+export const IconCalendar = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="3.4" y="5.4" width="17.2" height="15" rx="2.2" />
+    <path d="M8.2 3.4v3.8M15.8 3.4v3.8" />
+    <path d="M3.4 10.4h17.2" />
+  </Simbolo>
+)
+
+/** clock */
+export const IconReloj = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="12" cy="12" r="8.6" />
+    <path d="M12 7.4V12l3.4 2.2" />
+  </Simbolo>
+)
+
+/** infinity — los planes sin vencimiento */
+export const IconInfinity = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M12 12c-1.9-2.5-3.7-3.8-5.6-3.8a3.8 3.8 0 1 0 0 7.6c1.9 0 3.7-1.3 5.6-3.8z" />
+    <path d="M12 12c1.9 2.5 3.7 3.8 5.6 3.8a3.8 3.8 0 1 0 0-7.6c-1.9 0-3.7 1.3-5.6 3.8z" />
+  </Simbolo>
+)
+
+/** lock */
+export const IconLock = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <rect x="4.2" y="10.6" width="15.6" height="9.8" rx="2.3" />
+    <path d="M7.8 10.6V7.6a4.2 4.2 0 0 1 8.4 0v3" />
+  </Simbolo>
+)
+
+/** eye / eye.slash — mostrar la contraseña */
+export const IconOjo = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M2.6 12s3.6-6 9.4-6 9.4 6 9.4 6-3.6 6-9.4 6-9.4-6-9.4-6z" />
+    <circle cx="12" cy="12" r="2.8" />
+  </Simbolo>
+)
+
+export const IconOjoCerrado = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M2.6 12s3.6-6 9.4-6 9.4 6 9.4 6-3.6 6-9.4 6-9.4-6-9.4-6z" />
+    <circle cx="12" cy="12" r="2.8" />
+    <path d="M4.2 19.8 19.8 4.2" />
+  </Simbolo>
+)
+
+/** exclamationmark.triangle */
+export const IconAlerta = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M10.5 4.4a1.8 1.8 0 0 1 3 0l7.1 12.4a1.8 1.8 0 0 1-1.5 2.7H4.9a1.8 1.8 0 0 1-1.5-2.7z" />
+    <path d="M12 9.4v4" />
+    <path d="M12 16.4h.01" />
+  </Simbolo>
+)
+
+/** info.circle */
+export const IconInfo = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="12" cy="12" r="8.6" />
+    <path d="M12 11v5.4" />
+    <path d="M12 7.8h.01" />
+  </Simbolo>
+)
+
+/** ellipsis */
+export const IconMas = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="5.6" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    <circle cx="18.4" cy="12" r="1.4" fill="currentColor" stroke="none" />
+  </Simbolo>
+)
+
+/** gearshape */
+export const IconAjustes = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <circle cx="12" cy="12" r="3.2" />
+    <path d="M12 2.8l1.4 2.4a7.6 7.6 0 0 1 2.2 1.3l2.6-.6 1.6 2.8-1.9 1.8a7.6 7.6 0 0 1 0 2.6l1.9 1.8-1.6 2.8-2.6-.6a7.6 7.6 0 0 1-2.2 1.3L12 21.2l-1.4-2.4a7.6 7.6 0 0 1-2.2-1.3l-2.6.6-1.6-2.8 1.9-1.8a7.6 7.6 0 0 1 0-2.6L4.2 9.1l1.6-2.8 2.6.6a7.6 7.6 0 0 1 2.2-1.3z" />
+  </Simbolo>
+)
+
+/** filter */
+export const IconFiltro = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M3.4 5.6h17.2l-6.6 7.8v5.6l-4-2v-3.6z" />
+  </Simbolo>
+)
+
+/** doc.text */
+export const IconDocumento = (p: PropsSimbolo) => (
+  <Simbolo {...p}>
+    <path d="M6 3.6h7.4L19 9.2v11.2a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6V5.2A1.6 1.6 0 0 1 6 3.6z" />
+    <path d="M13.4 3.6v5.6H19" />
+    <path d="M7.6 13h8M7.6 16.4h5.4" />
+  </Simbolo>
 )
