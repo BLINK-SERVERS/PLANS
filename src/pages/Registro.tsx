@@ -61,7 +61,7 @@ export default function Registro() {
       <div className="w-full max-w-md space-y-4">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-sm font-medium text-blink-action hover:text-blink-action-hover"
+          className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-blink-action hover:text-blink-action-hover"
         >
           ← Volver al inicio
         </Link>
@@ -144,7 +144,7 @@ export default function Registro() {
 
               <p className="mt-4 text-center text-sm text-blink-ink-mute">
                 ¿Ya tienes cuenta?{' '}
-                <Link to="/ingreso" className="font-semibold text-blink-action hover:underline">
+                <Link to="/ingreso" className="inline-flex min-h-11 items-center px-1 font-semibold text-blink-action hover:underline">
                   Entrar
                 </Link>
               </p>

@@ -24,7 +24,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
           {volver ? (
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 rounded-full border border-blink-line-strong px-3 py-1.5 text-sm font-medium text-blink-muted hover:bg-blink-soft"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-blink-line-strong px-3 text-sm font-medium text-blink-muted hover:bg-blink-soft"
             >
               ← Inicio
             </Link>
@@ -36,7 +36,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
             <span className="text-lg font-bold text-blink-dark">Blink Plans</span>
           </Link>
         </div>
-        <nav className="flex items-center gap-2 text-sm">
+        <nav className="flex flex-wrap items-center justify-end gap-2 text-sm">
           <Link
             to="/carrito"
             aria-label={`Carrito (${total} artículo${total === 1 ? '' : 's'})`}
@@ -54,7 +54,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
               {rol === 'admin' ? (
                 <Link
                   to="/panel"
-                  className="rounded-full bg-blink-action px-4 py-2 font-semibold text-white hover:bg-blink-action-hover"
+                  className="inline-flex min-h-11 items-center rounded-full bg-blink-action px-4 py-2 font-semibold text-white hover:bg-blink-action-hover"
                 >
                   Panel admin
                 </Link>
@@ -65,7 +65,7 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
               )}
               <button
                 onClick={salirDeTienda}
-                className="inline-flex items-center gap-1 rounded-full border border-blink-line-strong px-3 py-2 text-blink-muted hover:bg-blink-soft"
+                className="inline-flex min-h-11 items-center gap-1 rounded-full border border-blink-line-strong px-3 text-blink-muted hover:bg-blink-soft"
               >
                 <IconLogout className="h-4 w-4" /> Salir
               </button>
@@ -74,13 +74,13 @@ export default function BarraTienda({ volver = false }: { volver?: boolean }) {
             <>
               <Link
                 to="/ingreso"
-                className="rounded-full border border-blink-line-strong px-4 py-2 font-semibold text-blink-muted hover:bg-blink-soft"
+                className="inline-flex min-h-11 items-center rounded-full border border-blink-line-strong px-4 py-2 font-semibold text-blink-muted hover:bg-blink-soft"
               >
                 Ingresar
               </Link>
               <Link
                 to="/registro"
-                className="rounded-full bg-blink-action px-4 py-2 font-semibold text-white hover:bg-blink-action-hover"
+                className="inline-flex min-h-11 items-center rounded-full bg-blink-action px-4 py-2 font-semibold text-white hover:bg-blink-action-hover"
               >
                 Registrarse
               </Link>

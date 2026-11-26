@@ -40,7 +40,7 @@ export default function Ingreso() {
       <div className="w-full max-w-md space-y-4">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-sm font-medium text-blink-action hover:text-blink-action-hover"
+          className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-blink-action hover:text-blink-action-hover"
         >
           ← Volver al inicio
         </Link>
@@ -89,7 +89,7 @@ export default function Ingreso() {
 
           <p className="mt-4 text-center text-sm text-blink-ink-mute">
             ¿No tienes cuenta?{' '}
-            <Link to="/registro" className="font-semibold text-blink-action hover:underline">
+            <Link to="/registro" className="inline-flex min-h-11 items-center px-1 font-semibold text-blink-action hover:underline">
               Regístrate
             </Link>
           </p>
