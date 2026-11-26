@@ -15,7 +15,8 @@ import { errMsg } from '../lib/err'
 import { ErrorMsg, Field, Input, Modal, ModalFooter, Select } from './ui'
 import { IconPlus } from './icons'
 
-const enlace = 'mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-blink-action hover:text-blink-action-hover'
+const enlace =
+  '-my-1.5 inline-flex min-h-11 items-center gap-1.5 rounded-[10px] px-1 text-subheadline font-medium text-[#0062cc] transition-opacity hover:text-[#0057ad] active:opacity-60'
 
 // ------------------------------------------------------------- Nuevo cliente
 export function NuevoCliente({ onCreated }: { onCreated: (id: string) => void }) {
@@ -415,10 +416,10 @@ export function NuevaPlataforma({ onCreated }: { onCreated: (id: string) => void
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             />
           </Field>
-          <label className="flex items-center gap-2 text-sm text-blink-muted">
+          <label className="flex items-center gap-2 text-subheadline text-ink-secondary">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-blink-action"
+              className="h-4 w-4 accent-[#007aff]"
               checked={form.aplica_comision}
               onChange={(e) => setForm({ ...form, aplica_comision: e.target.checked })}
             />
